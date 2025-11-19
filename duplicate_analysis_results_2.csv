@@ -1,3 +1,0 @@
-﻿crefo1_crefo2,record_position,confidence_score,match_type,record_index,name,vorname,name_field,name2,strasse,hausnummer,plz,ort,crefo,geburtstag,jahrgang,erfasst,quelle_95,name_similarity_normal,name_similarity_swapped,is_swapped,address_match_ratio
-429447406_429447203,A,65.71428571428572,fuzzy_normal,272,Sarviha Sitsabesan,Sarviha,Sitsabesan,,Weinsteig,209,820000,Schaffhausen,429447406,1993-04-07,1993.0,2025-11-06 14:07:24.756666,0,0.7142857142857143,0.4117647058823529,False,1.0
-429447406_429447203,B,65.71428571428572,fuzzy_normal,337,Sathees Sitsabesan,Sathees,Sitsabesan,,Weinsteig,209,820000,Schaffhausen,429447203,1993-07-04,1993.0,2025-11-06 10:17:39.467394,0,0.7142857142857143,0.4117647058823529,False,1.0

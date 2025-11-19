@@ -1,0 +1,949 @@
+﻿match_id,confidence,match_type,position,index,vorname,name,name2,strasse,hausnummer,plz,ort,crefo,geburtstag,jahrgang
+400092479_400092478,86.53846153846155,fuzzy_normal,A,42275,Muriel,Jaques,,Chemin de la Vulliette,15,100025,Lausanne 25,400092479,1958-12-02,1958.0
+400092479_400092478,86.53846153846155,fuzzy_normal,B,46642,Martial,Jaques,,Chemin de la Vulliette,15,100025,Lausanne 25,400092478,1958-12-02,1958.0
+400036399_400036400,80.0,fuzzy_normal,A,14257,Rocco,Mercuri,-Rieben,Chemin des Molliettes,4,100026,Lausanne 26,400036399,1953-06-05,1953.0
+400036399_400036400,80.0,fuzzy_normal,B,14258,Françoise,Mercuri,,Chemin des Molliettes,4,100026,Lausanne 26,400036400,1953-10-02,1953.0
+400004460_400004461,78.99999999999999,fuzzy_normal,A,1501,Jean-Daniel,Herdé,,Route du Jorat,156,100026,Lausanne 26,400004460,1967-02-10,1967.0
+400004460_400004461,78.99999999999999,fuzzy_normal,B,1502,Valentine,Herdé,,Route du Jorat,156,100026,Lausanne 26,400004461,1967-02-02,1967.0
+400043316_400043317,78.99999999999999,fuzzy_normal,A,17489,Alfred,Seiler,-Tuyns,route du Jorat,31,100027,Lausanne 27,400043316,1952-07-02,1952.0
+400043316_400043317,78.99999999999999,fuzzy_normal,B,17490,Anne,Seiler,-Tuyns,route du Jorat,31,100027,Lausanne 27,400043317,1952-08-02,1952.0
+400024156_400024157,80.0,fuzzy_normal,A,8684,André,Guignard,,Avenue Alexandre-Vinet,16,100400,Lausanne,400024156,,1940.0
+400024156_400024157,80.0,fuzzy_normal,B,8685,Françoise,Guignard,,Avenue Alexandre-Vinet,16,100400,Lausanne,400024157,1940-08-31,1940.0
+400041757_400041758,81.47058823529412,fuzzy_normal,A,16562,Eliane,Steiner,,Avenue de la Chablière,19,100400,Lausanne,400041757,1948-02-07,1948.0
+400041757_400041758,81.47058823529412,fuzzy_normal,B,16563,Jean-Claude,Steiner,,Avenue de la Chablière,19,100400,Lausanne,400041758,1948-10-20,1948.0
+400017085_400078278,79.26829268292683,fuzzy_normal,A,6508,Olivier,Trolliet,,avenue de la Confrérie,12,100400,Lausanne,400017085,,1965.0
+400017085_400078278,79.26829268292683,fuzzy_normal,B,38714,Valerie,Trolliet,,Avenue de la Confrérie,16,100400,Lausanne,400078278,1965-07-22,1965.0
+400002781_400042630,82.93752257132539,fuzzy_normal,A,1032,Antonio,Aloise,,Avenue de Morges,38,100400,Lausanne,400002781,1940-02-28,1940.0
+400002781_400042630,82.93752257132539,fuzzy_normal,B,17237,Antonino,Scalisi,,Avenue de Morges,153,100400,Lausanne,400042630,1940-02-21,1940.0
+400011332_400019137,79.35791217895608,fuzzy_normal,A,3801,René,Braichotte,,Avenue de Morges,157,100400,Lausanne,400011332,1934-10-21,1934.0
+400011332_400019137,79.35791217895608,fuzzy_normal,B,7206,René,Vaucher,,avenue de Morges,64,100400,Lausanne,400019137,1934-10-10,1934.0
+400033835_400044209,80.55555555555556,fuzzy_normal,A,16873,Claude,Moll,,Ch. Guillaume-de-Pierrefleur,13,100400,Lausanne,400033835,1943-10-17,1943.0
+400033835_400044209,80.55555555555556,fuzzy_normal,B,17926,Claude,Semon,,Ch. Guillaume-de-Pierrefleur,13,100400,Lausanne,400044209,1943-04-13,1943.0
+400045594_400045595,83.66666666666667,fuzzy_normal,A,17734,Daniel,Jörg,-Pfulg,chemin de Champrilly,22,100400,Lausanne,400045594,1953-04-03,1953.0
+400045594_400045595,83.66666666666667,fuzzy_normal,B,22222,Françoise,Jörg,,Chemin de Champrilly,22,100400,Lausanne,400045595,1953-07-12,1953.0
+400047494_400047493,88.33333333333333,fuzzy_normal,A,18925,Marie-Madeleine,Ferrari,,Chemin de Champrilly,21,100400,Lausanne,400047494,1941-12-21,1941.0
+400047494_400047493,88.33333333333333,fuzzy_normal,B,22870,Madelaine,Ferrari,,Chemin de Champrilly,21,100400,Lausanne,400047493,1941-12-21,1941.0
+400007988_400007989,82.1103896103896,fuzzy_normal,A,2246,Daniel,Péguiron,-Bolomey,Chemin des Aubépines,4,100400,Lausanne,400007988,1941-10-02,1941.0
+400007988_400007989,82.1103896103896,fuzzy_normal,B,2563,Eliane,Peguiron,,Chemin des Aubépines,4b,100400,Lausanne,400007989,1941-06-18,1941.0
+400009012_400009013,82.5,fuzzy_normal,A,2956,René,Ballaman,-Giauque,Chemin du Salève,5,100400,Lausanne,400009012,1932-09-10,1932.0
+400009012_400009013,82.5,fuzzy_normal,B,3000,Jeannine,Ballaman,-Giauque,Chemin du Salève,5,100400,Lausanne,400009013,1932-08-05,1932.0
+400037414_400037415,80.0,fuzzy_normal,A,15140,Elisabeth,Naucelle,,Chemin Porchat,32,100400,Lausanne,400037414,1955-12-09,1955.0
+400037414_400037415,80.0,fuzzy_normal,B,18675,Betty,Naucelle,-Zbinden,Chemin Porchat,32,100400,Lausanne,400037415,1955-12-02,1955.0
+400002998_400002997,80.0,fuzzy_normal,A,972,Silvana,Amy,-Solivella,Rue des Echelettes,2,100400,Lausanne,400002998,1964-01-02,1964.0
+400002998_400002997,80.0,fuzzy_normal,B,4368,Laurent,Amy,-Solivella,Rue des Echelettes,2,100400,Lausanne,400002997,1964-11-02,1964.0
+400014142_400014141,84.99999999999999,fuzzy_normal,A,4503,Marcelle,Buxcel,,Rue des Echelettes,4,100400,Lausanne,400014142,1928-09-02,1928.0
+400014142_400014141,84.99999999999999,fuzzy_normal,B,7796,Michel,Buxcel,-Bourgeois,rue des Echelettes,4,100400,Lausanne,400014141,1928-06-08,1928.0
+400004092_400004093,82.5,fuzzy_normal,A,1464,Antoine,Henriod,,Rue Pré-du-Marché,35,100400,Lausanne,400004092,1963-10-05,1963.0
+400004092_400004093,82.5,fuzzy_normal,B,4698,Joséphine,Henriod,,Rue Pré-du-Marché,35,100400,Lausanne,400004093,1963-04-02,1963.0
+400027931_400027932,81.15384615384616,fuzzy_normal,A,10494,Philippe,Gardaz,-Roussy,Avenue de Rumine,50,100500,Lausanne,400027931,1947-04-23,1947.0
+400027931_400027932,81.15384615384616,fuzzy_normal,B,10556,Odile,Gardaz,-Roussy,Avenue de Rumine,50,100500,Lausanne,400027932,1947-10-20,1947.0
+400037083_400037102,78.28571428571428,fuzzy_normal,A,18629,Philippe,Mercier,,Avenue Mon-Repos,24,100500,Lausanne,400037083,,1944.0
+400037083_400037102,78.28571428571428,fuzzy_normal,B,18633,Pierre,Mercier,-Maillard,Avenue Mon-Repos,30,100500,Lausanne,400037102,1944-07-28,1944.0
+400000636_400000635,78.99999999999999,fuzzy_normal,A,145,Sylviane,Jedwab,-Berner,Chemin du Levant,7,100500,Lausanne,400000636,,1960.0
+400000636_400000635,78.99999999999999,fuzzy_normal,B,513,Michael,Jedwab,-Berner,Chemin du Levant,7,100500,Lausanne,400000635,1960-07-02,1960.0
+400003515_400019110,78.14285714285714,fuzzy_normal,A,4438,Marianne,Amiguet,-Randin,Chemin du Levant,43,100500,Lausanne,400003515,1947-07-02,1947.0
+400003515_400019110,78.14285714285714,fuzzy_normal,B,7008,Marianne,Fauchere,,Chemin du Levant,13,100500,Lausanne,400019110,1947-02-03,1947.0
+400004412_400004413,78.99999999999999,fuzzy_normal,A,1418,Matthias,Härri,-Shishido,Avenue d'Ouchy,28,100600,Lausanne,400004412,1957-06-02,1957.0
+400004412_400004413,78.99999999999999,fuzzy_normal,B,4742,Toshiko,Härri,-Shishido,Avenue d'Ouchy,28,100600,Lausanne,400004413,,1957.0
+400038879_400038878,82.5,fuzzy_normal,A,14797,Marie,Roccati,,avenue d'Ouchy,53bis,100600,Lausanne,400038879,1927-12-03,1927.0
+400038879_400038878,82.5,fuzzy_normal,B,18960,Charles,Roccati,,avenue d'Ouchy,53bis,100600,Lausanne,400038878,,1927.0
+400027677_400027678,78.99999999999999,fuzzy_normal,A,9990,Olivier,Giordano,-Favre,Avenue du Rond-Point,5,100600,Lausanne,400027677,1962-03-02,1962.0
+400027677_400027678,78.99999999999999,fuzzy_normal,B,9991,Lucienne,Giordano,-Favre,Avenue du Rond-Point,5,100600,Lausanne,400027678,,1962.0
+400001734_400001735,83.3076923076923,fuzzy_normal,A,558,Willy-Marcel,Eggenschwyler,-Schaffner,Avenue Edouard-Dapples,9,100600,Lausanne,400001734,1939-02-06,1939.0
+400001734_400001735,83.3076923076923,fuzzy_normal,B,2690,Marcelle,Eggenschwiler,-Schaffner,Avenue Edouard-Dapples,9,100600,Lausanne,400001735,1939-10-15,1939.0
+400039393_400039392,79.73684210526315,fuzzy_normal,A,14847,Pierangelo,Bartoli,-Regazzoni,Avenue Edouard-Dapples,5,100600,Lausanne,400039393,,1958.0
+400039393_400039392,79.73684210526315,fuzzy_normal,B,19337,Marinella,Bartoli,-Regazzoni,Avenue Edouard-Dapples,5,100600,Lausanne,400039392,1958-02-11,1958.0
+400027772_400027773,80.55555555555556,fuzzy_normal,A,10466,Pierre,Gurtner,-Dupuis,Avenue Eglantine,3,100600,Lausanne,400027772,1954-02-15,1954.0
+400027772_400027773,80.55555555555556,fuzzy_normal,B,10467,Marie Claire,Gurtner,-Dupuis,Avenue Eglantine,3,100600,Lausanne,400027773,1954-07-05,1954.0
+400031081_400031080,80.0,fuzzy_normal,A,12144,Stephane,Lavanchy,,Boulevard de Grancy,32,100600,Lausanne,400031081,,1964.0
+400031081_400031080,80.0,fuzzy_normal,B,15783,Simone,Lavanchy,,Boulevard de Grancy,32,100600,Lausanne,400031080,1964-01-29,1964.0
+400004940_400004939,82.5,fuzzy_normal,A,1625,Marianne,Jaermann,-Moret,Chemin de la Joliette,5,100600,Lausanne,400004940,1958-03-02,1958.0
+400004940_400004939,82.5,fuzzy_normal,B,4821,Marc,Jaermann,-Moret,Chemin de la Joliette,5,100600,Lausanne,400004939,1958-12-02,1958.0
+400016644_400016643,80.55555555555556,fuzzy_normal,A,6633,Christiane,Dumusc,,Chemin des Allinges,2,100600,Lausanne,400016644,1947-11-16,1947.0
+400016644_400016643,80.55555555555556,fuzzy_normal,B,10032,Bertrand,Dumusc,,Chemin des Allinges,2,100600,Lausanne,400016643,1947-11-17,1947.0
+400059400_400059398,83.33333333333333,fuzzy_normal,A,24346,Hans-Jörg,Vuillemier,,Chemin Vermont,12,100600,Lausanne,400059400,1944-07-01,1944.0
+400059400_400059398,83.33333333333333,fuzzy_normal,B,24503,Jean-Georges,Vuilleumier,,Chemin Vermont,12,100600,Lausanne,400059398,1944-07-01,1944.0
+400007679_400012711,76.76119402985073,fuzzy_normal,A,5248,Antoine,Béguin,,Avenue de Cour,60,100700,Lausanne,400007679,1967-04-02,1967.0
+400007679_400012711,76.76119402985073,fuzzy_normal,B,6031,Cristina,Béguin,-Purrinos,Avenue de Cour,138,100700,Lausanne,400012711,1967-06-02,1967.0
+400002715_400033221,82.51196172248804,fuzzy_swapped,A,2900,Miguel,Alonso,,Avenue du Mont-d'Or,42,100700,Lausanne,400002715,1962-05-13,1962.0
+400002715_400033221,82.51196172248804,fuzzy_swapped,B,12516,Ramon,Miguel,,Avenue du Mont-d'Or,39,100700,Lausanne,400033221,1962-10-08,1962.0
+400028721_400028722,81.15384615384616,fuzzy_normal,A,11212,Michel,Grundisch,-Cornu,Avenue Frédéric-César-de-La-Harp,35,100700,Lausanne,400028721,1938-12-19,1938.0
+400028721_400028722,81.15384615384616,fuzzy_normal,B,13827,Monique,Grundisch,,Avenue Frédéric-César-de-La-Harp,35,100700,Lausanne,400028722,1938-06-07,1938.0
+400042963_400042962,78.99999999999999,fuzzy_normal,A,17284,Rose-Marie,Schlatter,,Chemin de Villard,21,100700,Lausanne,400042963,,1947.0
+400042963_400042962,78.99999999999999,fuzzy_normal,B,20889,André,Schlatter,-Chuard,Chemin de Villard,21,100700,Lausanne,400042962,1947-02-02,1947.0
+400029946_400029947,96.81818181818183,fuzzy_normal,A,11604,André,Castiglione,,Route de Chavannes,141,100700,Lausanne,400029946,1942-06-15,1942.0
+400029946_400029947,96.81818181818183,fuzzy_normal,B,11605,Andrea,Castiglione,,Route de Chavannes,141,100700,Lausanne,400029947,,1942.0
+400048224_400048225,81.15384615384616,fuzzy_normal,A,19228,Charles,Grivel,-Müller,Avenue de Chantegrive,9,100800,Prilly,400048224,1948-05-02,1948.0
+400048224_400048225,81.15384615384616,fuzzy_normal,B,22977,Cécile,Grivel,,Avenue de Chantegrive,9,100800,Prilly,400048225,1948-08-20,1948.0
+400048458_400048457,81.15384615384616,fuzzy_normal,A,19740,Francine,Gisler,,Avenue de la Rochelle,3,100800,Prilly,400048458,,1944.0
+400048458_400048457,81.15384615384616,fuzzy_normal,B,23015,Fredy,Gisler,-Garin,Avenue de la Rochelle,3,100800,Prilly,400048457,1944-07-16,1944.0
+400046780_400046782,81.15384615384616,fuzzy_normal,A,18411,François,Dagon,-Nussbaum,Avenue de Mont-Goulin,19,100800,Prilly,400046780,1937-10-22,1937.0
+400046780_400046782,81.15384615384616,fuzzy_normal,B,18412,Vreni,Dagon,,Avenue de Mont-Goulin,19,100800,Prilly,400046782,1937-06-21,1937.0
+400047929_400047928,82.5,fuzzy_normal,A,19109,Elisabeth,Knebel,-Cuerel,chemin de Corminjoz,19,100800,Prilly,400047929,1948-03-19,1948.0
+400047929_400047928,82.5,fuzzy_normal,B,19240,Gilbert,Knebel,,chemin de Corminjoz,19,100800,Prilly,400047928,,1948.0
+400038178_400038179,82.5,fuzzy_normal,A,14699,Renato,Rutta,,Chemin de la Bâtiaz,4,100802,Jouxtens-Mézery,400038178,1955-12-01,1955.0
+400038178_400038179,82.5,fuzzy_normal,B,18786,Bozena,Rutta,,Chemin de la Bâtiaz,4,100802,Jouxtens-Mézery,400038179,,1955.0
+400037660_400037661,84.09090909090908,fuzzy_normal,A,18711,Daniel,Massarelli,,Chemin de Pierregrosse,56,100802,Jouxtens-Mézery,400037660,,
+400037660_400037661,84.09090909090908,fuzzy_normal,B,18712,Nelly,Massarelli,,Chemin de Pierregrosse,56,100802,Jouxtens-Mézery,400037661,,
+400001982_400001983,81.15384615384616,fuzzy_normal,A,590,Olivier,Jaques,,chemin des Boracles,110,100802,Jouxtens-Mézery,400001982,1964-01-23,1964.0
+400001982_400001983,81.15384615384616,fuzzy_normal,B,860,Carole,Jaques,,chemin des Boracles,110,100802,Jouxtens-Mézery,400001983,1964-06-11,1964.0
+400055953_400055954,80.0,fuzzy_normal,A,23380,André,Roland,,Chemin des Boracles,42,100802,Jouxtens-Mézery,400055953,1963-09-02,1963.0
+400055953_400055954,80.0,fuzzy_normal,B,23381,Catherine,Roland,,Chemin des Boracles,42,100802,Jouxtens-Mézery,400055954,1963-03-21,1963.0
+400060988_400060989,80.55555555555556,fuzzy_normal,A,25355,René,Lapaire,,Rue des Métiers,3,100800,Prilly,400060988,,
+400060988_400060989,80.55555555555556,fuzzy_normal,B,25498,Marie,Lapaire,,Rue des Métiers,3,100800,Prilly,400060989,,
+400054132_400054131,79.73684210526315,fuzzy_normal,A,21853,Antoinette,Corà,,Avenue Chantemerle,9,100900,Pully,400054132,1953-07-02,1953.0
+400054132_400054131,79.73684210526315,fuzzy_normal,B,25892,Dominique,Corà,,Avenue Chantemerle,9,100900,Pully,400054131,,1953.0
+400055740_400055739,89.70588235294117,fuzzy_normal,A,23213,Jacqueline,Rabattoni,,Avenue de l'Avenir,12,100900,Pully,400055740,1936-02-08,1936.0
+400055740_400055739,89.70588235294117,fuzzy_normal,B,23289,Jacques,Rabattoni,-Bieg,Avenue de l'Avenir,12,100900,Pully,400055739,1936-09-26,1936.0
+400050978_400050979,85.99999999999999,fuzzy_normal,A,20570,Paul,Josefowitz,,avenue des Peupliers,17,100900,Pully,400050978,1952-06-08,1952.0
+400050978_400050979,85.99999999999999,fuzzy_normal,B,24831,Samuel,Josefowitz,,avenue des Peupliers,17,100900,Pully,400050979,,1952.0
+400054057_400054058,78.99999999999999,fuzzy_normal,A,21924,Remo,Kuonen,,Avenue du Tirage,5,100900,Pully,400054057,1952-05-09,1952.0
+400054057_400054058,78.99999999999999,fuzzy_normal,B,25876,Verena,Kuonen,,Avenue du Tirage,5,100900,Pully,400054058,1952-08-02,1952.0
+400055002_400055003,81.47058823529412,fuzzy_normal,A,22435,Claude,Noverraz,-Truffer,Avenue des Roses,10,100900,Pully,400055002,1947-11-02,1947.0
+400055002_400055003,81.47058823529412,fuzzy_normal,B,27098,Marie-Laure,Noverraz,,Avenue des Roses,10,100900,Pully,400055003,1947-10-30,1947.0
+400037855_400055731,81.15384615384616,fuzzy_normal,A,15263,Monique,Reboh,-Bawab,Avenue Charles-Ferdinand-Ramuz,47,100900,Pully,400037855,1960-12-15,1960.0
+400037855_400055731,81.15384615384616,fuzzy_normal,B,23210,Nadine,Reboh,,Avenue Charles-Ferdinand-Ramuz,47,100900,Pully,400055731,1960-12-15,1960.0
+400115264_400115265,80.0,fuzzy_normal,A,54068,Xavier,De Weck,,Avenue Charles-Ferdinand-Ramuz,6,100900,Pully,400115264,1955-05-12,1955.0
+400115264_400115265,80.0,fuzzy_normal,B,54069,Caroline,De Weck,,Avenue Charles-Ferdinand-Ramuz,6,100900,Pully,400115265,1955-11-02,1955.0
+400054173_400054174,78.99999999999999,fuzzy_normal,A,21857,Antoinette,Graber,-Chassot,Chemin de la Clergère,12,100900,Pully,400054173,1941-05-16,1941.0
+400054173_400054174,78.99999999999999,fuzzy_normal,B,26941,Alain,Graber,,Chemin de la Clergère,12,100900,Pully,400054174,,1941.0
+400053626_400087612,81.15384615384616,fuzzy_normal,A,21662,Pascale,Cuche,,Chemin de Mallieu,7,100900,Pully,400053626,1954-04-28,1954.0
+400053626_400087612,81.15384615384616,fuzzy_normal,B,39627,Claude,Cuche,,Chemin de Mallieu,7,100900,Pully,400087612,1954-09-24,1954.0
+400054071_400054072,82.5,fuzzy_normal,A,21927,Fernand,Goumoens,-Odoni,Chemin de Mallieu,16,100900,Pully,400054071,1948-04-02,1948.0
+400054071_400054072,82.5,fuzzy_normal,B,25879,Françoise,Goumoens,,Chemin de Mallieu,16,100900,Pully,400054072,1948-04-13,1948.0
+400030941_400030940,78.99999999999999,fuzzy_normal,A,11987,Nicole,Latorre,,Chemin de Rennier,16La Lezardiere La Lezardiere,100900,Pully,400030941,1940-02-06,1940.0
+400030941_400030940,78.99999999999999,fuzzy_normal,B,12061,Michel-Edouard,Latorre,,Chemin de Rennier,16La Lezardiere La Lezardiere,100900,Pully,400030940,1940-10-02,1940.0
+400051064_400051065,78.99999999999999,fuzzy_normal,A,20584,Elisabeth,Bato,-Dumas,Chemin du Caudoz,60,100900,Pully,400051064,1958-12-02,1958.0
+400051064_400051065,78.99999999999999,fuzzy_normal,B,24840,Joseph,Bato,-Dumas,Chemin du Caudoz,60,100900,Pully,400051065,1958-03-02,1958.0
+400029187_400029186,78.99999999999999,fuzzy_normal,A,11383,Ana,Gross,,Chemin du Riolet,22,100900,Pully,400029187,,1956.0
+400029187_400029186,78.99999999999999,fuzzy_normal,B,11582,Jean-Jacques,Gross,,Chemin du Riolet,22,100900,Pully,400029186,1956-12-07,1956.0
+400052783_400052784,81.15384615384616,fuzzy_normal,A,21232,René,Deslex,-Chiaradia,Route du Port,27,100900,Pully,400052783,1942-11-02,1942.0
+400052783_400052784,81.15384615384616,fuzzy_normal,B,21400,Françoise,Deslex,-Chiaradia,Route du Port,27,100900,Pully,400052784,1942-08-30,1942.0
+400056347_400056346,81.15384615384616,fuzzy_normal,A,23372,Claude,Savoca,,Chemin des Osches,65,100900,Pully,400056347,1962-06-15,1962.0
+400056347_400056346,81.15384615384616,fuzzy_normal,B,27605,Aurelio,Savoca,-Werthmüller,Chemin des Osches,65,100900,Pully,400056346,1962-09-30,1962.0
+400028828_400028829,82.5,fuzzy_normal,A,11228,Agnes,Kernen,,Chemin de la Grangette,6,101000,Lausanne,400028828,,
+400028828_400028829,82.5,fuzzy_normal,B,13837,Antoine,Kernen,,Chemin de la Grangette,6,101000,Lausanne,400028829,,
+400007983_400007984,80.9090909090909,fuzzy_normal,A,2560,Alain-Pierre,Boucherle,,Avenue de Beaumont,44,101200,Lausanne,400007983,1937-12-02,1937.0
+400007983_400007984,80.9090909090909,fuzzy_normal,B,2561,Jacqueline,Boucherle,,Avenue de Beaumont,44,101200,Lausanne,400007984,,1937.0
+400042093_400042079,84.99999999999999,fuzzy_normal,A,16499,Annelyse,Schwab,,Route d'Oron,40,101000,Lausanne,400042093,1958-06-28,1958.0
+400042093_400042079,84.99999999999999,fuzzy_normal,B,16599,Daniel,Schwab,,Route d'Oron,40,101000,Lausanne,400042079,1958-05-05,1958.0
+400016973_400030619,81.15384615384616,fuzzy_normal,A,6492,Bernard,Chaillet,,Chemin Louis-Boissonnet,67,101000,Lausanne,400016973,1947-09-07,1947.0
+400016973_400030619,81.15384615384616,fuzzy_normal,B,15707,Bernard,Lebet,,Chemin Louis-Boissonnet,67,101000,Lausanne,400030619,,1947.0
+400018233_400018234,80.55555555555556,fuzzy_normal,A,10269,Ahmet,Fetaj,,Chemin Louis-Boissonnet,12,101000,Lausanne,400018233,1963-03-07,1963.0
+400018233_400018234,80.55555555555556,fuzzy_normal,B,10270,Fane,Fetaj,,Chemin Louis-Boissonnet,12,101000,Lausanne,400018234,1963-10-09,1963.0
+400031197_400031198,81.15384615384616,fuzzy_normal,A,15796,Giovanni,De Luca,-Smacchia,Chemin Louis-Boissonnet,26,101000,Lausanne,400031197,1964-02-25,1964.0
+400031197_400031198,81.15384615384616,fuzzy_normal,B,15797,Sonia,De Luca,,Chemin Louis-Boissonnet,26,101000,Lausanne,400031198,1964-12-01,1964.0
+400003104_400003103,80.0,fuzzy_normal,A,990,Marike,Van den Ende,,Route de Berne,14,101000,Lausanne,400003104,1933-10-06,1933.0
+400003104_400003103,80.0,fuzzy_normal,B,4379,Hendrika,Van den Ende,,Route de Berne,14,101000,Lausanne,400003103,1933-10-06,1933.0
+400015476_400015475,80.99999999999999,fuzzy_normal,A,5413,André,Decrausaz,,Avenue des Boveresses,57,101000,Lausanne,400015476,1933-10-08,1933.0
+400015476_400015475,80.99999999999999,fuzzy_normal,B,6238,Jean-Pierre,Decrausaz,,avenue des Boveresses,31,101000,Lausanne,400015475,1933-01-16,1933.0
+400024873_400034441,78.33333333333333,fuzzy_normal,A,9477,Nadine,Calame,,Avenue de Béthusy,62,101200,Lausanne,400024873,,1943.0
+400024873_400034441,78.33333333333333,fuzzy_normal,B,13246,Nadine,Maillard,-Spielmann,Avenue de Béthusy,39,101200,Lausanne,400034441,1943-09-16,1943.0
+400194342_400194343,82.5,fuzzy_normal,A,88136,Daniel,Péclard,,Chemin du Grand-Praz,7,101200,Lausanne,400194342,1942-11-13,1942.0
+400194342_400194343,82.5,fuzzy_normal,B,88137,Ariane,Péclard,,Chemin du Grand-Praz,7,101200,Lausanne,400194343,,1942.0
+400028296_400028295,98.15789473684211,fuzzy_normal,A,10605,Christiane,Cruchon,,Chemin de la Lisière,3,101800,Lausanne,400028296,1942-12-24,1942.0
+400028296_400028295,98.15789473684211,fuzzy_normal,B,13768,Christian,Cruchon,,Chemin de la Lisière,3,101800,Lausanne,400028295,,1942.0
+400029906_400029908,83.66666666666667,fuzzy_normal,A,11480,Emmanuel,Chassot,,Chemin de l'Ancien-Stand,20,101800,Lausanne,400029906,1934-08-02,1934.0
+400029906_400029908,83.66666666666667,fuzzy_normal,B,11481,Monique,Chassot,,Chemin de l'Ancien-Stand,20,101800,Lausanne,400029908,1934-09-26,1934.0
+400007006_400007007,82.5,fuzzy_normal,A,2429,Marc-Henri,Bavaud,,Avenue du Grey,78,101800,Lausanne,400007006,1959-05-26,1959.0
+400007006_400007007,82.5,fuzzy_normal,B,5152,Marisa,Bavaud,,Avenue du Grey,78,101800,Lausanne,400007007,1959-05-06,1959.0
+400045074_400045073,84.99999999999999,fuzzy_normal,A,17663,Milena,Zizka,,Chemin du Furet,11,101800,Lausanne,400045074,1947-02-27,1947.0
+400045074_400045073,84.99999999999999,fuzzy_normal,B,18044,Miroslav,Zizka,,Chemin du Furet,11,101800,Lausanne,400045073,1947-01-11,1947.0
+400019964_400019963,85.99999999999999,fuzzy_normal,A,7265,Roger Marcel,Volery,,Chemin du Petit-Flon,50,101800,Lausanne,400019964,,1954.0
+400019964_400019963,85.99999999999999,fuzzy_normal,B,7545,Rosmarie,Volery,,Chemin du Petit-Flon,50,101800,Lausanne,400019963,1954-09-01,1954.0
+400016269_400016271,90.45454545454545,fuzzy_normal,A,6405,Mioara,Daniel,-Zamfirescu,Avenue de Chailly,55,101200,Lausanne,400016269,,1938.0
+400016269_400016271,90.45454545454545,fuzzy_normal,B,6406,Maria,Daniel,,Avenue de Chailly,55,101200,Lausanne,400016271,1938-03-12,1938.0
+400004304_400004305,83.66666666666667,fuzzy_normal,A,1481,Christian,Ansermet,-Brasey,Chemin de Maillefer,119,101800,Lausanne,400004304,1962-05-17,1962.0
+400004304_400004305,83.66666666666667,fuzzy_normal,B,4725,Corine,Ansermet,,Chemin de Maillefer,119,101800,Lausanne,400004305,1962-08-09,1962.0
+400060116_400060117,79.73684210526315,fuzzy_normal,A,29235,Hansulrich,Kilchenmann,,Avenue de la Piscine,16,102000,Renens VD,400060116,1949-02-18,1949.0
+400060116_400060117,79.73684210526315,fuzzy_normal,B,29236,Katharina,Kilchenmann,,Avenue de la Piscine,16,102000,Renens VD,400060117,1949-10-25,1949.0
+400058617_400058618,80.0,fuzzy_normal,A,24254,Michel,Dupuis,,Avenue des Baumettes,80,102000,Renens VD,400058617,1943-03-10,1943.0
+400058617_400058618,80.0,fuzzy_normal,B,24255,Danielle,Dupuis,-Margot,Avenue des Baumettes,80,102000,Renens VD,400058618,1943-07-29,1943.0
+400006239_400006240,81.15384615384616,fuzzy_normal,A,1950,André,Baudat,,Chemin d'Entre-Bois,11,101800,Lausanne,400006239,1943-05-04,1943.0
+400006239_400006240,81.15384615384616,fuzzy_normal,B,1951,Laurette,Baudat,,Chemin d'Entre-Bois,11,101800,Lausanne,400006240,1943-04-02,1943.0
+400006955_400036487,78.21052631578947,fuzzy_normal,A,2039,Jean-Pierre,Bovet,,Chemin d'Entre-Bois,37,101800,Lausanne,400006955,1947-12-18,1947.0
+400006955_400036487,78.21052631578947,fuzzy_normal,B,14994,Jean-Pierre,Morel,,Chemin d'Entre-Bois,17,101800,Lausanne,400036487,1947-12-23,1947.0
+400016810_400016811,80.0,fuzzy_normal,A,10061,Enea,Tarabori,,Chemin d'Entre-Bois,17,101800,Lausanne,400016810,,1928.0
+400016810_400016811,80.0,fuzzy_normal,B,10062,Giuseppina,Tarabori,,Chemin d'Entre-Bois,17,101800,Lausanne,400016811,1928-10-07,1928.0
+400059034_400059033,91.9230769230769,fuzzy_normal,A,24442,Marisa,Durand,-Croci,Avenue de Préfaully,56,102000,Renens VD,400059034,1958-06-18,1958.0
+400059034_400059033,91.9230769230769,fuzzy_normal,B,29069,Martial,Durand,,Avenue de Préfaully,56,102000,Renens VD,400059033,1958-04-22,1958.0
+400060213_400057807,78.23076923076921,fuzzy_normal,A,25245,Jean-Pierre,Glaus,,avenue de Préfaully,50,102000,Renens VD,400060213,1940-02-18,1940.0
+400060213_400057807,78.23076923076921,fuzzy_normal,B,28417,Jean-Pierre,Bilat,,Avenue de Préfaully,56,102000,Renens VD,400057807,1940-05-07,1940.0
+400041045_400041046,82.5,fuzzy_normal,A,16160,Tito,Cibeira,-Quintana,Rue de la Borde,3c,101800,Lausanne,400041045,,1960.0
+400041045_400041046,82.5,fuzzy_normal,B,16229,Victoria,Cibeira,-Quintana,Rue de la Borde,3c,101800,Lausanne,400041046,1960-04-02,1960.0
+400058942_400058943,86.53846153846155,fuzzy_normal,A,24211,Raymond,Dénéréaz,,Chemin de Rionza,5,102000,Renens VD,400058942,1963-06-11,1963.0
+400058942_400058943,86.53846153846155,fuzzy_normal,B,24422,Ronald,Dénéréaz,,Chemin de Rionza,5,102000,Renens VD,400058943,1963-06-11,1963.0
+400057326_400057327,80.0,fuzzy_normal,A,27869,José,Cortes,-Lecoultre,Chemin du Levant,1,102000,Renens VD,400057326,1951-10-18,1951.0
+400057326_400057327,80.0,fuzzy_normal,B,27870,Rose-Marie,Cortes,-Lecoultre,Chemin du Levant,1,102000,Renens VD,400057327,1951-10-18,1951.0
+400061825_400061826,80.0,fuzzy_normal,A,25786,Alfredo,Morganti,,Chemin du Martinet,14,102000,Renens VD,400061825,1939-07-08,1939.0
+400061825_400061826,80.0,fuzzy_normal,B,29502,Martine,Morganti,,Chemin du Martinet,14,102000,Renens VD,400061826,,1939.0
+400054225_400054226,78.99999999999999,fuzzy_normal,A,26945,François,Curtet,-Sordet,Chemin de Mont Robert,19,102000,Renens VD,400054225,1951-02-02,1951.0
+400054225_400054226,78.99999999999999,fuzzy_normal,B,26946,Marie-Louise,Curtet,-Sordet,Chemin de Mont Robert,19,102000,Renens VD,400054226,1951-11-21,1951.0
+400061908_400079314,81.15384615384616,fuzzy_normal,A,29513,Andre,Marendaz,,Rue de la Paix,11b,102000,Renens VD,400061908,,1965.0
+400061908_400079314,81.15384615384616,fuzzy_normal,B,35084,Laurence,Marendaz,,Rue de la Paix,11b,102000,Renens VD,400079314,1965-04-27,1965.0
+400079314_400079315,78.99999999999999,fuzzy_normal,A,35084,Laurence,Marendaz,,Rue de la Paix,11b,102000,Renens VD,400079314,1965-04-27,1965.0
+400079314_400079315,78.99999999999999,fuzzy_normal,B,38894,Jacques,Marendaz,,Rue de la Paix,11b,102000,Renens VD,400079315,1965-08-02,1965.0
+400002291_400002292,81.15384615384616,fuzzy_normal,A,900,Patricia,Haldemann,,Ch. Isabelle-de-Montolieu,187,101000,Lausanne,400002291,1954-02-15,1954.0
+400002291_400002292,81.15384615384616,fuzzy_normal,B,2780,Alice,Haldemann,,Ch. Isabelle-de-Montolieu,187,101000,Lausanne,400002292,,1954.0
+400021199_400021200,86.53846153846155,fuzzy_normal,A,8219,Colette,Fahrni,,Ch. Isabelle-de-Montolieu,133,101000,Lausanne,400021199,1933-10-26,1933.0
+400021199_400021200,86.53846153846155,fuzzy_normal,B,11001,Nicole,Fahrni,,Ch. Isabelle-de-Montolieu,133,101000,Lausanne,400021200,1933-06-26,1933.0
+400032271_400032270,82.5,fuzzy_normal,A,12381,Claire,Mo Costabella,-Mercier,Ch. Isabelle-de-Montolieu,41,101000,Lausanne,400032271,1945-10-24,1945.0
+400032271_400032270,82.5,fuzzy_normal,B,12588,Pierre,Mo Costabella,-Mercier,Ch. Isabelle-de-Montolieu,41,101000,Lausanne,400032270,1945-06-29,1945.0
+400062391_400062392,78.99999999999999,fuzzy_normal,A,25936,Eric,Rosset,-Wüthrich,Rue de Verdeaux,5,102000,Renens VD,400062391,,1960.0
+400062391_400062392,78.99999999999999,fuzzy_normal,B,26224,Nicole,Rosset,-Wüthrich,Rue de Verdeaux,5,102000,Renens VD,400062392,1960-10-02,1960.0
+400058638_400058639,84.99999999999999,fuzzy_normal,A,24167,Ladislas,Toth,,Chemin d'Eterpy,67,102000,Renens VD,400058638,1945-05-23,1945.0
+400058638_400058639,84.99999999999999,fuzzy_normal,B,24257,Laszlo,Toth,,Chemin d'Eterpy,67,102000,Renens VD,400058639,1945-05-23,1945.0
+400060663_400060664,81.15384615384616,fuzzy_normal,A,25308,Pierre,Kern,-Dupuis,Chemin d'Eterpy,41,102000,Renens VD,400060663,1951-05-03,1951.0
+400060663_400060664,81.15384615384616,fuzzy_normal,B,25309,Michèle,Kern,-Dupuis,Chemin d'Eterpy,41,102000,Renens VD,400060664,1951-02-02,1951.0
+400060538_400060536,79.31174089068826,fuzzy_normal,A,25380,Sandra,Giardiello,,Avenue du 1er-Mai,16,102000,Renens VD,400060538,,
+400060538_400060536,79.31174089068826,fuzzy_normal,B,29300,Stefano,Giardello,,Avenue du 1er-Mai,16,102000,Renens VD,400060536,,
+400063408_400063407,84.99999999999999,fuzzy_normal,A,26405,Françoise,Palley,,Chemin des Berges,4,102200,Chavannes-près-Renens,400063408,,1956.0
+400063408_400063407,84.99999999999999,fuzzy_normal,B,29722,Frank,Palley,,Chemin des Berges,4,102200,Chavannes-près-Renens,400063407,1956-07-15,1956.0
+400000121_400000120,78.99999999999999,fuzzy_normal,A,17,Ariane,Apothéloz,-Augsburger,Rue Centrale,14,102200,Chavannes-près-Renens,400000121,1971-11-02,1971.0
+400000121_400000120,78.99999999999999,fuzzy_normal,B,318,Sébastien,Apothéloz,-Augsburger,Rue Centrale,14,102200,Chavannes-près-Renens,400000120,1971-06-02,1971.0
+400063421_400063422,81.47058823529412,fuzzy_normal,A,29726,Dominique,Pioletti,,rue Centrale,30,102200,Chavannes-près-Renens,400063421,,
+400063421_400063422,81.47058823529412,fuzzy_normal,B,29727,Floriane,Pioletti,,rue Centrale,30,102200,Chavannes-près-Renens,400063422,,
+400068685_400068686,78.99999999999999,fuzzy_normal,A,28902,Eric,Freymond,-Luy,Chemin de Curtenaux,2a,102300,Crissier,400068685,1959-11-02,1959.0
+400068685_400068686,78.99999999999999,fuzzy_normal,B,28903,Annick,Freymond,,Chemin de Curtenaux,2a,102300,Crissier,400068686,1959-08-02,1959.0
+400065042_400065043,83.66666666666667,fuzzy_normal,A,26931,André,Jaquet,-Desarzens,Chemin de la Salette,10,102300,Crissier,400065042,1942-05-24,1942.0
+400065042_400065043,83.66666666666667,fuzzy_normal,B,26932,Jane-Marie,Jaquet,-Desarzens,Chemin de la Salette,10,102300,Crissier,400065043,1942-04-04,1942.0
+400063685_400063689,80.76729559748428,fuzzy_normal,A,29785,Micheline,Dubois,,route de la Maladière,18,102200,Chavannes-près-Renens,400063685,1947-05-30,1947.0
+400063685_400063689,80.76729559748428,fuzzy_normal,B,29787,Michel,Duboux,-Cuérel,Route de la Maladière,14,102200,Chavannes-près-Renens,400063689,1947-06-02,1947.0
+400061217_400061216,84.99999999999999,fuzzy_normal,A,25448,Nunziato,Maio,,Sur la Croix,159,102000,Renens VD,400061217,1948-10-11,1948.0
+400061217_400061216,84.99999999999999,fuzzy_normal,B,29403,Nuccio,Maio,,Sur la Croix,159,102000,Renens VD,400061216,1948-10-11,1948.0
+400066695_400066696,81.15384615384616,fuzzy_normal,A,31930,Angela,Roch,,Chemin du Mont-Blanc,7,102300,Crissier,400066695,1931-02-04,1931.0
+400066695_400066696,81.15384615384616,fuzzy_normal,B,31931,Gabriel,Roch,,Chemin du Mont-Blanc,7,102300,Crissier,400066696,1931-02-03,1931.0
+400009406_400009404,81.80000000000001,fuzzy_normal,A,3060,Patricia Angelica,Pombett,,chemin de Champ-Colomb,5b,102400,Ecublens VD,400009406,,1947.0
+400009406_400009404,81.80000000000001,fuzzy_normal,B,5542,Gabriela,Pombett,-Gonzalez,chemin de Champ-Colomb,5b,102400,Ecublens VD,400009404,1947-02-04,1947.0
+400058118_400058119,78.99999999999999,fuzzy_normal,A,24065,Fritz,Barben,-Pagani,Rue du Bugnon,2,102000,Renens VD,400058118,1946-07-02,1946.0
+400058118_400058119,78.99999999999999,fuzzy_normal,B,28460,Edith,Barben,-Pagani,Rue du Bugnon,2,102000,Renens VD,400058119,1946-10-12,1946.0
+400056923_400056922,80.0,fuzzy_normal,A,23580,Lucienne,Jakob,-Marti,Chemin de la Roche,14,102000,Renens VD,400056923,1940-08-01,1940.0
+400056923_400056922,80.0,fuzzy_normal,B,27693,Ernest,Jakob,-Marti,Chemin de la Roche,14,102000,Renens VD,400056922,,1940.0
+400060031_400060032,84.44444444444443,fuzzy_normal,A,25180,Jean-Paul,Giacomuzzo,,Chemin de la Roche,2,102000,Renens VD,400060031,,1951.0
+400060031_400060032,84.44444444444443,fuzzy_normal,B,29220,Gianpaolo,Giacomuzzo,,Chemin de la Roche,2,102000,Renens VD,400060032,1951-08-05,1951.0
+400068508_400068509,82.5,fuzzy_normal,A,28877,Nathalie,Fuchs,-Cousin,Chemin des Perrettes,19,102400,Ecublens VD,400068508,1966-12-02,1966.0
+400068508_400068509,82.5,fuzzy_normal,B,28971,Philippe,Fuchs,-Cousin,Chemin des Perrettes,19,102400,Ecublens VD,400068509,,1966.0
+400067721_400067720,81.15384615384616,fuzzy_normal,A,28626,Annalise,Ballerstedt,,Chemin de l'Ormet,23,102400,Ecublens VD,400067721,1951-10-11,1951.0
+400067721_400067720,81.15384615384616,fuzzy_normal,B,32761,Louis,Ballerstedt,-Peier,Chemin de l'Ormet,23,102400,Ecublens VD,400067720,1951-07-02,1951.0
+400063472_400063471,80.55555555555556,fuzzy_normal,A,26187,Anna,Biancaniello,-Natale,Avenue d'Epenex,25,102400,Ecublens VD,400063472,1954-05-02,1954.0
+400063472_400063471,80.55555555555556,fuzzy_normal,B,29736,Amato,Biancaniello,-Natale,Avenue d'Epenex,25,102400,Ecublens VD,400063471,1954-10-02,1954.0
+400070128_400070129,79.73684210526315,fuzzy_normal,A,30337,Laurent,Renaud,-Pilet,Sentier du Danube,2,102400,Ecublens VD,400070128,1955-10-03,1955.0
+400070128_400070129,79.73684210526315,fuzzy_normal,B,30413,Marie-Claude,Renaud,-Pilet,Sentier du Danube,2,102400,Ecublens VD,400070129,1955-03-10,1955.0
+400028516_400028515,78.99999999999999,fuzzy_normal,A,10703,Nathalie,Garin,,Route Aloys-Fauquez,125,101800,Lausanne,400028516,1969-01-01,1969.0
+400028516_400028515,78.99999999999999,fuzzy_normal,B,13795,Etienne,Garin,,Route Aloys-Fauquez,125,101800,Lausanne,400028515,1969-04-20,1969.0
+400070865_400070866,78.99999999999999,fuzzy_normal,A,30590,Claude,Bérard,,Chemin des Chantres,15,102500,St-Sulpice VD,400070865,1940-03-15,1940.0
+400070865_400070866,78.99999999999999,fuzzy_normal,B,30591,Elisabeth,Bérard,,Chemin des Chantres,15,102500,St-Sulpice VD,400070866,,1940.0
+400070788_400070787,78.99999999999999,fuzzy_normal,A,30572,Arlette,Baumgartner,,Chemin du Champ-du-Lac,10,102500,St-Sulpice VD,400070788,,
+400070788_400070787,78.99999999999999,fuzzy_normal,B,34676,Nathalie,Baumgartner,,Chemin du Champ-du-Lac,10,102500,St-Sulpice VD,400070787,,
+400071312_400071313,81.57894736842107,fuzzy_normal,A,34765,Margrit Juan Marco,Lopez,,Chemin du Champ-du-Lac,17,102500,St-Sulpice VD,400071312,1946-06-07,1946.0
+400071312_400071313,81.57894736842107,fuzzy_normal,B,34766,Margareta-Antoinette,Lopez,,Chemin du Champ-du-Lac,17,102500,St-Sulpice VD,400071313,1946-07-06,1946.0
+400001832_400001833,80.0,fuzzy_normal,A,570,Alain,Jaquier,-Fleriag,Route Cantonale,93b,102500,St-Sulpice VD,400001832,1964-11-24,1964.0
+400001832_400001833,80.0,fuzzy_normal,B,571,Catherine,Jaquier,-Fleriag,Route Cantonale,93b,102500,St-Sulpice VD,400001833,1964-09-03,1964.0
+400072800_400072801,78.99999999999999,fuzzy_normal,A,35612,Michel,Corthésy,-Berberat,Chemin de Lizet,11,102603,Echandens,400072800,1954-06-30,1954.0
+400072800_400072801,78.99999999999999,fuzzy_normal,B,35613,Dominique,Corthésy,-Berberat,Chemin de Lizet,11,102603,Echandens,400072801,1954-04-07,1954.0
+400073811_400073812,82.5,fuzzy_normal,A,31816,Youri,Borboën,,chemin des Utins,2b,102603,Echandens,400073811,1962-03-02,1962.0
+400073811_400073812,82.5,fuzzy_normal,B,35808,Corinne,Borboën,,chemin des Utins,2b,102603,Echandens,400073812,1962-08-02,1962.0
+400070068_400070069,81.15384615384616,fuzzy_normal,A,30403,Fernand,Ruchti,,Chemin de la Forêt,20,102400,Ecublens VD,400070068,1944-07-20,1944.0
+400070068_400070069,81.15384615384616,fuzzy_normal,B,33808,Eliane,Ruchti,,Chemin de la Forêt,20,102400,Ecublens VD,400070069,1944-02-07,1944.0
+400072300_400072301,78.99999999999999,fuzzy_normal,A,35515,Anne-Marie,Schopfer,,Rue de la Riaz,14,102603,Echandens,400072300,1942-06-13,1942.0
+400072300_400072301,78.99999999999999,fuzzy_normal,B,35516,Henri,Schopfer,,Rue de la Riaz,14,102603,Echandens,400072301,1942-05-26,1942.0
+400072820_400072821,78.99999999999999,fuzzy_normal,A,31871,Olivier,Métry,,Route de la Gare,10,102603,Echandens,400072820,1968-12-17,1968.0
+400072820_400072821,78.99999999999999,fuzzy_normal,B,35619,Nathalie,Métry,-Bernet,Route de la Gare,10,102603,Echandens,400072821,1968-11-12,1968.0
+400073465_400073466,95.625,fuzzy_normal,A,35740,Maylinde,Sordet,,Route des Pressoirs,9,102700,Lonay,400073465,,1959.0
+400073465_400073466,95.625,fuzzy_normal,B,35741,Maryline,Sordet,-Rosset,Route des Pressoirs,9,102700,Lonay,400073466,1959-01-02,1959.0
+400074600_400074601,80.0,fuzzy_normal,A,32368,Marie,Noukakis,-Jubin,Chemin des Uttins,41,102800,Préverenges,400074600,1963-08-02,1963.0
+400074600_400074601,80.0,fuzzy_normal,B,35952,Dimitrios,Noukakis,-Jubin,Chemin des Uttins,41,102800,Préverenges,400074601,1963-02-02,1963.0
+400123792_400123793,80.0,fuzzy_normal,A,58532,André,Brahier,,Chemin des Vignes,14La Gracieuse Appart. C206,102700,Lonay,400123792,1935-06-25,1935.0
+400123792_400123793,80.0,fuzzy_normal,B,62385,Madeleine,Brahier,,Chemin des Vignes,14La Gracieuse Appart. C206,102700,Lonay,400123793,1935-12-22,1935.0
+400076214_400076215,79.73684210526315,fuzzy_normal,A,33366,Pierre-Louis,Destraz,-Eggler,Chemin de Bellevue,1,103000,Bussigny,400076214,1946-05-25,1946.0
+400076214_400076215,79.73684210526315,fuzzy_normal,B,33367,Thérèse,Destraz,-Eggler,Chemin de Bellevue,1,103000,Bussigny,400076215,1946-04-02,1946.0
+400034994_400034995,81.15384615384616,fuzzy_normal,A,14473,Enrico,Mangani,-Ennas,Chemin des Bossons,17,101800,Lausanne,400034994,1946-03-02,1946.0
+400034994_400034995,81.15384615384616,fuzzy_normal,B,17040,Valeria,Mangani,-Ennas,Chemin des Bossons,17,101800,Lausanne,400034995,1946-10-29,1946.0
+400102077_400102065,85.58823529411765,fuzzy_normal,A,47724,Maurice,Blanc,-Marin,Chemin de la Violette,24,103000,Bussigny,400102077,1942-10-02,1942.0
+400102077_400102065,85.58823529411765,fuzzy_normal,B,47817,Anne-Marie,Blanc,-Marin,Chemin de la Violette,24,103000,Bussigny,400102065,1942-10-02,1942.0
+400076999_400076998,78.99999999999999,fuzzy_normal,A,33880,Giovanna,Lodato,,Chemin de la Sauge,6,103000,Bussigny,400076999,,
+400076999_400076998,78.99999999999999,fuzzy_normal,B,37635,Antoine,Lodato,,Chemin de la Sauge,6,103000,Bussigny,400076998,,
+400077100_400077101,78.99999999999999,fuzzy_normal,A,33900,Pierre-André,Michaud,,Chemin de la Sauge,15,103000,Bussigny,400077100,1949-06-13,1949.0
+400077100_400077101,78.99999999999999,fuzzy_normal,B,33901,Mireille,Michaud,,Chemin de la Sauge,15,103000,Bussigny,400077101,1949-10-11,1949.0
+400077674_400077675,90.45454545454545,fuzzy_normal,A,34081,René,Zufferey,,Chemin de Grandvignes,48,103000,Bussigny,400077674,1933-01-31,1933.0
+400077674_400077675,90.45454545454545,fuzzy_normal,B,38072,Marlène,Zufferey,,Chemin de Grandvignes,48,103000,Bussigny,400077675,,1933.0
+400077671_400077670,84.99999999999999,fuzzy_normal,A,34080,Marianne,Savary,,Chemin de Dallaz,45,103000,Bussigny,400077671,,1940.0
+400077671_400077670,84.99999999999999,fuzzy_normal,B,34374,Marcel,Savary,-Pot,Chemin de Dallaz,45,103000,Bussigny,400077670,1940-03-26,1940.0
+400075584_400075585,78.99999999999999,fuzzy_normal,A,32937,François,Peter,-Jaccard,Chemin du Bugnon,5,103000,Bussigny,400075584,1957-02-05,1957.0
+400075584_400075585,78.99999999999999,fuzzy_normal,B,32938,Corinne,Peter,-Jaccard,Chemin du Bugnon,5,103000,Bussigny,400075585,1957-03-02,1957.0
+400076629_400076630,84.09090909090908,fuzzy_normal,A,37548,René,Gilgen,-Pilet,chemin du Cèdre,18,103000,Bussigny,400076629,1964-07-17,1964.0
+400076629_400076630,84.09090909090908,fuzzy_normal,B,37549,Corinne,Gilgen,-Pilet,Chemin du Cèdre,18,103000,Bussigny,400076630,1964-05-26,1964.0
+400076023_400076024,81.15384615384616,fuzzy_normal,A,37416,Raymond,Duperrut,,chemin du Grand-Record,4,103000,Bussigny,400076023,1940-06-11,1940.0
+400076023_400076024,81.15384615384616,fuzzy_normal,B,37417,Simone,Duperrut,,chemin du Grand-Record,4,103000,Bussigny,400076024,1940-05-02,1940.0
+400004540_400004539,83.66666666666667,fuzzy_normal,A,1511,Sandra,Arduini,-Hernández,Rue de Remanan,23,103000,Bussigny,400004540,1965-03-02,1965.0
+400004540_400004539,83.66666666666667,fuzzy_normal,B,1562,Alexandre,Arduini,-Hernández,Rue de Remanan,23,103000,Bussigny,400004539,1965-09-25,1965.0
+400054548_400054549,82.5,fuzzy_normal,A,22311,Alain,Costa,-Vogel,Chemin Neuf,43,102800,Préverenges,400054548,1948-06-03,1948.0
+400054548_400054549,82.5,fuzzy_normal,B,27012,Daniela,Costa,-Vogel,chemin Neuf,43,102800,Préverenges,400054549,1948-02-04,1948.0
+400032273_400032272,81.47058823529412,fuzzy_normal,A,12382,Bénédicte,Neu,-Serckx,Chemin de la Potteilaz,48,103000,Bussigny,400032273,1967-07-02,1967.0
+400032273_400032272,81.47058823529412,fuzzy_normal,B,12589,Frédéric,Neu,-Serckx,Chemin de la Potteilaz,48,103000,Bussigny,400032272,1967-03-22,1967.0
+400076074_400076041,83.30522088353413,fuzzy_normal,A,33335,Bernard,Daucher,-Küng,Chemin de la Potteilaz,12,103000,Bussigny,400076074,1944-06-02,1944.0
+400076074_400076041,83.30522088353413,fuzzy_normal,B,37421,Bernard,Dätwyler,,Chemin de la Potteilaz,123,103000,Bussigny,400076041,1944-05-22,1944.0
+400077179_400077180,85.99999999999999,fuzzy_normal,A,33918,Marc,Muller,-Woodtli,chemin de la Potteilaz,8,103000,Bussigny,400077179,1961-07-10,1961.0
+400077179_400077180,85.99999999999999,fuzzy_normal,B,37669,Markus,Müller,,chemin de la Potteilaz,8,103000,Bussigny,400077180,1961-07-10,1961.0
+400078334_400078333,80.55555555555556,fuzzy_normal,A,34210,Emmanuelle,Perey,-Chatton,Chemin des Tilleuls,19,103200,Romanel-sur-Lausanne,400078334,1961-03-09,1961.0
+400078334_400078333,80.55555555555556,fuzzy_normal,B,38722,Jean-Luc,Perey,-Chatton,Chemin des Tilleuls,19,103200,Romanel-sur-Lausanne,400078333,1961-06-21,1961.0
+400078728_400078727,84.09090909090908,fuzzy_normal,A,34579,Jacqueline,Cottier,-Mayor,Chemin des Tilleuls,24,103200,Romanel-sur-Lausanne,400078728,1949-12-02,1949.0
+400078728_400078727,84.09090909090908,fuzzy_normal,B,38781,Jean-Jacques,Cottier,-Mayor,Chemin des Tilleuls,24,103200,Romanel-sur-Lausanne,400078727,1949-02-02,1949.0
+400078617_400078620,84.99999999999999,fuzzy_normal,A,34265,Eugène,Fleury,,Chemin des Terreaux,14,103200,Romanel-sur-Lausanne,400078617,1940-05-15,1940.0
+400078617_400078620,84.99999999999999,fuzzy_normal,B,34566,Germaine,Fleury,,Chemin des Terreaux,14,103200,Romanel-sur-Lausanne,400078620,1940-04-09,1940.0
+400063577_400063578,78.99999999999999,fuzzy_normal,A,26423,Cédric,Briand,,Rue de la Blancherie,46,102200,Chavannes-près-Renens,400063577,1959-09-14,1959.0
+400063577_400063578,78.99999999999999,fuzzy_normal,B,26444,Christine,Briand,,Rue de la Blancherie,46,102200,Chavannes-près-Renens,400063578,1959-05-06,1959.0
+400067211_400067212,82.5,fuzzy_normal,A,28299,Manuel,Alvarez,,Avenue du Tir-Fédéral,40,102400,Ecublens VD,400067211,1951-01-21,1951.0
+400067211_400067212,82.5,fuzzy_normal,B,28300,Isabel,Alvarez,,Avenue du Tir-Fédéral,40,102400,Ecublens VD,400067212,1951-01-19,1951.0
+400068971_400068970,82.5,fuzzy_normal,A,30039,Ceferino,Gallego,-Zumbach,Avenue du Tir-Fédéral,20,102400,Ecublens VD,400068971,1943-11-01,1943.0
+400068971_400068970,82.5,fuzzy_normal,B,33084,Zéphirin,Gallego,,Avenue du Tir-Fédéral,20,102400,Ecublens VD,400068970,1943-11-01,1943.0
+400066557_400076723,79.88624052004334,fuzzy_normal,A,31787,André,Martin,,Chemin de Riettaz,19,103000,Bussigny,400066557,1935-11-02,1935.0
+400066557_400076723,79.88624052004334,fuzzy_normal,B,37565,André,Genaine,,Chemin de Riettaz,3,103000,Bussigny,400076723,1935-04-14,1935.0
+400079895_400079894,82.5,fuzzy_normal,A,35211,Thérèse,Winterberger,,Chemin de la Plantaz,20,103300,Cheseaux-sur-Lausanne,400079895,1947-11-30,1947.0
+400079895_400079894,82.5,fuzzy_normal,B,35436,Peter,Winterberger,-Hubler,Chemin de la Plantaz,20,103300,Cheseaux-sur-Lausanne,400079894,1947-01-02,1947.0
+400079547_400079549,84.09090909090908,fuzzy_normal,A,35136,Hermann,Bachofner,-Stengel,Chemin de Sainte Marie,4,103300,Cheseaux-sur-Lausanne,400079547,1946-01-02,1946.0
+400079547_400079549,84.09090909090908,fuzzy_normal,B,35137,Vera,Bachofner,,Chemin de Sainte Marie,4,103300,Cheseaux-sur-Lausanne,400079549,1946-08-16,1946.0
+400075201_400075202,87.36111111111111,fuzzy_normal,A,32579,Albert,Apothéloz,,Chemin de Cocagne,28,103000,Bussigny,400075201,1941-02-15,1941.0
+400075201_400075202,87.36111111111111,fuzzy_normal,B,36180,Max Albert,Apdtheloz,,Chemin de Cocagne,28,103000,Bussigny,400075202,1941-02-15,1941.0
+400075742_400075740,90.45454545454545,fuzzy_normal,A,33207,Anne-Catherine,Binotto,,Chemin de Cocagne,18,103000,Bussigny,400075742,1962-02-04,1962.0
+400075742_400075740,90.45454545454545,fuzzy_normal,B,37356,Cathrine,Binotto,,Chemin de Cocagne,18,103000,Bussigny,400075740,,1962.0
+400076192_400076193,84.99999999999999,fuzzy_normal,A,33359,Pascal,Thorens,-Rithner,Chemin de Cocagne,18,103000,Bussigny,400076192,,1966.0
+400076192_400076193,84.99999999999999,fuzzy_normal,B,37447,Patricia,Thorens,,Chemin de Cocagne,18,103000,Bussigny,400076193,1966-05-31,1966.0
+400075740_400075741,81.15384615384616,fuzzy_normal,A,37356,Cathrine,Binotto,,Chemin de Cocagne,18,103000,Bussigny,400075740,,1962.0
+400075740_400075741,81.15384615384616,fuzzy_normal,B,37357,Katia,Binotto,,Chemin de Cocagne,18,103000,Bussigny,400075741,1962-02-04,1962.0
+400076218_400076217,78.99999999999999,fuzzy_normal,A,33368,Anna,Dazzini,,Chemin de Roséaz,18,103000,Bussigny,400076218,,1947.0
+400076218_400076217,78.99999999999999,fuzzy_normal,B,37455,Nicola,Dazzini,,Chemin de Roséaz,18,103000,Bussigny,400076217,1947-11-05,1947.0
+400008715_400008713,80.0,fuzzy_normal,A,2674,Paulette,Bolomey,,Rue du Grand Pré,12,103300,Cheseaux-sur-Lausanne,400008715,1942-07-02,1942.0
+400008715_400008713,80.0,fuzzy_normal,B,2837,Claude,Bolomey,,Rue du Grand Pré,12,103300,Cheseaux-sur-Lausanne,400008713,,1942.0
+400080815_400080816,82.5,fuzzy_normal,A,36264,Jean,Haering,,Chemin de la Laiterie,5,103600,Sullens,400080815,1964-09-24,1964.0
+400080815_400080816,82.5,fuzzy_normal,B,40110,Anne,Haering,,Chemin de la Laiterie,5,103600,Sullens,400080816,,1964.0
+400079843_400080343,81.9642857142857,fuzzy_normal,A,35428,Claude,Favre,,Chemin des Grands Champs,55b,103300,Cheseaux-sur-Lausanne,400079843,1958-06-22,1958.0
+400079843_400080343,81.9642857142857,fuzzy_normal,B,36114,Claude,Rey,-Hirsiger,Chemin des Grands Champs,5,103300,Cheseaux-sur-Lausanne,400080343,1958-03-02,1958.0
+400075308_400075309,82.5,fuzzy_normal,A,36200,François,Hagen,,Chemin des Grands Champs,45,103300,Cheseaux-sur-Lausanne,400075308,1961-07-05,1961.0
+400075308_400075309,82.5,fuzzy_normal,B,36201,Florence,Hagen,,Chemin des Grands Champs,45,103300,Cheseaux-sur-Lausanne,400075309,1961-08-15,1961.0
+400078380_400079205,78.69696969696969,fuzzy_normal,A,38730,Yvan,Bourquin,-Favret,Chemin des Esserpys,11,103200,Romanel-sur-Lausanne,400078380,1944-09-05,1944.0
+400078380_400079205,78.69696969696969,fuzzy_normal,B,38870,Yvan,Zeitoun,,Chemin des Esserpys,1,103200,Romanel-sur-Lausanne,400079205,1944-04-16,1944.0
+400058150_400058151,81.80000000000001,fuzzy_normal,A,28464,Arcangelo,Preite,,Route de Cheseaux,15,103600,Sullens,400058150,1949-01-15,1949.0
+400058150_400058151,81.80000000000001,fuzzy_normal,B,28465,Maria-Concepcion,Preite,,Route de Cheseaux,15,103600,Sullens,400058151,1949-11-07,1949.0
+400078279_400078280,81.15384615384616,fuzzy_normal,A,34499,Irène,Balogh,,Chemin du Taulard,20,103200,Romanel-sur-Lausanne,400078279,1936-04-23,1936.0
+400078279_400078280,81.15384615384616,fuzzy_normal,B,34500,Stéphane,Balogh,,Chemin du Taulard,20,103200,Romanel-sur-Lausanne,400078280,,1936.0
+400083538_400083537,81.15384615384616,fuzzy_normal,A,37193,Thérèse,Pittet,-Demierre,Avenue d'Orbe,10,104002,Villars-le-Terroir,400083538,1949-10-02,1949.0
+400083538_400083537,81.15384615384616,fuzzy_normal,B,37261,Hugues,Pittet,-Demierre,Avenue d'Orbe,10,104002,Villars-le-Terroir,400083537,1949-02-02,1949.0
+400082732_400082731,88.33333333333333,fuzzy_normal,A,36915,Ana Isabel,Maccaud,,Chemin de Daillens,11,104000,Echallens,400082732,1962-09-14,1962.0
+400082732_400082731,88.33333333333333,fuzzy_normal,B,37102,Isabelle,Maccaud,-Martos,Chemin de Daillens,11,104000,Echallens,400082731,1962-09-02,1962.0
+400042407_400042408,82.5,fuzzy_normal,A,20801,Martin,Schweizer,-Treuthardt,Rue de Lausanne,22c,103000,Bussigny,400042407,1941-02-25,1941.0
+400042407_400042408,82.5,fuzzy_normal,B,20802,Anne-Marie,Schweizer,-Treuthardt,Rue de Lausanne,22c,103000,Bussigny,400042408,1941-05-16,1941.0
+400081709_400081710,79.73684210526315,fuzzy_normal,A,36542,Dominique,Haldi,-Farina,Chemin du Crépon,6,104000,Echallens,400081709,1963-05-04,1963.0
+400081709_400081710,79.73684210526315,fuzzy_normal,B,41176,Rose-Marie,Haldi,,Chemin du Crépon,6,104000,Echallens,400081710,1963-02-11,1963.0
+400023095_400023096,81.15384615384616,fuzzy_normal,A,8485,Pascal,Chatelain,-Guenot,Chemin du Petit Record,2,104000,Echallens,400023095,1947-03-22,1947.0
+400023095_400023096,81.15384615384616,fuzzy_normal,B,11507,Chantal,Chatelain,-Guenot,Chemin du Petit Record,2,104000,Echallens,400023096,1947-03-02,1947.0
+400082175_400082176,82.5,fuzzy_normal,A,36746,Babette,Dimmig,,Chemin de la Villaire,22c,104000,Echallens,400082175,1961-04-02,1961.0
+400082175_400082176,82.5,fuzzy_normal,B,36747,Elisabeth,Dimmig,,Chemin de la Villaire,22c,104000,Echallens,400082176,1961-04-12,1961.0
+400074270_400074271,80.0,fuzzy_normal,A,32134,Roland,Chevalley,-Bavaud,Route de Genève,64b,102800,Préverenges,400074270,1953-09-02,1953.0
+400074270_400074271,80.0,fuzzy_normal,B,35892,Sylviane,Chevalley,-Bavaud,Route de Genève,64b,102800,Préverenges,400074271,1953-09-02,1953.0
+400074939_400110246,76.99999999999999,fuzzy_normal,A,36009,Marcel,Schneider,,Route de Genève,70,102800,Préverenges,400074939,1942-11-03,1942.0
+400074939_400110246,76.99999999999999,fuzzy_normal,B,51331,Rémy,Schneider,,Route de Genève,82a,102800,Préverenges,400110246,1942-08-13,1942.0
+400069416_400069418,80.0,fuzzy_normal,A,30168,Gilbert,Gesseney,,route de la Rose,3,104121,Dommartin,400069416,1943-10-09,1943.0
+400069416_400069418,80.0,fuzzy_normal,B,30169,Arlette,Gesseney,,route de la Rose,3,104121,Dommartin,400069418,1943-08-11,1943.0
+400084129_400084128,81.15384615384616,fuzzy_normal,A,37857,Martine,Delamadeleine,,Chemin des Essillaz,7,104132,Poliez-Pittet,400084129,1965-09-07,1965.0
+400084129_400084128,81.15384615384616,fuzzy_normal,B,38256,Michel,Delamadeleine,,Chemin des Essillaz,7,104132,Poliez-Pittet,400084128,1965-03-14,1965.0
+400070584_400070585,83.3076923076923,fuzzy_normal,A,30551,Jean-Pierre,Hählen,,rue du Centre,109,102500,St-Sulpice VD,400070584,1941-06-18,1941.0
+400070584_400070585,83.3076923076923,fuzzy_normal,B,34645,Pierrette,Haehlen,,Rue du Centre,109,102500,St-Sulpice VD,400070585,1941-10-31,1941.0
+400087730_400087731,84.99999999999999,fuzzy_normal,A,39771,Charles,Leu,-Barmaverain,Rue du Centre,76b,102500,St-Sulpice VD,400087730,1944-04-08,1944.0
+400087730_400087731,84.99999999999999,fuzzy_normal,B,39772,Chantal,Leu,-Barmaverain,Rue du Centre,76b,102500,St-Sulpice VD,400087731,1944-05-06,1944.0
+400079813_400079814,82.5,fuzzy_normal,A,35422,Marc,Tissot,,Chemin de Champ-Pamont,22,103300,Cheseaux-sur-Lausanne,400079813,1949-10-26,1949.0
+400079813_400079814,82.5,fuzzy_normal,B,39928,Béatrice,Tissot,,Chemin de Champ-Pamont,22,103300,Cheseaux-sur-Lausanne,400079814,1949-03-15,1949.0
+400087119_400087121,84.99999999999999,fuzzy_normal,A,43683,Albert,Schaller,,chemin de Chantemerle,10,105200,Le Mont-sur-Lausanne,400087119,1931-07-14,1931.0
+400087119_400087121,84.99999999999999,fuzzy_normal,B,43684,Paulette,Schaller,,Chemin de Chantemerle,10,105200,Le Mont-sur-Lausanne,400087121,,1931.0
+400086229_400086230,78.99999999999999,fuzzy_normal,A,39000,Germaine,Châtelain,,Chemin de Praz-Longet,1,105200,Le Mont-sur-Lausanne,400086229,1938-12-31,1938.0
+400086229_400086230,78.99999999999999,fuzzy_normal,B,39001,Danièle,Chatelain,,Chemin de Praz-Longet,1,105200,Le Mont-sur-Lausanne,400086230,,1938.0
+400086229_400086228,81.15384615384616,fuzzy_normal,A,39000,Germaine,Châtelain,,Chemin de Praz-Longet,1,105200,Le Mont-sur-Lausanne,400086229,1938-12-31,1938.0
+400086229_400086228,81.15384615384616,fuzzy_normal,B,39203,Roger,Chatelain,-Philippe,Chemin de Praz-Longet,1,105200,Le Mont-sur-Lausanne,400086228,1938-08-27,1938.0
+400086844_400086845,93.0,fuzzy_normal,A,43626,Michel,Merlin,,Chemin de l'Esplanade,11,105200,Le Mont-sur-Lausanne,400086844,,
+400086844_400086845,93.0,fuzzy_normal,B,43627,Micheline,Merlin,,Chemin de l'Esplanade,11,105200,Le Mont-sur-Lausanne,400086845,,
+400011737_400011736,80.0,fuzzy_normal,A,3463,Véronique,Bruchez,,Chemin des Corjons,15,105200,Le Mont-sur-Lausanne,400011737,1960-05-02,1960.0
+400011737_400011736,80.0,fuzzy_normal,B,3973,Serge,Bruchez,,Chemin des Corjons,15,105200,Le Mont-sur-Lausanne,400011736,1960-11-25,1960.0
+400086042_400086041,78.99999999999999,fuzzy_normal,A,39172,Ghislaine,Favre,-Pernet,Chemin des Corjons,1a,105200,Le Mont-sur-Lausanne,400086042,1950-09-02,1950.0
+400086042_400086041,78.99999999999999,fuzzy_normal,B,43448,Roland,Favre,-Pernet,Chemin des Corjons,1a,105200,Le Mont-sur-Lausanne,400086041,1950-11-02,1950.0
+400086315_400086316,81.47058823529412,fuzzy_normal,A,39010,Jean-Daniel,Gaillard,,Chemin du Tessin,7,105200,Le Mont-sur-Lausanne,400086315,1932-03-22,1932.0
+400086315_400086316,81.47058823529412,fuzzy_normal,B,39280,Nadine,Gaillard,,Chemin du Tessin,7,105200,Le Mont-sur-Lausanne,400086316,1932-11-05,1932.0
+400086953_400086952,78.99999999999999,fuzzy_normal,A,39144,Catherine,Roulet,,Chemin du Mottier,44,105200,Le Mont-sur-Lausanne,400086953,1945-08-27,1945.0
+400086953_400086952,78.99999999999999,fuzzy_normal,B,43646,Michel,Roulet,,Chemin du Mottier,44,105200,Le Mont-sur-Lausanne,400086952,1945-12-15,1945.0
+400085536_400085537,78.99999999999999,fuzzy_normal,A,38224,Nicole,Pache,-Barras,Route de Coppoz,3,105200,Le Mont-sur-Lausanne,400085536,1963-05-02,1963.0
+400085536_400085537,78.99999999999999,fuzzy_normal,B,43108,Eric,Pache,-Barras,Route de Coppoz,3,105200,Le Mont-sur-Lausanne,400085537,,1963.0
+400088116_400088118,83.66666666666667,fuzzy_normal,A,39842,Ernest,Delasoie,-Bron,chemin du Chêne,2,105400,Morrens VD,400088116,,
+400088116_400088118,83.66666666666667,fuzzy_normal,B,44554,Georgette,Delasoie,,chemin du Chêne,2,105400,Morrens VD,400088118,,
+400088174_400088175,82.5,fuzzy_normal,A,44572,Catherine,Wyss,-Bovay,Chemin du Crochet,3,105400,Morrens VD,400088174,1956-04-02,1956.0
+400088174_400088175,82.5,fuzzy_normal,B,44573,Patrick,Wyss,,Chemin du Crochet,3,105400,Morrens VD,400088175,,1956.0
+400087440_400087438,81.15384615384616,fuzzy_normal,A,39531,Myriam,Bessat,,Route du Grand-Mont,11,105200,Le Mont-sur-Lausanne,400087440,1938-03-03,1938.0
+400087440_400087438,81.15384615384616,fuzzy_normal,B,39591,Maurice,Bessat,,Route du Grand-Mont,11,105200,Le Mont-sur-Lausanne,400087438,1938-08-19,1938.0
+400088441_400088442,87.10526315789473,fuzzy_normal,A,40258,Jean-Marc,Borel,,Chemin des Grands-Prés,13,105500,Froideville,400088441,1943-08-22,1943.0
+400088441_400088442,87.10526315789473,fuzzy_normal,B,44610,Anne-Marie,Borel,,Chemin des Grands-Prés,13,105500,Froideville,400088442,1943-02-11,1943.0
+400088786_400088787,78.99999999999999,fuzzy_normal,A,40351,Jean-Claude,Zbinden,-Conzett,Chemin du Chaumiau,4,105500,Froideville,400088786,1953-10-02,1953.0
+400088786_400088787,78.99999999999999,fuzzy_normal,B,40352,Anne,Zbinden,,Chemin du Chaumiau,4,105500,Froideville,400088787,1953-07-11,1953.0
+400088915_400088916,81.15384615384616,fuzzy_normal,A,40412,Roland,Gisclon,,Rue des Fontaines,15b,105800,Villars-Tiercelin,400088915,1956-12-16,1956.0
+400088915_400088916,81.15384615384616,fuzzy_normal,B,44717,Dorinoa,Gisclon,,Rue des Fontaines,15b,105800,Villars-Tiercelin,400088916,1956-09-01,1956.0
+400004977_400004976,80.0,fuzzy_normal,A,1632,Carinne,Hornung,-Monnard,Route de Peney,28c,106100,Villars-Mendraz,400004977,1963-06-26,1963.0
+400004977_400004976,80.0,fuzzy_normal,B,4829,Florian,Hornung,,Route de Peney,28c,106100,Villars-Mendraz,400004976,1963-04-05,1963.0
+400090876_400090877,83.66666666666667,fuzzy_normal,A,41261,Marianne,Freemantle,-Saner,Chemin de Ballègue,23,106600,Epalinges,400090876,1952-07-30,1952.0
+400090876_400090877,83.66666666666667,fuzzy_normal,B,45170,Michael,Freemantle,,Chemin de Ballègue,23,106600,Epalinges,400090877,1952-11-25,1952.0
+400089859_400089858,78.99999999999999,fuzzy_normal,A,40629,Béatrice,Piattini,,Chemin de la Biolleyre,14,106600,Epalinges,400089859,,1947.0
+400089859_400089858,78.99999999999999,fuzzy_normal,B,40871,Jacques,Piattini,-Widmer,Chemin de la Biolleyre,14,106600,Epalinges,400089858,1947-07-02,1947.0
+400089512_400089513,82.5,fuzzy_normal,A,44813,Michel,Hottinger,,Chemin des Boveresses,147a,106600,Epalinges,400089512,1948-01-02,1948.0
+400089512_400089513,82.5,fuzzy_normal,B,44814,Cécile,Hottinger,-Clément,Chemin des Boveresses,147a,106600,Epalinges,400089513,1948-04-02,1948.0
+400025705_400072228,77.33333333333331,fuzzy_normal,A,9138,Olivier,Renault,-Koehn,Chemin du Bocage,30,106600,Epalinges,400025705,1966-02-15,1966.0
+400025705_400072228,77.33333333333331,fuzzy_normal,B,31158,Olivier,Marlétaz,,Chemin du Bocage,24,106600,Epalinges,400072228,1966-05-26,1966.0
+400089848_400089847,83.42105263157895,fuzzy_normal,A,40627,Joséphine,Pedgrift,,Chemin du Bois-de-Ban,3,106600,Epalinges,400089848,1949-03-09,1949.0
+400089848_400089847,83.42105263157895,fuzzy_normal,B,40869,Stephen-F.,Pedgrift,-D'Oro,Chemin du Bois-de-Ban,3,106600,Epalinges,400089847,1949-06-03,1949.0
+400089548_400089550,88.33333333333333,fuzzy_normal,A,40563,Daniel,Jagot,-Lachaume,Chemin du Chaugand,23,106600,Epalinges,400089548,1947-02-02,1947.0
+400089548_400089550,88.33333333333333,fuzzy_normal,B,40564,Denise,Jagot,-Lachaume,Chemin du Chaugand,23,106600,Epalinges,400089550,1947-08-04,1947.0
+400091376_400091377,78.99999999999999,fuzzy_normal,A,41352,Daniel,Von Grünigen,,Route de Montblesson,36b,106600,Epalinges,400091376,1953-06-27,1953.0
+400091376_400091377,78.99999999999999,fuzzy_normal,B,41519,Catherine,Von Grünigen,,Route de Montblesson,36b,106600,Epalinges,400091377,1953-11-03,1953.0
+400023879_400023880,78.99999999999999,fuzzy_normal,A,9216,Mireille,Coq,-Page,Route du Village,21,106600,Epalinges,400023879,1967-02-02,1967.0
+400023879_400023880,78.99999999999999,fuzzy_normal,B,12930,Etienne,Coq,-Page,Route du Village,21,106600,Epalinges,400023880,1967-02-02,1967.0
+400090039_400090040,82.5,fuzzy_normal,A,45026,Giampiero,Ballanti,,Route de Berne,222,106600,Epalinges,400090039,1939-06-18,1939.0
+400090039_400090040,82.5,fuzzy_normal,B,45027,Jean-Pierre,Ballanti,,Route de Berne,222,106600,Epalinges,400090040,1939-06-18,1939.0
+400089836_400089837,80.0,fuzzy_normal,A,40625,François,Pittet,-Favre,Chemin des Tuileries,9,106600,Epalinges,400089836,1957-06-02,1957.0
+400089836_400089837,80.0,fuzzy_normal,B,44995,Nicole,Pittet,-Favre,Chemin des Tuileries,9,106600,Epalinges,400089837,1957-11-02,1957.0
+400091807_400091808,78.99999999999999,fuzzy_normal,A,41827,Marius,Mayor,-Pellissier,Chemin des Tuileries,3,106600,Epalinges,400091807,1939-08-29,1939.0
+400091807_400091808,78.99999999999999,fuzzy_normal,B,45816,Madeleine,Mayor,-Pellissier,Chemin des Tuileries,3,106600,Epalinges,400091808,1939-11-26,1939.0
+400093273_400093274,78.99999999999999,fuzzy_normal,A,42601,Jean-Louis,Masson,,Chemin de la Séchaude,1,107300,Savigny,400093273,1953-07-27,1953.0
+400093273_400093274,78.99999999999999,fuzzy_normal,B,42602,Anne-Marie,Masson,,Chemin de la Séchaude,1,107300,Savigny,400093274,1953-07-26,1953.0
+400090106_400090105,84.99999999999999,fuzzy_normal,A,40919,Gian Piero,De Piante,-Sami,Le Grand-Chemin,53,106600,Epalinges,400090106,1949-08-29,1949.0
+400090106_400090105,84.99999999999999,fuzzy_normal,B,45047,Jean-Pierre,De Piante,-Sami,Le Grand-Chemin,53,106600,Epalinges,400090105,1949-08-02,1949.0
+400094494_400094495,80.0,fuzzy_normal,A,47192,Samuel,Feuz,-Wüest,Le Grand-Chemin,39,106600,Epalinges,400094494,1944-08-02,1944.0
+400094494_400094495,80.0,fuzzy_normal,B,47193,Adelheid,Feuz,-Wüest,Le Grand-Chemin,39,106600,Epalinges,400094495,1944-04-11,1944.0
+400091862_400091861,78.99999999999999,fuzzy_normal,A,41838,Lucienne,Morel,,chemin des Croisettes,3,106600,Epalinges,400091862,1941-06-07,1941.0
+400091862_400091861,78.99999999999999,fuzzy_normal,B,45826,Vincent,Morel,-Brunet,Chemin des Croisettes,3,106600,Epalinges,400091861,1941-05-19,1941.0
+400094988_400094987,82.5,fuzzy_normal,A,43402,Gislaine,Chaubert,-Bigler,Chemin de Praz Lombert,3,108000,Les Cullayes,400094988,1960-12-02,1960.0
+400094988_400094987,82.5,fuzzy_normal,B,47290,Philippe,Chaubert,-Bigler,Chemin de Praz Lombert,3,108000,Les Cullayes,400094987,1960-01-02,1960.0
+400024875_400024876,88.33333333333333,fuzzy_normal,A,9478,Armand,Gelin,-Destraz,Chemin Pierre-Boulanger,4,108300,Mézières VD,400024875,1948-07-02,1948.0
+400024875_400024876,88.33333333333333,fuzzy_normal,B,9479,Ariane,Gelin,-Destraz,Chemin Pierre-Boulanger,4,108300,Mézières VD,400024876,1948-10-02,1948.0
+400092611_400092612,81.15384615384616,fuzzy_normal,A,42467,Enrique,Bühlmann,,Rue du Général Guisan,3,108300,Mézières VD,400092611,1962-05-02,1962.0
+400092611_400092612,81.15384615384616,fuzzy_normal,B,46669,Nicole,Bühlmann,,Rue du Général Guisan,3,108300,Mézières VD,400092612,1962-12-11,1962.0
+400017448_400017449,81.15384615384616,fuzzy_normal,A,6565,Jacques,Terraz,,Chemin des Ormeaux,36,106600,Epalinges,400017448,1948-04-15,1948.0
+400017448_400017449,81.15384615384616,fuzzy_normal,B,6566,Janine,Terraz,,Chemin des Ormeaux,36,106600,Epalinges,400017449,1948-07-07,1948.0
+400095182_400095181,81.15384615384616,fuzzy_normal,A,43358,Olivier,Cochet,,Chemin Champ du Clos,6,108500,Vulliens,400095182,1964-10-19,1964.0
+400095182_400095181,81.15384615384616,fuzzy_normal,B,43771,Flavia,Cochet,,Chemin Champ du Clos,6,108500,Vulliens,400095181,1964-05-10,1964.0
+400095375_400094426,83.42105263157895,fuzzy_normal,A,43372,Jean-Pierre,Jaunin,,Route de Bourg-Dessous,2,108800,Ropraz,400095375,1964-01-29,1964.0
+400095375_400094426,83.42105263157895,fuzzy_normal,B,47182,Jean-Luc,Jaunin,,Route de Bourg-Dessous,2,108800,Ropraz,400094426,1964-01-29,1964.0
+400038911_400038912,82.5,fuzzy_normal,A,15436,Valérie,Gachet,,Chemin de Bahyse,6,109103,Chenaux,400038911,,1964.0
+400038911_400038912,82.5,fuzzy_normal,B,15437,Alain,Gachet,,Chemin de Bahyse,6,109103,Chenaux,400038912,1964-09-16,1964.0
+400096137_400096138,79.05502392344496,fuzzy_normal,A,47486,Jacqueline,Liardet,,Coin d'En Bas,14,109200,Belmont-sur-Lausanne,400096137,1944-04-14,1944.0
+400096137_400096138,79.05502392344496,fuzzy_normal,B,47487,Françoise,Liardet,,Coin d'En Bas,16,109200,Belmont-sur-Lausanne,400096138,1944-04-14,1944.0
+400095474_400095475,84.09090909090908,fuzzy_normal,A,43800,Edouard,Abetel,-Haldimann,Coin d'En Haut,9,109200,Belmont-sur-Lausanne,400095474,1955-08-14,1955.0
+400095474_400095475,84.09090909090908,fuzzy_normal,B,47361,Dora,Abetel,,Coin d'En Haut,9,109200,Belmont-sur-Lausanne,400095475,1955-11-13,1955.0
+400097028_400097029,80.0,fuzzy_normal,A,44374,Jacques-A,Mani,,Route de Corsy,5,109300,La Conversion,400097028,1944-02-07,1944.0
+400097028_400097029,80.0,fuzzy_normal,B,44502,Jacky,Mani,,Route de Corsy,5,109300,La Conversion,400097029,,1944.0
+400096940_400096941,81.15384615384616,fuzzy_normal,A,44487,Henri,Carrera,-Troillet,Chemin du Creux de Corsy,98,109300,La Conversion,400096940,1944-11-14,1944.0
+400096940_400096941,81.15384615384616,fuzzy_normal,B,44488,Béatrice,Carrera,-Troillet,Chemin du Creux de Corsy,98,109300,La Conversion,400096941,1944-07-02,1944.0
+400098796_400098795,78.99999999999999,fuzzy_normal,A,45752,Marianne,Favez,,Chemin de la Combe,3,109500,Lutry,400098796,1962-05-02,1962.0
+400098796_400098795,78.99999999999999,fuzzy_normal,B,49353,Charles,Favez,-Goutte,Chemin de la Combe,3,109500,Lutry,400098795,1962-08-02,1962.0
+400097833_400097834,82.5,fuzzy_normal,A,45337,Jean-Rodolphe,Oettli,,Chemin de Crêt-de-Plan,29,109500,Lutry,400097833,1958-12-28,1958.0
+400097833_400097834,82.5,fuzzy_normal,B,49189,Hans Rudolf,Oettli,,Chemin de Crêt-de-Plan,29,109500,Lutry,400097834,,1958.0
+400098736_400098735,94.16666666666667,fuzzy_normal,A,45671,Marie,Deslex,,Chemin des Moines,183,109500,Lutry,400098736,1955-11-21,1955.0
+400098736_400098735,94.16666666666667,fuzzy_normal,B,45745,Maurice,Deslex,,Chemin des Moines,183,109500,Lutry,400098735,1955-04-03,1955.0
+400099565_400099566,90.78947368421053,fuzzy_normal,A,46003,Christophe,Menthonnex,-Laval,chemin de Plantaz,7,109500,Lutry,400099565,1938-05-12,1938.0
+400099565_400099566,90.78947368421053,fuzzy_normal,B,46004,Christine,Menthonnex,,Chemin de Plantaz,7,109500,Lutry,400099566,1938-12-05,1938.0
+400099321_400099023,81.46551724137929,fuzzy_normal,A,45890,Laurence,Coste,-Reymondin,Rue de la Tour,8,109500,Lutry,400099321,1965-05-25,1965.0
+400099321_400099023,81.46551724137929,fuzzy_normal,B,45914,Laurence,Coderey,,Rue de la Tour,1,109500,Lutry,400099023,1965-03-11,1965.0
+400099943_400099942,81.66666666666667,fuzzy_normal,A,46131,Jacqueline,Salathé,-Cuendet,Rue du Bourg,4,109500,Lutry,400099943,1933-07-08,1933.0
+400099943_400099942,81.66666666666667,fuzzy_normal,B,46194,Jean-Claude,Salathé,-Cuendet,Rue du Bourg,4,109500,Lutry,400099942,1933-05-16,1933.0
+400052123_400098484,89.70588235294117,fuzzy_normal,A,25009,Daniel,Paschoud,,rue Friporte,4,109500,Lutry,400052123,1957-10-07,1957.0
+400052123_400098484,89.70588235294117,fuzzy_normal,B,49299,Jean-Daniel,Paschoud,-Grand,Rue Friporte,4,109500,Lutry,400098484,1957-10-07,1957.0
+400099144_400099145,80.21739130434781,fuzzy_normal,A,45865,Jacques-André,Conne,,Grand-Rue,64,109500,Lutry,400099144,1948-02-29,1948.0
+400099144_400099145,80.21739130434781,fuzzy_normal,B,49420,Christiane,Conne,,Grand-Rue,64,109500,Lutry,400099145,1948-02-12,1948.0
+400100829_400100831,81.15384615384616,fuzzy_normal,A,46544,Denis,Fauquex,-Conod,Route de la Corniche,17,109700,Riex,400100829,1967-05-14,1967.0
+400100829_400100831,81.15384615384616,fuzzy_normal,B,46545,Frédéric,Fauquex,,Route de la Corniche,17,109700,Riex,400100831,,1967.0
+400101367_400101368,88.33333333333333,fuzzy_normal,A,47118,Enrichetta,D'Alessandro,,Avenue Auguste-Forel,15,111000,Morges,400101367,,1943.0
+400101367_400101368,88.33333333333333,fuzzy_normal,B,47119,Erica,D'Alessandro,,Avenue Auguste-Forel,15,111000,Morges,400101368,1943-04-09,1943.0
+400105786_400105785,80.55555555555556,fuzzy_normal,A,49114,Janine,Ravay,,Avenue Henry-Warnery,10,111000,Morges,400105786,1939-09-24,1939.0
+400105786_400105785,80.55555555555556,fuzzy_normal,B,53534,Jean-Jacques,Ravay,-Paschoud,Avenue Henry-Warnery,10,111000,Morges,400105785,1939-09-24,1939.0
+400100360_400100361,78.99999999999999,fuzzy_normal,A,50996,André,Volet,,Route de Grandvaux,18a,109600,Cully,400100360,1951-06-12,1951.0
+400100360_400100361,78.99999999999999,fuzzy_normal,B,50997,Jacqueline,Volet,,Route de Grandvaux,18a,109600,Cully,400100361,,1951.0
+400100555_400100553,84.44444444444443,fuzzy_normal,A,46349,Catherine,Lehni,,Route de Lausanne,18,109600,Cully,400100555,1966-03-23,1966.0
+400100555_400100553,84.44444444444443,fuzzy_normal,B,46498,Christian,Lehni,,Route de Lausanne,18,109600,Cully,400100553,1966-03-26,1966.0
+400106496_400106498,81.15384615384616,fuzzy_normal,A,49744,Claude,Sierro,,Chemin de l'Alouette,1,111000,Morges,400106496,1940-02-02,1940.0
+400106496_400106498,81.15384615384616,fuzzy_normal,B,49824,Michèle,Sierro,,Chemin de l'Alouette,1,111000,Morges,400106498,1940-02-12,1940.0
+400100444_400100445,84.09090909090908,fuzzy_normal,A,51009,André,Kulling,,Chemin des Colombaires,51,109600,Cully,400100444,1955-02-03,1955.0
+400100444_400100445,84.09090909090908,fuzzy_normal,B,51010,Janine,Kulling,,Chemin des Colombaires,51,109600,Cully,400100445,1955-08-27,1955.0
+400101152_400101153,78.99999999999999,fuzzy_normal,A,51127,Nicole,Hofmann,,Résidences-de-la-Côte,70,111000,Morges,400101152,,
+400101152_400101153,78.99999999999999,fuzzy_normal,B,51128,Anne,Hofmann,,Résidences-de-la-Côte,70,111000,Morges,400101153,,
+400106141_400106140,80.55555555555556,fuzzy_normal,A,49626,Anne-Marie,Stifani,,Rue des Fossés,4,111000,Morges,400106141,1956-05-15,1956.0
+400106141_400106140,80.55555555555556,fuzzy_normal,B,49707,Marcello,Stifani,,Rue des Fossés,4,111000,Morges,400106140,1956-07-21,1956.0
+400068696_400068697,88.33333333333333,fuzzy_normal,A,28907,Christian,Francet,,Chemin des Genévriers,5,111200,Echichens,400068696,1946-04-14,1946.0
+400068696_400068697,88.33333333333333,fuzzy_normal,B,32985,Marie-Christine,Francet,,Chemin des Genévriers,5,111200,Echichens,400068697,1946-12-31,1946.0
+400107061_400107064,80.21739130434781,fuzzy_normal,A,49908,Jean-Louis,Klay,,Bois-des-Fives,1,111400,Colombier VD,400107061,,1953.0
+400107061_400107064,80.21739130434781,fuzzy_normal,B,54182,Evelyne-Lydia,Klay,,Bois-des-Fives,1,111400,Colombier VD,400107064,1953-01-18,1953.0
+400107167_400107170,86.22065727699531,fuzzy_normal,A,49931,Luc,Bourgeois,,Rue du Village,20c,111500,Vullierens,400107167,1960-10-01,1960.0
+400107167_400107170,86.22065727699531,fuzzy_normal,B,49932,Lucien,Bourgeois,,rue du Village,18,111500,Vullierens,400107170,1960-10-01,1960.0
+400099697_400098430,78.38141025641025,fuzzy_swapped,A,46153,Pierre,Robert,,Route de Lavaux,286,109500,Lutry,400099697,1955-01-21,1955.0
+400099697_400098430,78.38141025641025,fuzzy_swapped,B,49290,Norbert,Pernet,-Truan,Route de Lavaux,240,109500,Lutry,400098430,1955-10-24,1955.0
+400113087_400113088,81.15384615384616,fuzzy_normal,A,57479,Alain,Corthésy,,Les Résidences-de-la-Côte,10,111000,Morges,400113087,1944-11-03,1944.0
+400113087_400113088,81.15384615384616,fuzzy_normal,B,57480,Germaine,Corthesy,,Les Résidences-de-la-Côte,10,111000,Morges,400113088,1944-07-20,1944.0
+400108451_400108452,78.99999999999999,fuzzy_normal,A,50750,Erwin,Inglin,-Reche,Chemin des Plantées,10,113100,Tolochenaz,400108451,1956-06-07,1956.0
+400108451_400108452,78.99999999999999,fuzzy_normal,B,55404,Nuria,Inglin,,Chemin des Plantées,10,113100,Tolochenaz,400108452,1956-03-10,1956.0
+400109101_400109104,78.99999999999999,fuzzy_normal,A,50529,Christiane,Kohler,-Abrezol,Chemin du Brisecol,4,113200,Lully VD,400109101,1949-02-03,1949.0
+400109101_400109104,78.99999999999999,fuzzy_normal,B,50894,Marianne-Noëlle,Kohler,,Chemin du Brisecol,4,113200,Lully VD,400109104,,1949.0
+400070980_400070981,82.5,fuzzy_normal,A,34710,Emile,Tasev,-Botteron,Chemin de Chantemerle,9,113200,Lully VD,400070980,1960-03-02,1960.0
+400070980_400070981,82.5,fuzzy_normal,B,34711,Evelyne,Tasev,-Botteron,Chemin de Chantemerle,9,113200,Lully VD,400070981,1960-06-02,1960.0
+400103308_400103900,79.28571428571428,fuzzy_normal,A,48216,Michel,Vauthey,,Chemin de la Grosse-Pierre,5,111000,Morges,400103308,1941-07-02,1941.0
+400103308_400103900,79.28571428571428,fuzzy_normal,B,48366,Michel,Chauvet,,Chemin de la Grosse-Pierre,7,111000,Morges,400103900,1941-12-18,1941.0
+400103718_400105795,81.15384615384616,fuzzy_normal,A,48334,Eric,Voruz,,Chemin de la Grosse-Pierre,11,111000,Morges,400103718,1945-07-05,1945.0
+400103718_400105795,81.15384615384616,fuzzy_normal,B,48775,Eric,Rouvinez,,Chemin de la Grosse-Pierre,11,111000,Morges,400105795,1945-03-01,1945.0
+400109776_400109777,80.55555555555556,fuzzy_normal,A,55617,Jean-Claude,Gervasi,-Pesenti,Avenue de Condémine,6,113500,Denens,400109776,1961-11-02,1961.0
+400109776_400109777,80.55555555555556,fuzzy_normal,B,55618,Manuela,Gervasi,-Pesenti,Avenue de Condémine,6,113500,Denens,400109777,,1961.0
+400105228_400105227,81.15384615384616,fuzzy_normal,A,48689,Manuela,Magnin,,Ru Michel,6,113500,Denens,400105228,1961-12-29,1961.0
+400105228_400105227,81.15384615384616,fuzzy_normal,B,49040,Claude,Magnin,,Ru Michel,6,113500,Denens,400105227,1961-07-03,1961.0
+400110929_400110930,78.99999999999999,fuzzy_normal,A,56018,Charles,Martin,-Rouge,Route de Yens,37,114300,Apples,400110929,1947-04-02,1947.0
+400110929_400110930,78.99999999999999,fuzzy_normal,B,56019,Isabelle,Martin,-Rouge,Route de Yens,37,114300,Apples,400110930,1947-04-02,1947.0
+400108594_400108593,82.5,fuzzy_normal,A,50319,Marguerite,Bezençon,,Avenue de Lonay,17,111000,Morges,400108594,1928-03-14,1928.0
+400108594_400108593,82.5,fuzzy_normal,B,50786,Robert,Bezençon,,Avenue de Lonay,17,111000,Morges,400108593,1928-03-14,1928.0
+400111321_400111320,81.15384615384616,fuzzy_normal,A,52191,Christine,Vautravers,,Chemin des Moulins,9,114500,Bière,400111321,1943-12-17,1943.0
+400111321_400111320,81.15384615384616,fuzzy_normal,B,56089,René,Vautravers,,Chemin des Moulins,9,114500,Bière,400111320,,1943.0
+400111614_400111615,78.99999999999999,fuzzy_normal,A,56140,Catherine,Dauphin,-Despont,Chemin de Grattalau,17,114900,Berolle,400111614,1964-10-31,1964.0
+400111614_400111615,78.99999999999999,fuzzy_normal,B,56141,Michel,Dauphin,-Despont,Chemin de Grattalau,17,114900,Berolle,400111615,1964-05-08,1964.0
+400113375_400113374,81.15384615384616,fuzzy_normal,A,53033,Monique,Mosini,,Chemin du Chauchy,5a,116200,St-Prex,400113375,1954-09-02,1954.0
+400113375_400113374,81.15384615384616,fuzzy_normal,B,57521,Daniel,Mosini,,Chemin du Chauchy,5a,116200,St-Prex,400113374,1954-09-18,1954.0
+400112971_400112972,85.41666666666666,fuzzy_normal,A,52768,Jean-Pierre,Cavin,,Route de Lussy,34,116200,St-Prex,400112971,1942-07-15,1942.0
+400112971_400112972,85.41666666666666,fuzzy_normal,B,56371,Michel Pierre,Cavin,,Route de Lussy,34,116200,St-Prex,400112972,,1942.0
+400113589_400113590,80.55555555555556,fuzzy_normal,A,57556,Line,Smith,-Jaquier,Chemin du Cherrat,16,116200,St-Prex,400113589,1958-12-02,1958.0
+400113589_400113590,80.55555555555556,fuzzy_normal,B,57557,Simon,Smith,-Jaquier,chemin du Cherrat,16,116200,St-Prex,400113590,,1958.0
+400113974_400113975,81.15384615384616,fuzzy_normal,A,53354,Nino,Cassano,-Letteri,Route de la Gare,1,116300,Etoy,400113974,1932-03-25,1932.0
+400113974_400113975,81.15384615384616,fuzzy_normal,B,53355,Nunziante,Cassano,,Route de la Gare,1,116300,Etoy,400113975,1932-03-25,1932.0
+400114190_400114191,87.27272727272725,fuzzy_normal,A,57774,Hanna Brigitta,Bron,,Chemin des Petits-Bois,4,116400,Buchillon,400114190,,1946.0
+400114190_400114191,87.27272727272725,fuzzy_normal,B,57775,Brigitte,Bron,,Chemin des Petits-Bois,4,116400,Buchillon,400114191,1946-03-25,1946.0
+400114827_400114828,84.99999999999999,fuzzy_normal,A,53813,Roland,Rosé,-Grosjean,Route de Malessert,6,116600,Perroy,400114827,1945-01-16,1945.0
+400114827_400114828,84.99999999999999,fuzzy_normal,B,53814,Raymonde,Rose,,Route de Malessert,6,116600,Perroy,400114828,1945-03-23,1945.0
+400118975_400118976,80.0,fuzzy_normal,A,55856,Christian,Hasler,,Route de Montelly,35,116600,Perroy,400118975,1965-04-05,1965.0
+400118975_400118976,80.0,fuzzy_normal,B,55907,Maria,Hasler,,Route de Montelly,35,116600,Perroy,400118976,1965-07-03,1965.0
+400111106_400111107,81.15384615384616,fuzzy_normal,A,52037,Pascal,Roch,,Chemin des Vignes,3,116700,Lussy-sur-Morges,400111106,1958-05-16,1958.0
+400111106_400111107,81.15384615384616,fuzzy_normal,B,52038,Chantal,Roch,,Chemin des Vignes,3,116700,Lussy-sur-Morges,400111107,1958-07-22,1958.0
+400118593_400118592,86.53846153846155,fuzzy_normal,A,55732,Jeanine,Pittet,,Grande-Rue,41,117000,Aubonne,400118593,1957-01-08,1957.0
+400118593_400118592,86.53846153846155,fuzzy_normal,B,55783,Daniel,Pittet,,Grande-Rue,41,117000,Aubonne,400118592,1957-03-04,1957.0
+400115919_400115920,80.0,fuzzy_normal,A,54348,Daniel,Salomé,,Chemin Sus chez Callin,1,117200,Bougy-Villars,400115919,1943-12-23,1943.0
+400115919_400115920,80.0,fuzzy_normal,B,54431,Cathrine,Salome,,Chemin Sus chez Callin,1,117200,Bougy-Villars,400115920,1943-02-14,1943.0
+400115921_400115920,89.3478260869565,fuzzy_normal,A,54349,Edith Catherine,Salome,,Chemin Sus chez Callin,1,117200,Bougy-Villars,400115921,1943-02-14,1943.0
+400115921_400115920,89.3478260869565,fuzzy_normal,B,54431,Cathrine,Salome,,Chemin Sus chez Callin,1,117200,Bougy-Villars,400115920,1943-02-14,1943.0
+400115126_400115127,82.5,fuzzy_normal,A,54041,Mario,Brero,,Route d'Allaman,14,117300,Féchy,400115126,1946-03-29,1946.0
+400115126_400115127,82.5,fuzzy_normal,B,58474,Carolyn,Brero,,Route d'Allaman,14,117300,Féchy,400115127,1946-01-04,1946.0
+400012394_400012395,81.47058823529412,fuzzy_normal,A,4051,Conxita,Brandt,,Route de Taillepied,38,109500,Lutry,400012394,1950-06-18,1950.0
+400012394_400012395,81.47058823529412,fuzzy_normal,B,4052,Conception,Brandt,,Route de Taillepied,38,109500,Lutry,400012395,,1950.0
+400098435_400098434,80.0,fuzzy_normal,A,45501,René,Burnand,,Route de Taillepied,15,109500,Lutry,400098435,1933-05-10,1933.0
+400098435_400098434,80.0,fuzzy_normal,B,49291,Jacqueline,Burnand,-Ceruti,route de Taillepied,15,109500,Lutry,400098434,1933-07-08,1933.0
+400099082_400099086,78.14285714285714,fuzzy_normal,A,45852,Gilbert,Chollet,-Chevalley,Route de Taillepied,13,109500,Lutry,400099082,1952-02-02,1952.0
+400099082_400099086,78.14285714285714,fuzzy_normal,B,45928,Danielle,Chollet,,Route de Taillepied,39,109500,Lutry,400099086,1952-04-28,1952.0
+400116488_400116491,80.55555555555556,fuzzy_normal,A,54511,Micheline,Frutig,,Chemin du Moulin,5,117600,St-Livres,400116488,,
+400116488_400116491,80.55555555555556,fuzzy_normal,B,54513,Elisabeth,Frutig,,Chemin du Moulin,5,117600,St-Livres,400116491,,
+400116559_400116558,78.99999999999999,fuzzy_normal,A,54527,Nadine,Tsingos,,Grand'Rue,38,117600,St-Livres,400116559,1958-03-06,1958.0
+400116559_400116558,78.99999999999999,fuzzy_normal,B,58819,Evangelos,Tsingos,,Grand'Rue,38,117600,St-Livres,400116558,1958-01-12,1958.0
+400116448_400116449,80.0,fuzzy_normal,A,58802,Brigitte,Bourgeois,-Berney,Rue Saint-Laurent,11a,117600,St-Livres,400116448,1966-01-10,1966.0
+400116448_400116449,80.0,fuzzy_normal,B,58803,Didier,Bourgeois,,Rue Saint-Laurent,11a,117600,St-Livres,400116449,1966-01-11,1966.0
+400108119_400170681,82.5,fuzzy_normal,A,55165,Thierry,Pillet,,Avenue de Beaulieu,34,118000,Rolle,400108119,1961-02-07,1961.0
+400108119_400170681,82.5,fuzzy_normal,B,81504,Catherine,Pillet,,Avenue de Beaulieu,34,118000,Rolle,400170681,1961-10-12,1961.0
+400117329_400117328,80.0,fuzzy_normal,A,54650,Volkertje,Worner,,Chemin de la Plage,2,118000,Rolle,400117329,1938-05-03,1938.0
+400117329_400117328,80.0,fuzzy_normal,B,55104,Roger,Worner,,Chemin de la Plage,2,118000,Rolle,400117328,1938-10-26,1938.0
+400117669_400117670,80.55555555555556,fuzzy_normal,A,55219,Daniel,Lavanchy,,Avenue de la Gare,13,118000,Rolle,400117669,1952-03-19,1952.0
+400117669_400117670,80.55555555555556,fuzzy_normal,B,55220,Ana,Lavanchy,,Avenue de la Gare,13,118000,Rolle,400117670,1952-07-01,1952.0
+400117995_400117996,85.99999999999999,fuzzy_normal,A,54892,Charlie,Rechik,,Chemin J. -J. Porchat,1,118000,Rolle,400117995,,1948.0
+400117995_400117996,85.99999999999999,fuzzy_normal,B,54893,Ali,Rechik,,Chemin J. -J. Porchat,1,118000,Rolle,400117996,1948-09-24,1948.0
+400117539_400117540,78.99999999999999,fuzzy_normal,A,58975,Roland,Corbaz,,Chemin E. Jaques-Dalcroze,7,118000,Rolle,400117539,1938-10-29,1938.0
+400117539_400117540,78.99999999999999,fuzzy_normal,B,58976,Françoise,Corbaz,,Chemin E. Jaques-Dalcroze,7,118000,Rolle,400117540,1938-12-06,1938.0
+400118296_400118297,77.23529411764704,fuzzy_normal,A,54948,Véronique,Maréchal,,Rue du Terroir,30,118002,Tartegnin,400118296,,
+400118296_400118297,77.23529411764704,fuzzy_normal,B,55316,Pierre,Maréchal,,Rue du Terroir,26,118002,Tartegnin,400118297,,
+400123588_400123587,81.47058823529412,fuzzy_normal,A,58116,Nicole,Isoz,-Combremont,Chemin des Oliviers,8,118401,Vinzel,400123588,1961-02-01,1961.0
+400123588_400123587,81.47058823529412,fuzzy_normal,B,58312,Jean-Michel,Isoz,-Combremont,Chemin des Oliviers,8,118401,Vinzel,400123587,1961-10-01,1961.0
+400119890_400119887,81.34615384615384,fuzzy_normal,A,56573,Marcel,Debonneville,,Rue du Fort,5,118800,Gimel,400119890,,1950.0
+400119890_400119887,81.34615384615384,fuzzy_normal,B,57055,Daniel,Debonneville,-Emery,Rue du Fort,3,118800,Gimel,400119887,1950-03-14,1950.0
+400121750_400121751,80.0,fuzzy_normal,A,57419,Lionel,Vaucher,-Gysler,Rue de l'Abbaye,4b,119600,Gland,400121750,1971-08-26,1971.0
+400121750_400121751,80.0,fuzzy_normal,B,57420,Sandrine,Vaucher,-Gysler,Rue de l'Abbaye,4b,119600,Gland,400121751,1971-05-18,1971.0
+400122404_400122405,83.26086956521739,fuzzy_normal,A,62127,Jean-Claude,Christen,,Rue de Savoie,8,119600,Gland,400122404,1943-02-03,1943.0
+400122404_400122405,83.26086956521739,fuzzy_normal,B,62128,Marie-Claire,Christen,,Rue de Savoie,8,119600,Gland,400122405,1943-12-20,1943.0
+400110277_400117793,76.99999999999999,fuzzy_normal,A,51461,Christian,Cherpillod,,Avenue Général-Guisan,130,118000,Rolle,400110277,1958-01-25,1958.0
+400110277_400117793,76.99999999999999,fuzzy_normal,B,59025,Christian,Maillardet,,Avenue Général-Guisan,22,118000,Rolle,400117793,1958-05-24,1958.0
+400116790_400116791,82.5,fuzzy_normal,A,58847,Didier,Petignat,,Avenue Général-Guisan,26,118000,Rolle,400116790,,
+400116790_400116791,82.5,fuzzy_normal,B,58848,Pierre,Petignat,,Avenue Général-Guisan,26,118000,Rolle,400116791,,
+400123666_400123665,86.53846153846155,fuzzy_normal,A,58130,Kathleen,Blatter,,Chemin de la Chenalette,11,119700,Prangins,400123666,1949-03-01,1949.0
+400123666_400123665,86.53846153846155,fuzzy_normal,B,58327,Käthy,Blatter,,Chemin de la Chenalette,11,119700,Prangins,400123665,,1949.0
+400123738_400123736,78.99999999999999,fuzzy_normal,A,58142,Marlyse,Brauch,-Uldry,Chemin de la Chenalette,25,119700,Prangins,400123738,1934-03-04,1934.0
+400123738_400123736,78.99999999999999,fuzzy_normal,B,58523,Pierre-Marcel,Brauch,-Uldry,Chemin de la Chenalette,25,119700,Prangins,400123736,1934-06-03,1934.0
+400123667_400123668,86.53846153846155,fuzzy_normal,A,58328,Stephen,Blockley,,Chemin Sous le Bois,3,119700,Prangins,400123667,1952-09-01,1952.0
+400123667_400123668,86.53846153846155,fuzzy_normal,B,62365,Esther,Blockley,,Chemin Sous le Bois,3,119700,Prangins,400123668,1952-02-28,1952.0
+400122855_400122856,82.5,fuzzy_normal,A,62222,N.,Merchant,,Rue des Alpes,10a,119600,Gland,400122855,,1964.0
+400122855_400122856,82.5,fuzzy_normal,B,62223,L.,Merchant,,Rue des Alpes,10a,119600,Gland,400122856,1964-01-16,1964.0
+400131230_400131231,81.15384615384616,fuzzy_normal,A,65552,Francisco,Ortega,,Rue de Berne,44,120100,Genève,400131230,1943-04-26,1943.0
+400131230_400131231,81.15384615384616,fuzzy_normal,B,65553,Paco,Ortega,,Rue de Berne,44,120100,Genève,400131231,1943-04-24,1943.0
+400156924_400156925,78.99999999999999,fuzzy_normal,A,71952,Florence,Cattafi,,Rue Fendt,11,120100,Genève,400156924,1962-08-17,1962.0
+400156924_400156925,78.99999999999999,fuzzy_normal,B,74073,Filippo,Cattafi,,Rue Fendt,11,120100,Genève,400156925,1962-04-29,1962.0
+400174629_400174628,78.99999999999999,fuzzy_normal,A,79541,Jean-Michel,Martini,,rue de l'Encyclopédie,16,120100,Genève,400174629,1961-04-14,1961.0
+400174629_400174628,78.99999999999999,fuzzy_normal,B,80183,Antonella,Martini,,rue de l'Encyclopédie,16,120100,Genève,400174628,1961-12-29,1961.0
+400165503_400165502,82.5,fuzzy_normal,A,76254,Agnès,Grosset,,Avenue Giuseppe-Motta,8,120200,Genève,400165503,,1948.0
+400165503_400165502,82.5,fuzzy_normal,B,78662,Georges,Grosset,,Avenue Giuseppe-Motta,8,120200,Genève,400165502,1948-01-07,1948.0
+400158244_400158245,93.0,fuzzy_normal,A,74940,Jean René,Gagnebin,,Rue des Pâquis,36,120100,Genève,400158244,1950-01-20,1950.0
+400158244_400158245,93.0,fuzzy_normal,B,74941,Jeanne,Gagnebin,,Rue des Pâquis,36,120100,Genève,400158245,1950-01-20,1950.0
+400166703_400166702,80.55555555555556,fuzzy_normal,A,76604,Méral,Gecim,,Rue des Pâquis,41,120100,Genève,400166703,1943-03-15,1943.0
+400166703_400166702,80.55555555555556,fuzzy_normal,B,80594,Marc,Gecim,,Rue des Pâquis,41,120100,Genève,400166702,1943-03-15,1943.0
+400214788_400214787,93.0,fuzzy_normal,A,97846,Marie,Attié,,Rue des Pâquis,51,120100,Genève,400214788,1936-05-17,1936.0
+400214788_400214787,93.0,fuzzy_normal,B,98349,Ariel,Attié,,Rue des Pâquis,51,120100,Genève,400214787,1936-05-01,1936.0
+400136481_400136482,81.15384615384616,fuzzy_normal,A,68473,Claude,Pellet,-Chambaz,Rue Gustave-Moynier,1,120200,Genève,400136481,1930-02-13,1930.0
+400136481_400136482,81.15384615384616,fuzzy_normal,B,68474,Liliane,Pellet,-Chambaz,Rue Gustave-Moynier,1,120200,Genève,400136482,,1930.0
+400128531_400128532,81.15384615384616,fuzzy_normal,A,60696,Miloslav,Hulman,,La Voie-Creuse,11,120200,Genève,400128531,1955-03-06,1955.0
+400128531_400128532,81.15384615384616,fuzzy_normal,B,60697,Maria,Hulman,-Puskailer,La Voie-Creuse,11,120200,Genève,400128532,1955-01-11,1955.0
+400137156_400137157,82.5,fuzzy_normal,A,64267,Alex,Blanchet,,Rue Tronchin,23,120200,Genève,400137156,1947-05-28,1947.0
+400137156_400137157,82.5,fuzzy_normal,B,64665,Anne,Blanchet,,Rue Tronchin,23,120200,Genève,400137157,1947-11-26,1947.0
+400130918_400130917,81.47058823529412,fuzzy_normal,A,61658,Véronique,Ansermet,,Rue Thomas Masaryk,8,120200,Genève,400130918,1964-10-23,1964.0
+400130918_400130917,81.47058823529412,fuzzy_normal,B,61841,Emmanuel,Ansermet,,Rue Thomas Masaryk,8,120200,Genève,400130917,1964-08-10,1964.0
+400141379_400141380,78.99999999999999,fuzzy_normal,A,66368,Eric,Barel,-Beckel,Chemin de l'Essor,1,120300,Genève,400141379,1965-12-01,1965.0
+400141379_400141380,78.99999999999999,fuzzy_normal,B,66369,Régine,Barel,-Beckel,Chemin de l'Essor,1,120300,Genève,400141380,1965-11-01,1965.0
+400155887_400155888,80.0,fuzzy_normal,A,71812,Philippe,Vessaz,,Chemin de l'Essor,5,120300,Genève,400155887,1955-04-22,1955.0
+400155887_400155888,80.0,fuzzy_normal,B,73574,Nicole,Vessaz,-Steiner,Chemin de l'Essor,5,120300,Genève,400155888,1955-04-11,1955.0
+400140391_400140389,78.99999999999999,fuzzy_normal,A,66171,Simone,Brüderlin,-Cottet,Avenue des Tilleuls,24,120300,Genève,400140391,,1940.0
+400140391_400140389,78.99999999999999,fuzzy_normal,B,69595,René,Brüderlin,-Cottet,Avenue des Tilleuls,24,120300,Genève,400140389,1940-07-12,1940.0
+400174067_400174068,82.5,fuzzy_normal,A,82807,Michèle,Maire,,Rue Liotard,40,120200,Genève,400174067,1933-05-30,1933.0
+400174067_400174068,82.5,fuzzy_normal,B,82808,Gisèle-J.,Maire,,Rue Liotard,40,120200,Genève,400174068,1933-05-30,1933.0
+400143122_400177510,77.42105263157895,fuzzy_normal,A,66794,José,Bras,,avenue Soret,6,120300,Genève,400143122,,1951.0
+400143122_400177510,77.42105263157895,fuzzy_normal,B,80046,José,Robalo,,Avenue Soret,1a,120300,Genève,400177510,1951-09-29,1951.0
+400175795_400175796,84.99999999999999,fuzzy_normal,A,79681,José,Morim,,Avenue De-Gallatin,4,120300,Genève,400175795,,1962.0
+400175795_400175796,84.99999999999999,fuzzy_normal,B,79682,Maria-José,Morim,,Avenue De-Gallatin,4,120300,Genève,400175796,1962-12-05,1962.0
+400183373_400183374,78.99999999999999,fuzzy_normal,A,83831,Josiane,Tschofen,,Avenue De-Gallatin,12,120300,Genève,400183373,1943-07-29,1943.0
+400183373_400183374,78.99999999999999,fuzzy_normal,B,86785,Danielle,Tschofen,,Avenue De-Gallatin,12,120300,Genève,400183374,,1943.0
+400159702_400159703,82.5,fuzzy_normal,A,74326,Emilian,Koller,,Avenue De-Luserna,9,120300,Genève,400159702,1951-08-01,1951.0
+400159702_400159703,82.5,fuzzy_normal,B,74327,Emile,Coller,,Avenue De-Luserna,9,120300,Genève,400159703,1951-08-25,1951.0
+400181921_400181920,84.25,fuzzy_normal,A,82481,Joseph,Suto,,Avenue De-Luserna,30,120300,Genève,400181921,,1950.0
+400181921_400181920,84.25,fuzzy_normal,B,86360,Joséphine,Soto,-Tovar,Avenue De-Luserna,30,120300,Genève,400181920,1950-11-01,1950.0
+400168920_400168919,84.99999999999999,fuzzy_normal,A,77105,Charles,Longchamp,,Rue De-Miléant,5,120300,Genève,400168920,1940-11-16,1940.0
+400168920_400168919,84.99999999999999,fuzzy_normal,B,80882,Michèle,Longchamp,,Rue De-Miléant,5,120300,Genève,400168919,1940-11-16,1940.0
+400147913_400148781,78.70235934664245,fuzzy_normal,A,68641,Danielle,Donzé,-Raudino,Rue Hoffmann,18,120200,Genève,400147913,1947-03-06,1947.0
+400147913_400148781,78.70235934664245,fuzzy_normal,B,69394,Danielle,Dorange Michel,,Rue Hoffmann,16,120200,Genève,400148781,1947-02-02,1947.0
+400165789_400165790,88.33333333333333,fuzzy_normal,A,76350,René,Grossen,-Chatelain,Rue Chabrey,31,120200,Genève,400165789,1931-03-12,1931.0
+400165789_400165790,88.33333333333333,fuzzy_normal,B,76351,Adrienne,Grossen,-Chatelain,Rue Chabrey,31,120200,Genève,400165790,1931-08-24,1931.0
+400128613_400152124,81.95238095238095,fuzzy_normal,A,65076,Antonio,Alonso,,Rue de la Servette,71,120200,Genève,400128613,1962-06-28,1962.0
+400128613_400152124,81.95238095238095,fuzzy_normal,B,70572,Antonio,Valentino,,Rue de la Servette,32,120200,Genève,400152124,,1962.0
+400161711_400161710,80.0,fuzzy_normal,A,75144,Dina,Generelli,,rue du Dauphiné,14,120300,Genève,400161711,1934-06-16,1934.0
+400161711_400161710,80.0,fuzzy_normal,B,78147,Gianfranco,Generelli,,rue du Dauphiné,14,120300,Genève,400161710,1934-05-26,1934.0
+400187631_400187632,80.0,fuzzy_normal,A,84596,Teresa,Surano,-Nuzzo,Rue de Lyon,53,120300,Genève,400187631,1962-12-06,1962.0
+400187631_400187632,80.0,fuzzy_normal,B,85185,Fernando,Surano,-Nuzzo,Rue de Lyon,53,120300,Genève,400187632,1962-02-07,1962.0
+400159567_400159568,87.10526315789473,fuzzy_normal,A,74305,Bartolomé,Galmés,,Rue de la Colline,8,120500,Genève,400159567,1940-01-14,1940.0
+400159567_400159568,87.10526315789473,fuzzy_normal,B,74306,Barthélémy,Galmés,,Rue de la Colline,8,120500,Genève,400159568,1940-01-14,1940.0
+400151005_400170820,82.5,fuzzy_normal,A,70238,Madeleine,Wegmuller,,Promenade de l'Europe,67,120300,Genève,400151005,1928-02-27,1928.0
+400151005_400170820,82.5,fuzzy_normal,B,77552,Madeleine,Miville,,Promenade de l'Europe,67,120300,Genève,400170820,,1928.0
+400131722_400131721,78.99999999999999,fuzzy_normal,A,61894,Paulette,Jarnieu,,Rue des Minoteries,1,120500,Genève,400131722,1941-10-21,1941.0
+400131722_400131721,78.99999999999999,fuzzy_normal,B,62001,Gilbert,Jarnieu,,Rue des Minoteries,1,120500,Genève,400131721,1941-01-14,1941.0
+400185052_400208656,79.27884615384615,fuzzy_normal,A,84071,André,Salamin,,Rue du Vidollet,39,120200,Genève,400185052,1929-12-13,1929.0
+400185052_400208656,79.27884615384615,fuzzy_normal,B,96179,André,Armand,,rue du Vidollet,11,120200,Genève,400208656,1929-01-06,1929.0
+400187777_400187778,87.27272727272725,fuzzy_normal,A,84675,Caroline,Seris,,Rue du Vidollet,41,120200,Genève,400187777,1942-06-21,1942.0
+400187777_400187778,87.27272727272725,fuzzy_normal,B,88891,Maria Carolina,Seris,,Rue du Vidollet,41,120200,Genève,400187778,1942-06-21,1942.0
+400140075_400140076,88.33333333333333,fuzzy_normal,A,66288,Iselda,Bordignon,,Rue Verte,6,120500,Genève,400140075,1937-08-22,1937.0
+400140075_400140076,88.33333333333333,fuzzy_normal,B,66289,Gisèle,Bordignon,,Rue Verte,6,120500,Genève,400140076,1937-08-22,1937.0
+400162886_400162887,81.47058823529412,fuzzy_normal,A,75535,Kathleen,Currit,,Boulevard de la Cluse,11,120500,Genève,400162886,1942-06-04,1942.0
+400162886_400162887,81.47058823529412,fuzzy_normal,B,75536,Alexandre,Currit,,Boulevard de la Cluse,11,120500,Genève,400162887,1942-08-26,1942.0
+400175263_400175262,85.58823529411765,fuzzy_normal,A,80275,Anne-Marie,Marclay,,Rue Dancet,12,120500,Genève,400175263,,1943.0
+400175263_400175262,85.58823529411765,fuzzy_normal,B,82971,Annette,Marclay,,Rue Dancet,12,120500,Genève,400175262,1943-08-04,1943.0
+400124525_400124524,78.99999999999999,fuzzy_normal,A,59504,Christine,Joye,,Rue de Vermont,34,120200,Genève,400124525,1966-04-29,1966.0
+400124525_400124524,78.99999999999999,fuzzy_normal,B,62537,Michel,Joye,,Rue de Vermont,34,120200,Genève,400124524,1966-02-12,1966.0
+400156232_400156235,78.99999999999999,fuzzy_normal,A,71662,André,Kébiche,,Rue Lamartine,11A,120300,Genève,400156232,1938-03-31,1938.0
+400156232_400156235,78.99999999999999,fuzzy_normal,B,71861,Maria,Kebiche,,Rue Lamartine,11a,120300,Genève,400156235,1938-03-31,1938.0
+400178040_400178039,93.0,fuzzy_normal,A,81023,Théodore,Reitano,,Rue Lamartine,17a,120300,Genève,400178040,1939-04-11,1939.0
+400178040_400178039,93.0,fuzzy_normal,B,81262,Teodoro,Reitano,,Rue Lamartine,17a,120300,Genève,400178039,1939-04-11,1939.0
+400166629_400166628,83.66666666666667,fuzzy_normal,A,76674,Alain,Cazal,,Chemin de Beau-Soleil,6,120600,Genève,400166629,,1929.0
+400166629_400166628,83.66666666666667,fuzzy_normal,B,80586,Jacqueline,Cazal,,Chemin de Beau-Soleil,6,120600,Genève,400166628,1929-01-11,1929.0
+400164157_400164158,81.47058823529412,fuzzy_normal,A,78486,Fabienne,Crelier,,Rue Jean-Violette,23,120500,Genève,400164157,1959-12-23,1959.0
+400164157_400164158,81.47058823529412,fuzzy_normal,B,78487,Pascaline,Crelier,,Rue Jean-Violette,23,120500,Genève,400164158,,1959.0
+400153698_400153699,79.58333333333331,fuzzy_normal,A,71095,Marie-Antoinette,Friedli,,Rue du Grand-Pré,74,120200,Genève,400153698,1965-12-30,1965.0
+400153698_400153699,79.58333333333331,fuzzy_normal,B,71096,Bleuette,Friedli,,Rue du Grand-Pré,74,120200,Genève,400153699,1965-12-30,1965.0
+400165506_400165481,85.99999999999999,fuzzy_normal,A,76255,Jules,Cruzado,-D'Attoma,Carrefour de Villereuse,4,120700,Genève,400165506,1962-04-01,1962.0
+400165506_400165481,85.99999999999999,fuzzy_normal,B,76329,Julio,Cruzado,,Carrefour de Villereuse,4,120700,Genève,400165481,1962-04-01,1962.0
+400165020_400165018,78.99999999999999,fuzzy_normal,A,76134,Gabriel,Girardet,,Rue Louis-Curval,14,120600,Genève,400165020,1957-01-26,1957.0
+400165020_400165018,78.99999999999999,fuzzy_normal,B,76211,Nathalie,Girardet,,Rue Louis-Curval,14,120600,Genève,400165018,1957-01-26,1957.0
+400160130_400160131,80.55555555555556,fuzzy_normal,A,74506,Paola,Goldstein,,Avenue Pictet-de-Rochemont,24,120700,Genève,400160130,1967-02-22,1967.0
+400160130_400160131,80.55555555555556,fuzzy_normal,B,74790,Joël,Goldstein,,Avenue Pictet-de-Rochemont,24,120700,Genève,400160131,1967-12-02,1967.0
+400153262_400153263,84.09090909090908,fuzzy_normal,A,70839,Nino,Vinciguerra,,Rue Cherbuliez,3,120700,Genève,400153262,1942-05-06,1942.0
+400153262_400153263,84.09090909090908,fuzzy_normal,B,70840,Antonio,Vinciguerra,,Rue Cherbuliez,3,120700,Genève,400153263,1942-05-06,1942.0
+400121773_400121774,80.0,fuzzy_normal,A,57426,François,Volpé,-Reymond,Avenue Théodore-Flournoy,5,120700,Genève,400121773,1959-04-01,1959.0
+400121773_400121774,80.0,fuzzy_normal,B,61018,Nicole,Volpé,-Reymond,Avenue Théodore-Flournoy,5,120700,Genève,400121774,1959-04-01,1959.0
+400143799_400143800,79.48275862068965,fuzzy_normal,A,71974,Anne-Claude,Basset,,Rue des Barques,4,120700,Genève,400143799,1958-04-16,1958.0
+400143799_400143800,79.48275862068965,fuzzy_normal,B,71975,Laurence Catherine,Basset,,Rue des Barques,4,120700,Genève,400143800,1958-04-16,1958.0
+400149630_400149631,80.0,fuzzy_normal,A,69675,Christian,Deschenaux,,Avenue Wendt,14,120300,Genève,400149630,1952-09-15,1952.0
+400149630_400149631,80.0,fuzzy_normal,B,72695,Maria,Deschenaux,,Avenue Wendt,14,120300,Genève,400149631,1952-09-15,1952.0
+400153504_400153505,82.5,fuzzy_normal,A,73226,José,Ferri,,Avenue Wendt,8,120300,Genève,400153504,1944-12-24,1944.0
+400153504_400153505,82.5,fuzzy_normal,B,73227,Jocelyne,Ferri,-Rohrbach,Avenue Wendt,8,120300,Genève,400153505,1944-06-29,1944.0
+400170562_400170563,80.0,fuzzy_normal,A,77521,Catherine,Mottaz,-Collet,Rue Ernest-Bloch,56,120700,Genève,400170562,1948-10-01,1948.0
+400170562_400170563,80.0,fuzzy_normal,B,77522,André,Mottaz,-Collet,Rue Ernest-Bloch,56,120700,Genève,400170563,1948-09-01,1948.0
+400129281_400129280,80.55555555555556,fuzzy_normal,A,61066,Christiane,Antich,,Avenue d'Aïre,33,120300,Genève,400129281,,1950.0
+400129281_400129280,80.55555555555556,fuzzy_normal,B,65157,Santiago,Antich,,Avenue d'Aïre,33,120300,Genève,400129280,1950-10-19,1950.0
+400139399_400198731,76.99999999999999,fuzzy_normal,A,69458,Antonio,Barba,,Avenue d'Aïre,9b,120300,Genève,400139399,1957-01-19,1957.0
+400139399_400198731,76.99999999999999,fuzzy_normal,B,93380,Antonio,Jodar,,Avenue d'Aïre,26,120300,Genève,400198731,1957-05-06,1957.0
+400175179_400175180,86.53846153846155,fuzzy_normal,A,79603,Michèle,Marco,,Avenue d'Aïre,56,120300,Genève,400175179,1941-05-03,1941.0
+400175179_400175180,86.53846153846155,fuzzy_normal,B,79604,Celine,Marco,,Avenue d'Aïre,56,120300,Genève,400175180,,1941.0
+400176318_400186020,84.07944514501891,fuzzy_normal,A,79810,Antonio,Marsano,-Mancino,Avenue d'Aïre,95c,120300,Genève,400176318,1949-07-01,1949.0
+400176318_400186020,84.07944514501891,fuzzy_normal,B,84854,Antonio,Santos,,avenue d'Aïre,47,120300,Genève,400186020,1949-01-08,1949.0
+400130202_400130203,93.0,fuzzy_normal,A,61422,Joséfa,Anon,,Avenue de l'Amandolier,24,120800,Genève,400130202,1960-11-15,1960.0
+400130202_400130203,93.0,fuzzy_normal,B,61619,José,Anon,,Avenue de l'Amandolier,24,120800,Genève,400130203,1960-11-15,1960.0
+400183758_400183759,78.99999999999999,fuzzy_normal,A,83748,Bernard,Zaugg,-Baezner,Chemin des Clochettes,14,120600,Genève,400183758,1944-02-01,1944.0
+400183758_400183759,78.99999999999999,fuzzy_normal,B,83749,Fabienne,Zaugg,-Baezner,Chemin des Clochettes,14,120600,Genève,400183759,1944-10-01,1944.0
+400146757_400146758,90.94117647058823,fuzzy_normal,A,68132,Hanafi,Tiliouine,,Chemin de la Petite-Boissière,44,120800,Genève,400146757,,1953.0
+400146757_400146758,90.94117647058823,fuzzy_normal,B,68133,El Hanafi,Tilouine,,Chemin de la Petite-Boissière,44,120800,Genève,400146758,1953-02-28,1953.0
+400152000_400152002,81.15384615384616,fuzzy_normal,A,70527,Inez,Foulkes,-Moors,Avenue de la Gare des Eaux-Vives,26,120800,Genève,400152000,1947-10-14,1947.0
+400152000_400152002,81.15384615384616,fuzzy_normal,B,70529,Huberdine,Foulkes,-Moors,Avenue de la Gare des Eaux-Vives,26,120800,Genève,400152002,1947-10-14,1947.0
+400164584_400164585,81.47058823529412,fuzzy_normal,A,76013,Philippe,Granget,,Avenue de la Gare des Eaux-Vives,26,120800,Genève,400164584,1958-11-30,1958.0
+400164584_400164585,81.47058823529412,fuzzy_normal,B,76095,Christine,Granget,,Avenue de la Gare des Eaux-Vives,26,120800,Genève,400164585,1958-05-21,1958.0
+400169788_400169789,81.47058823529412,fuzzy_normal,A,77634,Manuel,Noya,,Rue des Eaux-Vives,6,120700,Genève,400169788,1951-06-06,1951.0
+400169788_400169789,81.47058823529412,fuzzy_normal,B,81194,Maria-Elena,Noya,,Rue des Eaux-Vives,6,120700,Genève,400169789,,1951.0
+400205755_400205756,80.55555555555556,fuzzy_normal,A,93499,Emma,Brugger,,rue des Vollandes,40,120700,Genève,400205755,1932-07-14,1932.0
+400205755_400205756,80.55555555555556,fuzzy_normal,B,93645,Edgar,Brugger,,rue des Vollandes,40,120700,Genève,400205756,1932-10-30,1932.0
+400160205_400160206,85.99999999999999,fuzzy_normal,A,74642,Luigi,Calisesi,-Kelm,Rue John-Rehfous,9,120800,Genève,400160205,1939-03-01,1939.0
+400160205_400160206,85.99999999999999,fuzzy_normal,B,74643,Louis,Calisesi,,Rue John-Rehfous,9,120800,Genève,400160206,1939-01-03,1939.0
+400145394_400145393,80.55555555555556,fuzzy_normal,A,67873,Evangelos,Tzoutzoulis,-Grivel,Avenue de Riant-Parc,9,120900,Genève,400145394,1967-08-02,1967.0
+400145394_400145393,80.55555555555556,fuzzy_normal,B,72153,Géraldine,Tzoutzoulis,-Grivel,Avenue de Riant-Parc,9,120900,Genève,400145393,1967-06-18,1967.0
+400148150_400148151,80.55555555555556,fuzzy_normal,A,68736,Jean Pierre,Derobert,,Rue Michel-Chauvet,8,120800,Genève,400148150,,
+400148150_400148151,80.55555555555556,fuzzy_normal,B,72499,Thierry,Derobert,,rue Michel-Chauvet,8,120800,Genève,400148151,,
+400208682_400208683,81.15384615384616,fuzzy_normal,A,94969,Pascale,Almagbaly,,Avenue de Champel,4,120600,Genève,400208682,1963-07-27,1963.0
+400208682_400208683,81.15384615384616,fuzzy_normal,B,94970,Usameh,Almagbaly,,Avenue de Champel,4,120600,Genève,400208683,,1963.0
+400136909_400136910,80.0,fuzzy_normal,A,68526,Philippe,Bellon,,Rue Henri-Mussard,26,120800,Genève,400136909,1944-06-27,1944.0
+400136909_400136910,80.0,fuzzy_normal,B,68527,Claire,Bellon,,Rue Henri-Mussard,26,120800,Genève,400136910,1944-01-18,1944.0
+400130767_400130766,78.99999999999999,fuzzy_normal,A,61639,Elisabeth,Amstutz,-Vavasseur,Rue de Carouge,65,120500,Genève,400130767,1949-01-01,1949.0
+400130767_400130766,78.99999999999999,fuzzy_normal,B,65356,Ulrich,Amstutz,,Rue de Carouge,65,120500,Genève,400130766,1949-03-28,1949.0
+400126189_400126190,88.33333333333333,fuzzy_normal,A,59789,Maya,Uwer,-Zapico,Chemin des Tulipiers,22,120800,Genève,400126189,1954-03-08,1954.0
+400126189_400126190,88.33333333333333,fuzzy_normal,B,59790,Maria,Uwer,,Chemin des Tulipiers,22,120800,Genève,400126190,,1954.0
+400135078_400135077,81.15384615384616,fuzzy_normal,A,64027,Monique,Bock,-Ecuer,Chemin des Tulipiers,1,120800,Genève,400135078,1943-09-26,1943.0
+400135078_400135077,81.15384615384616,fuzzy_normal,B,67865,Daniel,Bock,-Ecuer,Chemin des Tulipiers,1,120800,Genève,400135077,1943-04-06,1943.0
+400156844_400156845,80.55555555555556,fuzzy_normal,A,71744,Brigitte,Gauthey,,Chemin Rieu,4,120800,Genève,400156844,,
+400156844_400156845,80.55555555555556,fuzzy_normal,B,74061,Christophe,Gauthey,,Chemin Rieu,4,120800,Genève,400156845,,
+400192934_400192935,83.66666666666667,fuzzy_normal,A,87425,Amos,Sabatini,,chemin de Gilly,32,121200,Grand-Lancy,400192934,,1958.0
+400192934_400192935,83.66666666666667,fuzzy_normal,B,90286,Silvio Amos,Sabatini,,Chemin de Gilly,32,121200,Grand-Lancy,400192935,1958-11-14,1958.0
+400190440_400190439,84.99999999999999,fuzzy_normal,A,86031,Madeleine,Flückiger,,Chemin de la Colline,19,121200,Grand-Lancy,400190440,1947-10-18,1947.0
+400190440_400190439,84.99999999999999,fuzzy_normal,B,86063,Alain,Flückiger,,Chemin de la Colline,19,121200,Grand-Lancy,400190439,1947-02-22,1947.0
+400141436_400141437,80.0,fuzzy_normal,A,66858,Marc,Borella,-Vatter,Rue de Montchoisy,76,120700,Genève,400141436,1963-04-01,1963.0
+400141436_400141437,80.0,fuzzy_normal,B,69832,Marie-Anne,Borella,-Vatter,Rue de Montchoisy,76,120700,Genève,400141437,1963-03-01,1963.0
+400184998_400185001,80.0,fuzzy_normal,A,84060,Pierre,Schlumpf,,Rue de Montchoisy,66,120700,Genève,400184998,1938-02-25,1938.0
+400184998_400185001,80.0,fuzzy_normal,B,84418,Philippe,Schlumpf,,Rue de Montchoisy,66,120700,Genève,400185001,,1938.0
+400189035_400189036,84.99999999999999,fuzzy_normal,A,84929,Margaret,Bolt,-Frey,Chemin du Cretallet,4,121200,Grand-Lancy,400189035,1949-08-30,1949.0
+400189035_400189036,84.99999999999999,fuzzy_normal,B,89089,Martin,Bolt,-Frey,Chemin du Cretallet,4,121200,Grand-Lancy,400189036,1949-10-11,1949.0
+400190075_400190076,78.99999999999999,fuzzy_normal,A,85886,Albert,Darbellay,-Fot,Chemin du Cretallet,6,121200,Grand-Lancy,400190075,1939-02-11,1939.0
+400190075_400190076,78.99999999999999,fuzzy_normal,B,89255,Catherine,Darbellay,-Fot,Chemin du Cretallet,6,121200,Grand-Lancy,400190076,1939-05-06,1939.0
+400207395_400200062,80.55555555555556,fuzzy_normal,A,94198,Georges,Paul,,Chemin Colladon,5,120900,Genève,400207395,1929-12-06,1929.0
+400207395_400200062,80.55555555555556,fuzzy_normal,B,94559,Georges,Penel,,chemin Colladon,5,120900,Genève,400200062,1929-03-13,1929.0
+400156604_400163587,78.26829268292683,fuzzy_normal,A,71907,Benoît,Chappuis,-Wenger,Chemin de la Chevillarde,32,120800,Genève,400156604,1956-12-01,1956.0
+400156604_400163587,78.26829268292683,fuzzy_normal,B,78402,Benoît,Maurice,,Chemin de la Chevillarde,24,120800,Genève,400163587,1956-06-01,1956.0
+400159873_400169752,80.69277108433735,fuzzy_normal,A,77895,Roger,Clerc,-Dittert,Chemin de la Chevillarde,16c,120800,Genève,400159873,1943-08-01,1943.0
+400159873_400169752,80.69277108433735,fuzzy_normal,B,81190,Roger,Lozeron,,Chemin de la Chevillarde,28,120800,Genève,400169752,1943-10-08,1943.0
+400193650_400193651,81.47058823529412,fuzzy_normal,A,87923,Alexandre,Avanzini,-Stöckli,Chemin Annevelle,10,121300,Petit-Lancy,400193650,1958-04-01,1958.0
+400193650_400193651,81.47058823529412,fuzzy_normal,B,91651,Béatrice,Avanzini,-Stöckli,Chemin Annevelle,10,121300,Petit-Lancy,400193651,1958-08-01,1958.0
+400201476_400201475,80.0,fuzzy_normal,A,91098,Nicolas,Vonlanthen,,Chemin de Belle-Cour,42,121303,Onex,400201476,1965-08-30,1965.0
+400201476_400201475,80.0,fuzzy_normal,B,94795,Claudia,Vonlanthen,,Chemin de Belle-Cour,42,121303,Onex,400201475,1965-05-01,1965.0
+400199804_400200753,79.58333333333334,fuzzy_normal,A,90228,Audrey,Devillard Bally,,Chemin de la Vi-Longe,20,121303,Onex,400199804,1959-09-27,1959.0
+400199804_400200753,79.58333333333334,fuzzy_normal,B,90999,Claude,Devillard,,Chemin de la Vi-Longe,20,121303,Onex,400200753,1959-06-30,1959.0
+400196729_400196730,78.99999999999999,fuzzy_normal,A,92921,Pierre-Alain,Quennoz,-Corminboeuf,Chemin des Pampres,3,121303,Onex,400196729,1965-03-17,1965.0
+400196729_400196730,78.99999999999999,fuzzy_normal,B,92922,Francine,Quennoz,-Corminboeuf,Chemin des Pampres,3,121303,Onex,400196730,1965-12-06,1965.0
+400174715_400174716,78.99999999999999,fuzzy_normal,A,80196,Joaquin,Martin,,Rue Le-Corbusier,24,120800,Genève,400174715,,1944.0
+400174715_400174716,78.99999999999999,fuzzy_normal,B,80197,Juliette,Martin,,Rue Le-Corbusier,24,120800,Genève,400174716,1944-05-09,1944.0
+400188765_400188764,84.09090909090908,fuzzy_normal,A,85410,Anne,Hassel,,Chemin des Trévisans,14,121303,Onex,400188765,1958-11-15,1958.0
+400188765_400188764,84.09090909090908,fuzzy_normal,B,89041,Andreas,Hassel,,Chemin des Trévisans,14,121303,Onex,400188764,,1958.0
+400196873_400196871,82.5,fuzzy_normal,A,89670,Constantin,Xygalas,,Chemin de la Vendée,29,121300,Petit-Lancy,400196873,,1945.0
+400196873_400196871,82.5,fuzzy_normal,B,92944,Kostas,Xygalas,,Chemin de la Vendée,29,121300,Petit-Lancy,400196871,1945-04-08,1945.0
+400194994_400194995,80.0,fuzzy_normal,A,88248,René,Bosson,,chemin des Vignes,26,121300,Petit-Lancy,400194994,1937-01-07,1937.0
+400194994_400194995,80.0,fuzzy_normal,B,88249,Rose-Marie,Bosson,,chemin des Vignes,26,121300,Petit-Lancy,400194995,1937-03-17,1937.0
+400184607_400204884,79.69043151969981,fuzzy_normal,A,84013,Maria,Da Silva,,rampe du Pont-Rouge,24,121300,Petit-Lancy,400184607,1967-08-11,1967.0
+400184607_400204884,79.69043151969981,fuzzy_normal,B,95563,Cristina,Da Silva,Rodrigues,Rampe du Pont-Rouge,16,121300,Petit-Lancy,400204884,1967-08-11,1967.0
+400194350_400194349,81.15384615384616,fuzzy_normal,A,88139,Fernand,Pochon,,avenue des Grandes-Communes,15,121300,Petit-Lancy,400194350,,
+400194350_400194349,81.15384615384616,fuzzy_normal,B,91938,Eliane,Pochon,,avenue des Grandes-Communes,15,121300,Petit-Lancy,400194349,,
+400200804_400200805,83.66666666666667,fuzzy_normal,A,91006,Christian,Ducret,,Avenue des Grandes-Communes,20e,121303,Onex,400200804,1964-09-16,1964.0
+400200804_400200805,83.66666666666667,fuzzy_normal,B,91007,Corine,Ducret,,Avenue des Grandes-Communes,20e,121303,Onex,400200805,1964-10-19,1964.0
+400165108_400202778,85.99999999999999,fuzzy_normal,A,76150,Maria Isabel,Garcia,Rodriguez,Rue des Grand-Portes,7,121303,Onex,400165108,,1948.0
+400165108_400202778,85.99999999999999,fuzzy_normal,B,91833,Isabelle,Garcia,,Rue des Grand-Portes,7,121303,Onex,400202778,1948-01-21,1948.0
+400191558_400191559,80.55555555555556,fuzzy_normal,A,86717,Pavol,Karaman,,Chemin des Fraisiers,29,121200,Grand-Lancy,400191558,1947-10-07,1947.0
+400191558_400191559,80.55555555555556,fuzzy_normal,B,89586,Olga,Karaman,,Chemin des Fraisiers,29,121200,Grand-Lancy,400191559,1947-05-24,1947.0
+400203874_400203873,90.45454545454545,fuzzy_normal,A,92437,Rosaria,Martin,,route du Grand-Lancy,179a,121303,Onex,400203874,1955-12-01,1955.0
+400203874_400203873,90.45454545454545,fuzzy_normal,B,92514,Sara,Martin,,route du Grand-Lancy,179a,121303,Onex,400203873,1955-04-01,1955.0
+400192488_400192489,82.5,fuzzy_normal,A,87361,José,Miramontes,-Rodriguez,Avenue Eugène-LANCE,80,121200,Grand-Lancy,400192488,1944-03-01,1944.0
+400192488_400192489,82.5,fuzzy_normal,B,87561,Rosa,Miramontes,,Avenue Eugène-LANCE,80,121200,Grand-Lancy,400192489,1944-01-03,1944.0
+400202123_400202105,88.45454545454545,fuzzy_normal,A,91214,Monique,Gallay,,Rue de la Calle,38,121303,Onex,400202123,1957-05-19,1957.0
+400202123_400202105,88.45454545454545,fuzzy_normal,B,94885,Monique,Gallo,,Rue de la Calle,21,121303,Onex,400202105,1957-05-19,1957.0
+400203572_400203571,82.5,fuzzy_normal,A,92328,Sophie,Macheret,-Schwarz,Rue du Loup,7,121303,Onex,400203572,1962-02-28,1962.0
+400203572_400203571,82.5,fuzzy_normal,B,92412,Pierre,Macheret,-Schwarz,Rue du Loup,7,121303,Onex,400203571,,1962.0
+400202820_400202821,78.99999999999999,fuzzy_normal,A,95117,Karl-Heinz,Kratz,,Rue des Racettes,55,121303,Onex,400202820,1943-02-21,1943.0
+400202820_400202821,78.99999999999999,fuzzy_normal,B,95118,Irène,Kratz,-Steinke,Rue des Racettes,55,121303,Onex,400202821,,1943.0
+400206773_400206772,83.42105263157895,fuzzy_normal,A,93895,Anne-Marie,Monod,,Chemin de l'Echarpine,10,121400,Vernier,400206773,1965-12-01,1965.0
+400206773_400206772,83.42105263157895,fuzzy_normal,B,93985,Alexandre,Monod,,Chemin de l'Echarpine,10,121400,Vernier,400206772,1965-10-01,1965.0
+400205987_400205988,83.26086956521739,fuzzy_normal,A,95732,Jean-Claude,Tranchet,,Chemin du Progrès,7,121400,Vernier,400205987,1953-11-09,1953.0
+400205987_400205988,83.26086956521739,fuzzy_normal,B,95733,Jeanne-Irène,Tranchet,,Chemin du Progrès,7,121400,Vernier,400205988,1953-09-11,1953.0
+400143103_400143102,83.66666666666667,fuzzy_normal,A,67073,Rosemarie,Barras,-Demierre,Chemin du Champ-d'Anier,24,120900,Genève,400143103,1946-03-08,1946.0
+400143103_400143102,83.66666666666667,fuzzy_normal,B,70423,Marcel,Barras,-Demierre,Chemin du Champ-d'Anier,24,120900,Genève,400143102,1946-09-01,1946.0
+400151953_400151952,80.0,fuzzy_normal,A,70521,Monique,Falconnet,,chemin du Champ-d'Anier,22,120900,Genève,400151953,,1932.0
+400151953_400151952,80.0,fuzzy_normal,B,70552,Camille,Falconnet,,Chemin du Champ-d'Anier,22,120900,Genève,400151952,1932-12-21,1932.0
+400204569_400204568,82.5,fuzzy_normal,A,92604,Emilia,Sperinde,,Rue du Comte-Géraud,11,121303,Onex,400204569,,1963.0
+400204569_400204568,82.5,fuzzy_normal,B,92744,Nicola,Sperinde,,Rue du Comte-Géraud,11,121303,Onex,400204568,1963-08-02,1963.0
+400196993_400196992,81.15384615384616,fuzzy_normal,A,90335,Deborah,Lavanchy,-Pinkstone,Chemin des Corbillettes,27,121600,Cointrin,400196993,1962-09-10,1962.0
+400196993_400196992,81.15384615384616,fuzzy_normal,B,92956,Didier,Lavanchy,,Chemin des Corbillettes,27,121600,Cointrin,400196992,1962-05-17,1962.0
+400207428_400207429,81.15384615384616,fuzzy_normal,A,94120,Germaine,Peiry,,Chemin du Ruisseau,22,121600,Cointrin,400207428,,
+400207428_400207429,81.15384615384616,fuzzy_normal,B,94203,André,Peiry,,Chemin du Ruisseau,22,121600,Cointrin,400207429,,
+400210828_400210829,78.99999999999999,fuzzy_normal,A,97226,Gérard,Füllemann,,Chemin des Feuillus,20,121700,Meyrin,400210828,1963-03-28,1963.0
+400210828_400210829,78.99999999999999,fuzzy_normal,B,98823,Rita,Füllemann,-Di -Tondo,Chemin des Feuillus,20,121700,Meyrin,400210829,1963-07-15,1963.0
+400211374_400211373,84.09090909090908,fuzzy_normal,A,96673,Gabriel,Chatelanat,,Chemin des Picottes,10,121700,Meyrin,400211374,1946-09-27,1946.0
+400211374_400211373,84.09090909090908,fuzzy_normal,B,98906,Gaby,Chatelanat,,Chemin des Picottes,10,121700,Meyrin,400211373,,1946.0
+400191250_400192348,79.31174089068826,fuzzy_normal,A,86653,Jacqueline,Genevard,,Chemin des Palettes,17,121200,Grand-Lancy,400191250,1946-08-01,1946.0
+400191250_400192348,79.31174089068826,fuzzy_normal,B,90130,Jaqueline,Meier,,Chemin des Palettes,17,121200,Grand-Lancy,400192348,1946-06-28,1946.0
+400192631_400192632,96.1111111111111,fuzzy_normal,A,87585,Alexandre,Ruedin,,Chemin des Palettes,11,121200,Grand-Lancy,400192631,1937-08-16,1937.0
+400192631_400192632,96.1111111111111,fuzzy_normal,B,87586,Alexandra,Ruedin,,Chemin des Palettes,11,121200,Grand-Lancy,400192632,,1937.0
+400206796_400206795,84.44444444444443,fuzzy_normal,A,93987,Conchita,Nunez,,Route de Peney,51,121400,Vernier,400206796,1952-11-22,1952.0
+400206796_400206795,84.44444444444443,fuzzy_normal,B,95881,Concepcion,Nunez,,Route de Peney,51,121400,Vernier,400206795,1952-11-22,1952.0
+400211976_400211977,91.66666666666666,fuzzy_normal,A,96758,José Isabella,Gonzalez,-Mentha,Avenue François-Besson,12,121700,Meyrin,400211976,1953-08-24,1953.0
+400211976_400211977,91.66666666666666,fuzzy_normal,B,96759,Isabella,Gonzalez,-Mentha,Avenue François-Besson,12,121700,Meyrin,400211977,1953-08-24,1953.0
+400211900_400211901,82.5,fuzzy_normal,A,97403,Patricia,Kuonen,-Moullet,Route de Meyrin,287,121700,Meyrin,400211900,1965-07-01,1965.0
+400211900_400211901,82.5,fuzzy_normal,B,97404,Eric,Kuonen,-Moullet,Route de Meyrin,287,121700,Meyrin,400211901,1965-12-01,1965.0
+400186023_400191436,80.35947712418302,fuzzy_normal,A,84254,Antonio,Dos Santos,,chemin des Pontets,31B,121200,Grand-Lancy,400186023,1957-07-26,1957.0
+400186023_400191436,80.35947712418302,fuzzy_normal,B,86681,Antonio,Cardoso,,Chemin des Pontets,21,121200,Grand-Lancy,400191436,1957-03-29,1957.0
+400191138_400192235,81.73076923076921,fuzzy_normal,A,86630,Christine,Gaillard,-Verasani,Chemin des Pontets,8,121200,Grand-Lancy,400191138,1955-03-01,1955.0
+400191138_400192235,81.73076923076921,fuzzy_normal,B,90121,Martine,Maillard,,Chemin des Pontets,3,121200,Grand-Lancy,400192235,1955-10-01,1955.0
+400191707_400191708,81.15384615384616,fuzzy_normal,A,86739,Daniel,Castiglioni,,Chemin des Pontets,9,121200,Grand-Lancy,400191707,1952-09-24,1952.0
+400191707_400191708,81.15384615384616,fuzzy_normal,B,89614,Yolande,Castiglioni,-Gilliéron,Chemin des Pontets,9,121200,Grand-Lancy,400191708,1952-11-12,1952.0
+400192234_400192235,81.15384615384616,fuzzy_normal,A,87288,Daniel,Maillard,-Braillard,Chemin des Pontets,3,121200,Grand-Lancy,400192234,1955-10-15,1955.0
+400192234_400192235,81.15384615384616,fuzzy_normal,B,90121,Martine,Maillard,,Chemin des Pontets,3,121200,Grand-Lancy,400192235,1955-10-01,1955.0
+400192210_400192211,78.99999999999999,fuzzy_normal,A,90115,Laurent,Maulini,,Chemin du Jonc,18b,121800,Le Grand-Saconnex,400192210,1961-07-01,1961.0
+400192210_400192211,78.99999999999999,fuzzy_normal,B,90116,Sylviane,Maulini,,Chemin du Jonc,18b,121800,Le Grand-Saconnex,400192211,1961-06-28,1961.0
+400208178_400208177,82.5,fuzzy_normal,A,94287,Denise,Albisser,-Perriard,Rue Virginio-Malnati,68,121700,Meyrin,400208178,,1942.0
+400208178_400208177,82.5,fuzzy_normal,B,94448,Werner,Albisser,,Rue Virginio-Malnati,68,121700,Meyrin,400208177,1942-08-04,1942.0
+400213490_400213489,80.0,fuzzy_normal,A,96978,Arlette,Morisod,,Rue Virginio-Malnati,21,121700,Meyrin,400213490,1954-11-22,1954.0
+400213490_400213489,80.0,fuzzy_normal,B,97960,Maurice,Morisod,,Rue Virginio-Malnati,21,121700,Meyrin,400213489,1954-02-05,1954.0
+400182312_400182313,80.55555555555556,fuzzy_normal,A,83518,Anne,Miche,-Stucker,Avenue Edmond-Vaucher,9B,121912,Châtelaine,400182312,1968-12-01,1968.0
+400182312_400182313,80.55555555555556,fuzzy_normal,B,86405,Alain,Miche,-Stucker,Avenue Edmond-Vaucher,9B,121912,Châtelaine,400182313,1968-05-01,1968.0
+400127409_400128789,70.5952380952381,fuzzy_normal,A,60484,Bertha,Eugster,-Baumgartner,Cité Vieusseux,8,120300,Genève,400127409,1930-05-12,1930.0
+400127409_400128789,70.5952380952381,fuzzy_normal,B,60935,Berthe,Elsener,,Cité Vieusseux,8Résidence des Franchises,120300,Genève,400128789,1930-01-23,1930.0
+400137522_400158755,81.53225806451611,fuzzy_normal,A,64323,Giuseppe,Palermo,,Cité Vieusseux,16,120300,Genève,400137522,,1935.0
+400137522_400158755,81.53225806451611,fuzzy_normal,B,75120,Giuseppe,Giliberto,,Cité Vieusseux,12,120300,Genève,400158755,1935-06-26,1935.0
+400141014_400141012,78.99999999999999,fuzzy_normal,A,66259,Josephine,Brigante,,Cité Vieusseux,16,120300,Genève,400141014,,1945.0
+400141014_400141012,78.99999999999999,fuzzy_normal,B,66670,Cosimo,Brigante,,Cité Vieusseux,16,120300,Genève,400141012,,1945.0
+400148716_400148715,80.0,fuzzy_normal,A,69382,Caroline,Thorimbert,-Ménétrey,Cité Vieusseux,12,120300,Genève,400148716,1961-07-01,1961.0
+400148716_400148715,80.0,fuzzy_normal,B,72572,Claude,Thorimbert,-Ménétrey,Cité Vieusseux,12,120300,Genève,400148715,1961-10-01,1961.0
+400209303_400209304,84.09090909090908,fuzzy_normal,A,95260,Martti,Pimiä,,Avenue Sainte-Cécile,15,121700,Meyrin,400209303,1949-05-05,1949.0
+400209303_400209304,84.09090909090908,fuzzy_normal,B,96291,Marja,Pimiä,,Avenue Sainte-Cécile,15,121700,Meyrin,400209304,1949-10-08,1949.0
+400214747_400214746,81.15384615384616,fuzzy_normal,A,97838,Liliane,Zosso,,Avenue Sainte-Cécile,17,121700,Meyrin,400214747,1940-04-14,1940.0
+400214747_400214746,81.15384615384616,fuzzy_normal,B,98341,Roland,Zosso,,Avenue Sainte-Cécile,17,121700,Meyrin,400214746,1940-10-05,1940.0
+400200587_400200588,82.5,fuzzy_normal,A,90978,Machiel,Post,-Messerli,Chemin du Renard,31,121910,Aïre,400200587,1955-08-01,1955.0
+400200587_400200588,82.5,fuzzy_normal,B,90979,Françoise,Post,-Messerli,Chemin du Renard,31,121910,Aïre,400200588,,1955.0
+400213025_400213026,80.55555555555556,fuzzy_normal,A,97691,Marc,Nogarède,,Chemin du Renard,47,121910,Aïre,400213025,1958-02-01,1958.0
+400213025_400213026,80.55555555555556,fuzzy_normal,B,97692,Mandy,Nogarède,,Chemin du Renard,47,121910,Aïre,400213026,1958-12-01,1958.0
+400141185_400141184,78.99999999999999,fuzzy_normal,A,66345,Clara,Berger,,Route de Vandoeuvres,8,122300,Cologny,400141185,1953-08-10,1953.0
+400141185_400141184,78.99999999999999,fuzzy_normal,B,69797,Bernard A.,Berger,,Route de Vandoeuvres,8,122300,Cologny,400141184,1953-03-24,1953.0
+400208665_400208666,93.0,fuzzy_normal,A,94921,Patrick,Arnoux,-Zanon,Rue des Bugnons,10,121700,Meyrin,400208665,1961-10-01,1961.0
+400208665_400208666,93.0,fuzzy_normal,B,94963,Patricia,Arnoux,,Rue des Bugnons,10,121700,Meyrin,400208666,,1961.0
+400209275_400209276,81.11111111111111,fuzzy_normal,A,95254,Enza,Palozzoni,,Rue des Lattes,21,121700,Meyrin,400209275,1960-10-14,1960.0
+400209275_400209276,81.11111111111111,fuzzy_normal,B,95440,Vincenzina,Palazzoni,,Rue des Lattes,21,121700,Meyrin,400209276,1960-01-21,1960.0
+400155180_400155181,76.08695652173914,fuzzy_normal,A,71333,Andre,Forestier,,Chemin du Pré-du-Couvent,1bEMS Eyard Fatio,122400,Chêne-Bougeries,400155180,,
+400155180_400155181,76.08695652173914,fuzzy_normal,B,71334,Madeleine,Forestier,,chemin du Pré-du-Couvent,1b,122400,Chêne-Bougeries,400155181,,
+400204252_400204253,80.0,fuzzy_normal,A,95449,Benoit,Ravier,,Rue du Vieux-Moulin,7,121303,Onex,400204252,1937-05-08,1937.0
+400204252_400204253,80.0,fuzzy_normal,B,95450,Libertad,Ravier,,Rue du Vieux-Moulin,7,121303,Onex,400204253,1937-04-25,1937.0
+400149846_400149847,78.99999999999999,fuzzy_normal,A,69165,Marie-France,Faublas,,Chemin de la Béraille,3,122600,Thônex,400149846,1946-05-27,1946.0
+400149846_400149847,78.99999999999999,fuzzy_normal,B,72725,Antonine,Faublas,,Chemin de la Béraille,3,122600,Thônex,400149847,1946-05-27,1946.0
+400156014_400156013,83.42105263157895,fuzzy_normal,A,71579,Catherine,Gay,-Estoppey,Chemin des Colibris,4,122600,Thônex,400156014,1960-08-01,1960.0
+400156014_400156013,83.42105263157895,fuzzy_normal,B,71823,Christophe,Gay,-Estoppey,Chemin des Colibris,4,122600,Thônex,400156013,1960-03-01,1960.0
+400159843_400159782,100.0,exact,A,74758,François,Gaillard,,Chemin Frank-Thomas,104,122300,Cologny,400159843,1954-09-05,1954.0
+400159843_400159782,100.0,exact,B,77885,Francois,Gaillard,,Chemin Frank-Thomas,104,122300,Cologny,400159782,1954-09-11,1954.0
+400171585_400171584,81.47058823529412,fuzzy_normal,A,78729,Philippe,Michon,,Route des Chevaliers-de-Malte,27,122800,Plan-les-Ouates,400171585,1957-05-25,1957.0
+400171585_400171584,81.47058823529412,fuzzy_normal,B,78881,Christine,Michon,,Route des Chevaliers-de-Malte,27,122800,Plan-les-Ouates,400171584,1957-12-05,1957.0
+400201482_400201481,81.15384615384616,fuzzy_normal,A,91100,Hélène,Wiener,,Chemin de Champ-Rond,7,123200,Confignon,400201482,1942-01-14,1942.0
+400201482_400201481,81.15384615384616,fuzzy_normal,B,94797,Charles,Wiener,,Chemin de Champ-Rond,7,123200,Confignon,400201481,1942-01-14,1942.0
+400196752_400196754,78.99999999999999,fuzzy_normal,A,89356,Carlo,Gherardini,,chemin du Fief-de-Chapitre,16,121300,Petit-Lancy,400196752,1939-09-27,1939.0
+400196752_400196754,78.99999999999999,fuzzy_normal,B,89357,Marie,Gherardini,,chemin du Fief-de-Chapitre,16,121300,Petit-Lancy,400196754,,1939.0
+400196752_400196753,84.09090909090908,fuzzy_normal,A,89356,Carlo,Gherardini,,chemin du Fief-de-Chapitre,16,121300,Petit-Lancy,400196752,1939-09-27,1939.0
+400196752_400196753,84.09090909090908,fuzzy_normal,B,92928,Claire,Gherardini,,chemin du Fief-de-Chapitre,16,121300,Petit-Lancy,400196753,1939-05-14,1939.0
+400196754_400196753,84.09090909090908,fuzzy_normal,A,89357,Marie,Gherardini,,chemin du Fief-de-Chapitre,16,121300,Petit-Lancy,400196754,,1939.0
+400196754_400196753,84.09090909090908,fuzzy_normal,B,92928,Claire,Gherardini,,chemin du Fief-de-Chapitre,16,121300,Petit-Lancy,400196753,1939-05-14,1939.0
+400197739_400197740,84.09090909090908,fuzzy_normal,A,89796,Ernest,Messerli,-Carrara,Chemin du Fief-de-Chapitre,11,121300,Petit-Lancy,400197739,1946-05-01,1946.0
+400197739_400197740,84.09090909090908,fuzzy_normal,B,93192,Agnès,Messerli,,Chemin du Fief-de-Chapitre,11,121300,Petit-Lancy,400197740,1946-07-31,1946.0
+400204030_400204032,80.55555555555556,fuzzy_normal,A,92464,Giancarlo,Marzi,,Chemin de la Concorde,9,123300,Bernex,400204030,1960-07-29,1960.0
+400204030_400204032,80.55555555555556,fuzzy_normal,B,92539,Francesca,Marzi,-Calo,Chemin de la Concorde,9,123300,Bernex,400204032,1960-02-20,1960.0
+400200965_400200964,84.09090909090908,fuzzy_normal,A,91431,Marie,Teijeiro,,Chemin des Côtes,8,123300,Bernex,400200965,1968-01-12,1968.0
+400200965_400200964,84.09090909090908,fuzzy_normal,B,94704,Manuel,Teijeiro,,Chemin des Côtes,8,123300,Bernex,400200964,1968-03-11,1968.0
+400192671_400192670,81.47058823529412,fuzzy_normal,A,87383,Alexandre,Ravenel,,Chemin des Sylvains,36,123400,Vessy,400192671,1968-05-24,1968.0
+400192671_400192670,81.47058823529412,fuzzy_normal,B,87591,Sylviane,Ravenel,,Chemin des Sylvains,36,123400,Vessy,400192670,1968-09-08,1968.0
+400172304_400172305,81.15384615384616,fuzzy_normal,A,79110,Peter,Mühlemann,-Huysman,Route de Collex,209,123900,Collex,400172304,1967-06-08,1967.0
+400172304_400172305,81.15384615384616,fuzzy_normal,B,79196,Patricia,Mühlemann,-Huysman,Route de Collex,209,123900,Collex,400172305,1967-08-01,1967.0
+400217404_400217403,78.99999999999999,fuzzy_normal,A,99170,Nathalie,Cessens,-Favre,Rampe de Choully,14b,124200,Satigny,400217404,1966-10-07,1966.0
+400217404_400217403,78.99999999999999,fuzzy_normal,B,99630,Olivier,Cessens,-Favre,Rampe de Choully,14b,124200,Satigny,400217403,1966-04-24,1966.0
+400177429_400177430,84.99999999999999,fuzzy_normal,A,80559,Antoine,Rupp,-Beney,Chemin de la Rétuelle,8,125200,Meinier,400177429,1968-09-01,1968.0
+400177429_400177430,84.99999999999999,fuzzy_normal,B,83275,Suzanne,Rupp,-Beney,Chemin de la Rétuelle,8,125200,Meinier,400177430,1968-06-01,1968.0
+400202798_400203442,79.04117009750811,fuzzy_normal,A,91322,Manuel,Garcia,,Avenue du Gros-Chêne,37b,121303,Onex,400202798,1960-12-21,1960.0
+400202798_400203442,79.04117009750811,fuzzy_normal,B,95200,Manuel,Machado,,Avenue du Gros-Chêne,29,121303,Onex,400203442,1960-08-05,1960.0
+400200287_400200289,80.0,fuzzy_normal,A,94596,Denis,Bourgoin,-Thorimbert,avenue du Gros-Chêne,40,121303,Onex,400200287,1954-06-01,1954.0
+400200287_400200289,80.0,fuzzy_normal,B,94597,Françoise,Bourgoin,-Thorimbert,avenue du Gros-Chêne,40,121303,Onex,400200289,1954-05-01,1954.0
+400204108_400204109,78.99999999999999,fuzzy_normal,A,95362,Sabine,Moschella,,avenue du Gros-Chêne,14A,121303,Onex,400204108,1959-03-01,1959.0
+400204108_400204109,78.99999999999999,fuzzy_normal,B,95363,Francesco,Moschella,,avenue du Gros-Chêne,14A,121303,Onex,400204109,1959-07-18,1959.0
+400141252_400141253,83.42105263157895,fuzzy_normal,A,66350,Christophe,Burggraf,,chemin des Bois,36,125500,Veyrier,400141252,,1963.0
+400141252_400141253,83.42105263157895,fuzzy_normal,B,66351,Catherine,Burggraf,,Chemin des Bois,36,125500,Veyrier,400141253,1963-04-22,1963.0
+400123387_400123388,84.0625,fuzzy_normal,A,58269,Sandrine,Schorr,,Chemin Falconnier,45,126000,Nyon,400123387,1966-09-12,1966.0
+400123387_400123388,84.0625,fuzzy_normal,B,62331,Martin,Schorr,,Chemin Falconnier,43,126000,Nyon,400123388,1966-03-08,1966.0
+400123492_400123491,97.30769230769229,fuzzy_normal,A,58294,Michel,Allaman,-Yersin,Chemin du Carroz d'Amont,12,126400,St-Cergue,400123492,1946-03-20,1946.0
+400123492_400123491,97.30769230769229,fuzzy_normal,B,62341,Michèle,Allaman,-Yersin,Chemin du Carroz d'Amont,12,126400,St-Cergue,400123491,1946-04-20,1946.0
+400188935_400188936,82.5,fuzzy_normal,A,89074,René,Béguelin,,Chemin des Baules,4,126800,Begnins,400188935,1937-01-15,1937.0
+400188935_400188936,82.5,fuzzy_normal,B,89075,Julienne,Béguelin,,Chemin des Baules,4,126800,Begnins,400188936,1937-04-21,1937.0
+400177851_400177852,78.99999999999999,fuzzy_normal,A,81113,Daniel,Rod,,La Vy-Neuve,5,128700,Laconnex,400177851,1944-12-30,1944.0
+400177851_400177852,78.99999999999999,fuzzy_normal,B,81114,Rosemarie,Rod,,La Vy-Neuve,5,128700,Laconnex,400177852,1944-06-10,1944.0
+400197319_400197320,82.5,fuzzy_normal,A,90454,Juan,Mellen,,Rue des Bossons,90,121300,Petit-Lancy,400197319,1944-08-27,1944.0
+400197319_400197320,82.5,fuzzy_normal,B,90455,Anna,Mellen,,Rue des Bossons,90,121300,Petit-Lancy,400197320,1944-10-06,1944.0
+400198053_400201134,72.04201680672269,fuzzy_normal,A,93231,Michel,Schopfer,,rue des Bossons,78-80,121300,Petit-Lancy,400198053,1937-05-06,1937.0
+400198053_400201134,72.04201680672269,fuzzy_normal,B,94736,Michel,Descombes,-Blandin,Rue des Bossons,24,121303,Onex,400201134,1937-02-22,1937.0
+400168108_400168109,80.0,fuzzy_normal,A,77165,Jocelyne,Hohl,,Chemin de la Fauvette,46,129400,Genthod,400168108,1953-04-22,1953.0
+400168108_400168109,80.0,fuzzy_normal,B,77166,Michel,Hohl,,Chemin de la Fauvette,46,129400,Genthod,400168109,1953-11-18,1953.0
+400141740_400141741,85.58823529411765,fuzzy_normal,A,66893,Lamberto,Pieroni,,Route de Collex,22b,129400,Genthod,400141740,1941-01-07,1941.0
+400141740_400141741,85.58823529411765,fuzzy_normal,B,66894,Elisabeth,Pieroni,,Route de Collex,22b,129400,Genthod,400141741,1941-05-14,1941.0
+400128541_400128542,83.66666666666667,fuzzy_normal,A,61125,Nicolas,Uhlmann,,Chemin des Voirons,9a,129600,Coppet,400128541,1970-05-01,1970.0
+400128541_400128542,83.66666666666667,fuzzy_normal,B,65062,Milagros,Uhlmann,,Chemin des Voirons,9a,129600,Coppet,400128542,1970-06-01,1970.0
+400107509_400107511,81.15384615384616,fuzzy_normal,A,50054,Genier,Pavillard,,Route de Saint-Denis,2,130404,Senarclens,400107509,,
+400107509_400107511,81.15384615384616,fuzzy_normal,B,54260,Georges,Pavillard,,Route de Saint-Denis,2,130404,Senarclens,400107511,,
+400077636_400077637,78.99999999999999,fuzzy_normal,A,38062,Henri,Streuli,,Chemin Prés-du-Dimanche,38,130400,Cossonay-Ville,400077636,1949-09-20,1949.0
+400077636_400077637,78.99999999999999,fuzzy_normal,B,38063,Christiane,Streuli,,Chemin Prés-du-Dimanche,38,130400,Cossonay-Ville,400077637,,1949.0
+400023496_400023497,79.73684210526315,fuzzy_normal,A,9165,Alexandre,Chevalley,,Route de Ferreyres,9,131500,La Sarraz,400023496,1928-02-02,1928.0
+400023496_400023497,79.73684210526315,fuzzy_normal,B,11692,Jacqueline,Chevalley,,Route de Ferreyres,9,131500,La Sarraz,400023497,1928-03-27,1928.0
+400081057_400081055,84.44444444444443,fuzzy_normal,A,36491,Anne-Marie,Rütsche,-Meier,Quartier de la Prairie,3,140000,Yverdon-les-Bains,400081057,1933-10-04,1933.0
+400081057_400081055,84.44444444444443,fuzzy_normal,B,40160,Hans-Max,Rütsche,-Meier,Quartier de la Prairie,3,140000,Yverdon-les-Bains,400081055,1933-10-04,1933.0
+400076296_400076294,81.15384615384616,fuzzy_normal,A,33506,Marino,Vello,,Rue des Moulins,52,140000,Yverdon-les-Bains,400076296,1968-02-22,1968.0
+400076296_400076294,81.15384615384616,fuzzy_normal,B,37471,Gerardo,Vello,,Rue des Moulins,52,140000,Yverdon-les-Bains,400076294,1968-02-22,1968.0
+400085167_400085163,85.58904109589041,fuzzy_normal,A,38045,Carmen,Pahud,,Route d'Ogens,5,140704,Bioley-Magnoux,400085167,,1932.0
+400085167_400085163,85.58904109589041,fuzzy_normal,B,43040,René,Pahud,-Vallotton,route d'Ogens,,140704,Bioley-Magnoux,400085163,1932-01-28,1932.0
+400065722_400065721,80.0,fuzzy_normal,A,27525,Nathalie,Trallero,-Enrico,Chemin de l'Erberey,27,160800,Oron-le-Châtel,400065722,1968-07-09,1968.0
+400065722_400065721,80.0,fuzzy_normal,B,27560,Pascal,Trallero,-Enrico,Chemin de l'Erberey,27,160800,Oron-le-Châtel,400065721,1968-02-17,1968.0
+400051676_400051675,78.99999999999999,fuzzy_normal,A,20925,Sandra,Perret,,Route de Rombuet,8,161600,Attalens,400051676,1964-09-11,1964.0
+400051676_400051675,78.99999999999999,fuzzy_normal,B,21005,Christian,Perret,,Route de Rombuet,8,161600,Attalens,400051675,1964-07-04,1964.0
+400034316_400034317,79.37756497948017,fuzzy_normal,A,13232,Christian,Muller,,Route de Palézieux,79,161000,Oron-la-Ville,400034316,1959-07-08,1959.0
+400034316_400034317,79.37756497948017,fuzzy_normal,B,16939,Marianne,Muller,,route de Palézieux,,161000,Oron-la-Ville,400034317,1959-03-31,1959.0
+400026504_400026505,81.15384615384616,fuzzy_normal,A,9834,Jean-Paul,Genin,,chemin du Clos,3,169900,Porsel,400026504,1938-01-17,1938.0
+400026504_400026505,81.15384615384616,fuzzy_normal,B,9835,Germaine-Caroline,Genin,,Chemin du Clos,3,169900,Porsel,400026505,1938-12-29,1938.0
+400105099_400105098,84.44444444444443,fuzzy_normal,A,48672,Marie-Louise,Maudonnet,,Impasse Saint-Sébastien,2,172300,Marly,400105099,1939-01-10,1939.0
+400105099_400105098,84.44444444444443,fuzzy_normal,B,49020,Marcel,Maudonnet,,Impasse Saint-Sébastien,2,172300,Marly,400105098,1939-03-04,1939.0
+400095546_400095545,82.5,fuzzy_normal,A,43811,Valérie,Humbert,,Vieux Chemin,6,183300,Les Avants,400095546,1965-07-11,1965.0
+400095546_400095545,82.5,fuzzy_normal,B,47369,Vital,Humbert,,Vieux Chemin,6,183300,Les Avants,400095545,1965-06-21,1965.0
+400197256_400197257,84.44444444444443,fuzzy_normal,A,90441,Jean-Luc,Maechler,,Route de la Solverse,31,192600,Fully,400197256,1971-07-13,1971.0
+400197256_400197257,84.44444444444443,fuzzy_normal,B,93070,Anne-Laure,Maechler,,Route de la Solverse,31,192600,Fully,400197257,1971-02-06,1971.0
+400118675_400118676,78.99999999999999,fuzzy_normal,A,55748,Marcien,Luisier,,Rue des Noyers,10,192600,Fully,400118675,1946-05-18,1946.0
+400118675_400118676,78.99999999999999,fuzzy_normal,B,55749,Danielle,Luisier,,Rue des Noyers,10,192600,Fully,400118676,1946-09-23,1946.0
+400033489_400033490,96.1111111111111,fuzzy_normal,A,12616,Alexandre,Nicolas,,Batterie Branche d'en Haut,204,194400,La Fouly VS,400033489,1964-10-03,1964.0
+400033489_400033490,96.1111111111111,fuzzy_normal,B,12815,Alexandra,Nicolas,,Batterie Branche d'en Haut,204,194400,La Fouly VS,400033490,1964-10-03,1964.0
+400186790_400186791,81.15384615384616,fuzzy_normal,A,84353,Grégoire,Zimmermann,,Chemin des Collines,7,195000,Sion,400186790,1964-01-24,1964.0
+400186790_400186791,81.15384615384616,fuzzy_normal,B,88521,Marie,Zimmermann,,Chemin des Collines,7,195000,Sion,400186791,1964-12-20,1964.0
+400067524_400067522,78.99999999999999,fuzzy_normal,A,28248,Natale,Battaglia,,Rue des Pontets,4,195700,Ardon,400067524,,1944.0
+400067524_400067522,78.99999999999999,fuzzy_normal,B,28351,Noël,Battaglia,-Chevalley,Rue des Pontets,4,195700,Ardon,400067522,1944-12-04,1944.0
+400093993_400093994,78.99999999999999,fuzzy_normal,A,42804,André,Rego,,Chemin des Crêtes,34,199700,Haute-Nendaz,400093993,1965-08-19,1965.0
+400093993_400093994,78.99999999999999,fuzzy_normal,B,42805,Diana,Rego,,Chemin des Crêtes,34,199700,Haute-Nendaz,400093994,1965-08-19,1965.0
+400078930_400078929,92.96696696696696,fuzzy_normal,A,34929,Alexandra,Lochmann,,Impasse Ariane,5,396300,Crans-Montana,400078930,1944-01-30,1944.0
+400078930_400078929,92.96696696696696,fuzzy_normal,B,35021,Alexander,Lochman,,impasse Ariane,2,396300,Crans-Montana,400078929,1944-01-30,1944.0
+400048379_400048380,81.15384615384616,fuzzy_normal,A,22999,Raymond,Croset,,Route d'Entre Deux Crêtes,14,397200,Miège,400048379,,1948.0
+400048379_400048380,81.15384615384616,fuzzy_normal,B,23000,Yvonne,Croset,,Route d'Entre Deux Crêtes,14,397200,Miège,400048380,1948-02-15,1948.0
+400210109_400210108,80.55555555555556,fuzzy_normal,A,96472,Josiane,Thabuis,-Wüthrich,Route de Vercorin,30,397900,Grône,400210109,,1944.0
+400210109_400210108,80.55555555555556,fuzzy_normal,B,97110,Jean-Pierre,Thabuis,-Wüthrich,Route de Vercorin,30,397900,Grône,400210108,1944-08-29,1944.0
+400117106_400117105,89.0625,fuzzy_normal,A,55065,Franziska-Françoise,Douet,-Schmucki,Maschinenstrasse,11,800500,Zürich,400117106,1958-04-23,1958.0
+400117106_400117105,89.0625,fuzzy_normal,B,58897,Jean-François,Douet,,Maschinenstrasse,11,800500,Zürich,400117105,1958-04-23,1958.0
+400112231_400112232,82.5,fuzzy_normal,A,52577,Marie France,Häfliger,,Hergisroosstrasse,3,883200,Wollerau,400112231,1959-08-01,1959.0
+400112231_400112232,82.5,fuzzy_normal,B,52721,Marc,Häfliger,,Hergisroosstrasse,3,883200,Wollerau,400112232,1959-01-17,1959.0
+400203720_400203719,81.15384615384616,fuzzy_normal,A,92352,André,Mungwarakarama,-Poisat,Avenue Bois-de-la-Chapelle,92,121303,Onex,400203720,1950-01-01,1950.0
+400203720_400203719,81.15384615384616,fuzzy_normal,B,92494,Laurence,Mungwarakarama,-Poisat,Avenue Bois-de-la-Chapelle,92,121303,Onex,400203719,1950-05-01,1950.0
+400203749_400203748,78.99999999999999,fuzzy_normal,A,92355,Martine,Neimari,,Avenue Bois-de-la-Chapelle,47,121303,Onex,400203749,,1954.0
+400203749_400203748,78.99999999999999,fuzzy_normal,B,95316,Max,Neimari,,Avenue Bois-de-la-Chapelle,47,121303,Onex,400203748,1954-03-17,1954.0
+400217511_400219247,85.6060606060606,fuzzy_swapped,A,99647,Michel,Jacquemettaz,,Avenue du Lignon,64,121900,Le Lignon,400217511,1942-05-24,1942.0
+400217511_400219247,85.6060606060606,fuzzy_swapped,B,99929,Jacqueline,Michel,-Pasdeloup,Avenue du Lignon,81,121900,Le Lignon,400219247,,1942.0
+400218810_400218811,78.99999999999999,fuzzy_normal,A,99872,Bernard,N'Kouanga,,Avenue du Lignon,20,121900,Le Lignon,400218810,1943-10-01,1943.0
+400218810_400218811,78.99999999999999,fuzzy_normal,B,99873,Eva,N'Kouanga,,Avenue du Lignon,20,121900,Le Lignon,400218811,1943-06-07,1943.0
+400219008_400219009,81.47058823529412,fuzzy_normal,A,99897,Alain,Christinet,,Avenue du Lignon,55,121900,Le Lignon,400219008,1949-03-22,1949.0
+400219008_400219009,81.47058823529412,fuzzy_normal,B,99898,Marlyse Inès,Christinet,-Engel,Avenue du Lignon,55,121900,Le Lignon,400219009,1949-02-20,1949.0
+400219404_400219405,82.5,fuzzy_normal,A,99949,Michel,Morel,,Avenue du Lignon,19,121900,Le Lignon,400219404,1958-06-22,1958.0
+400219404_400219405,82.5,fuzzy_normal,B,99950,Nicole,Morel,,Avenue du Lignon,19,121900,Le Lignon,400219405,,1958.0
