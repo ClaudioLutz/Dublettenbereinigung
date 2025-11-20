@@ -232,12 +232,33 @@ class OptimizedFuzzyMatcher:
     
     @staticmethod
     def normalize_name(name):
-        """Fast name normalization"""
+        """
+        Fast name normalization with German umlaut handling
+        
+        Handles German umlauts where:
+        - ü/Ü can be written as ue/Ue
+        - ä/Ä can be written as ae/Ae  
+        - ö/Ö can be written as oe/Oe
+        
+        Both forms are normalized to the same result for consistent matching.
+        """
         if pd.isna(name):
             return ""
         name = str(name).strip().lower()
+        
+        # Replace ß with ss (German eszett)
         name = name.replace('ß', 'ss')
+        
+        # Normalize German umlauts to their ASCII equivalents BEFORE unidecode
+        # This ensures both "Müller" and "Mueller" normalize to "mueller"
+        name = name.replace('ü', 'ue')
+        name = name.replace('ä', 'ae')
+        name = name.replace('ö', 'oe')
+        
+        # Apply unidecode for any remaining accents/diacritics
         name = unidecode(name)
+        
+        # Clean up whitespace
         return re.sub(r'\s+', ' ', name).strip()
     
     @staticmethod
@@ -275,7 +296,11 @@ class OptimizedFuzzyMatcher:
 
 def process_block_worker(args: Tuple) -> List[Dict]:
     """
-    Worker function for parallel block processing
+    Worker function for parallel block processing with two-stage architecture
+    
+    Stage 1: Exact match detection (normalized names, both normal and swapped)
+    Stage 2: Fuzzy match for remaining unmatched records
+    
     Returns list of match dictionaries (not MatchResult objects for serialization)
     """
     block_data, confidence_threshold, fuzzy_threshold = args
@@ -290,7 +315,12 @@ def process_block_worker(args: Tuple) -> List[Dict]:
     records = block_data.to_dict('records')
     original_indices = block_data['index'].values
     
-    # Pairwise comparison within block
+    # Track matched indices to skip in Stage 2
+    matched_indices = set()
+    
+    # =======================
+    # STAGE 1: EXACT MATCHING
+    # =======================
     for i in range(block_size):
         for j in range(i + 1, block_size):
             record_a = records[i]
@@ -306,54 +336,148 @@ def process_block_worker(args: Tuple) -> List[Dict]:
             ):
                 continue
             
-            # Check exact match first
-            v_a = OptimizedFuzzyMatcher.normalize_name(record_a.get('Vorname', ''))
-            n_a = OptimizedFuzzyMatcher.normalize_name(record_a.get('Name', ''))
-            v_b = OptimizedFuzzyMatcher.normalize_name(record_b.get('Vorname', ''))
-            n_b = OptimizedFuzzyMatcher.normalize_name(record_b.get('Name', ''))
+            # Normalize names for exact comparison
+            v_a_norm = OptimizedFuzzyMatcher.normalize_name(record_a.get('Vorname', ''))
+            n_a_norm = OptimizedFuzzyMatcher.normalize_name(record_a.get('Name', ''))
+            v_b_norm = OptimizedFuzzyMatcher.normalize_name(record_b.get('Vorname', ''))
+            n_b_norm = OptimizedFuzzyMatcher.normalize_name(record_b.get('Name', ''))
             
-            if v_a and n_a and v_b and n_b and v_a == v_b and n_a == n_b:
-                # Exact match
+            # Skip if any name is empty
+            if not (v_a_norm and n_a_norm and v_b_norm and n_b_norm):
+                continue
+            
+            # Check both normal and swapped exact matches
+            is_exact_normal = (v_a_norm == v_b_norm and n_a_norm == n_b_norm)
+            is_exact_swapped = (v_a_norm == n_b_norm and n_a_norm == v_b_norm)
+            
+            if is_exact_normal or is_exact_swapped:
+                # Calculate address match ratio for confidence scoring
+                address_fields = ['Strasse', 'HausNummer', 'Plz', 'Ort']
+                address_matches = 0
+                total_address_fields = 0
+                
+                for field in address_fields:
+                    val_a = str(record_a.get(field, '')).strip().lower()
+                    val_b = str(record_b.get(field, '')).strip().lower()
+                    
+                    if val_a and val_b:
+                        total_address_fields += 1
+                        if val_a == val_b:
+                            address_matches += 1
+                
+                address_ratio = address_matches / max(total_address_fields, 1)
+                
+                # Exact match confidence: 90-100% based on address matches
+                # Normal exact: 90-100%
+                # Swapped exact: 85-95% (slightly lower due to name swap)
+                if is_exact_normal:
+                    confidence = 90 + (address_ratio * 10)  # 90-100%
+                    match_type = 'exact_normal'
+                else:  # is_exact_swapped
+                    confidence = 85 + (address_ratio * 10)  # 85-95%
+                    match_type = 'exact_swapped'
+                
                 matches.append({
                     'record_a_idx': int(original_indices[i]),
                     'record_b_idx': int(original_indices[j]),
-                    'confidence_score': 100.0,
-                    'match_type': 'exact',
-                    'details': {}
+                    'confidence_score': float(confidence),
+                    'match_type': match_type,
+                    'details': {
+                        'address_ratio': address_ratio,
+                        'address_matches': address_matches,
+                        'total_address_fields': total_address_fields
+                    }
                 })
+                
+                # Mark as matched to skip in Stage 2
+                matched_indices.add(i)
+                matched_indices.add(j)
+    
+    # =======================
+    # STAGE 2: FUZZY MATCHING
+    # =======================
+    for i in range(block_size):
+        # Skip if already matched in Stage 1
+        if i in matched_indices:
+            continue
+            
+        for j in range(i + 1, block_size):
+            # Skip if already matched in Stage 1
+            if j in matched_indices:
                 continue
             
-            # Fuzzy matching
+            record_a = records[i]
+            record_b = records[j]
+            
+            # Check business rules first (fast rejection)
+            if not FastBusinessRules.check_zweitname(record_a.get('Name2'), record_b.get('Name2')):
+                continue
+            
+            if not FastBusinessRules.check_date_rule(
+                record_a.get('Geburtstag'), record_a.get('Jahrgang'),
+                record_b.get('Geburtstag'), record_b.get('Jahrgang')
+            ):
+                continue
+            
+            # Fuzzy name matching
             name_results = OptimizedFuzzyMatcher.compare_names(
                 record_a.get('Vorname', ''), record_a.get('Name', ''),
                 record_b.get('Vorname', ''), record_b.get('Name', '')
             )
             
-            if name_results['best_score'] >= fuzzy_threshold:
-                # Calculate address similarity
-                addr_a = f"{record_a.get('Strasse', '')} {record_a.get('HausNummer', '')} {record_a.get('Plz', '')} {record_a.get('Ort', '')}".strip()
-                addr_b = f"{record_b.get('Strasse', '')} {record_b.get('HausNummer', '')} {record_b.get('Plz', '')} {record_b.get('Ort', '')}".strip()
+            # Check if name similarity meets threshold
+            if name_results['best_score'] < fuzzy_threshold:
+                continue
+            
+            # Calculate address match ratio
+            address_fields = ['Strasse', 'HausNummer', 'Plz', 'Ort']
+            address_matches = 0
+            total_address_fields = 0
+            
+            for field in address_fields:
+                val_a = str(record_a.get(field, '')).strip().lower()
+                val_b = str(record_b.get(field, '')).strip().lower()
                 
-                addr_ratio = 0.0
-                if addr_a and addr_b:
-                    addr_ratio = fuzz.ratio(addr_a.lower(), addr_b.lower()) / 100.0
-                
-                # Calculate confidence
-                confidence = (name_results['best_score'] * 0.7 + addr_ratio * 0.3) * 100
-                
-                if confidence >= confidence_threshold:
-                    match_type = 'fuzzy_swapped' if name_results['is_swapped'] else 'fuzzy_normal'
-                    
-                    matches.append({
-                        'record_a_idx': int(original_indices[i]),
-                        'record_b_idx': int(original_indices[j]),
-                        'confidence_score': float(confidence),
-                        'match_type': match_type,
-                        'details': {
-                            'name_results': name_results,
-                            'address_ratio': addr_ratio
-                        }
-                    })
+                if val_a and val_b:
+                    total_address_fields += 1
+                    if val_a == val_b:
+                        address_matches += 1
+            
+            address_ratio = address_matches / max(total_address_fields, 1)
+            
+            # Calculate fuzzy match confidence
+            # Base: name similarity * 50 (max 50 points from names)
+            # Address bonus: address_ratio * 30 (max 30 points from address)
+            # Swap penalty: -5 points if swapped (name swap is more suspicious)
+            base_confidence = name_results['best_score'] * 50
+            address_bonus = address_ratio * 30
+            
+            if name_results['is_swapped']:
+                # Fuzzy swapped: 65-85% range (slightly lower due to swap)
+                # Apply small penalty for swap
+                confidence = base_confidence + address_bonus - 5
+                match_type = 'fuzzy_swapped'
+            else:
+                # Fuzzy normal: 70-90% range
+                confidence = base_confidence + address_bonus
+                match_type = 'fuzzy_normal'
+            
+            # Cap fuzzy matches at 95% (never higher than exact matches)
+            confidence = min(confidence, 95)
+            
+            if confidence >= confidence_threshold:
+                matches.append({
+                    'record_a_idx': int(original_indices[i]),
+                    'record_b_idx': int(original_indices[j]),
+                    'confidence_score': float(confidence),
+                    'match_type': match_type,
+                    'details': {
+                        'name_results': name_results,
+                        'address_ratio': address_ratio,
+                        'address_matches': address_matches,
+                        'total_address_fields': total_address_fields
+                    }
+                })
     
     return matches
 

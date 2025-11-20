@@ -1,0 +1,17 @@
+﻿match_id,confidence,match_type,position,index,vorname,name,name2,strasse,hausnummer,plz,ort,crefo,geburtstag,jahrgang
+4_5,73.75,fuzzy_normal,A,4,Hans,Mueller,,Muellerweg,5,11111,Muellerstadt,,1985-03-10,
+4_5,73.75,fuzzy_normal,B,5,Haus,Mueller,,Muellerweg,5,11111,Muellerstadt,,1985-03-10,
+0_1,100.0,exact_normal,A,0,Max,Mustermann,,Musterstrasse,1,12345,Musterstadt,,1980-01-15,
+0_1,100.0,exact_normal,B,1,Max,Mustermann,,Musterstrasse,1,12345,Musterstadt,,1980-01-15,
+6_7,72.72727272727272,fuzzy_swapped,A,6,Thomas,Weber,,Weberplatz,7,22222,Weberstadt,,1990-12-01,
+6_7,72.72727272727272,fuzzy_swapped,B,7,Weber,Tomas,,Weberplatz,7,22222,Weberstadt,,1990-12-01,
+8_9,100.0,exact_normal,A,8,Karl,Müller,,Müllerstrasse,3,33333,Müllendorf,,1978-08-15,
+8_9,100.0,exact_normal,B,9,Karl,Mueller,,Müllerstrasse,3,33333,Müllendorf,,1978-08-15,
+2_3,95.0,exact_swapped,A,2,Anna,Schmidt,,Schmidtweg,10,54321,Schmidtstadt,,1975-05-20,
+2_3,95.0,exact_swapped,B,3,Schmidt,Anna,,Schmidtweg,10,54321,Schmidtstadt,,1975-05-20,
+12_13,100.0,exact_normal,A,12,Maria,Fischer,Anna,Fischerplatz,8,55555,Fischerstadt,,1988-06-30,
+12_13,100.0,exact_normal,B,13,Maria,Fischer,anna,Fischerplatz,8,55555,Fischerstadt,,1988-06-30,
+14_15,100.0,exact_normal,A,14,Lukas,Koch,,Kochweg,15,66666,Kochstadt,,1992-11-25,
+14_15,100.0,exact_normal,B,15,Lukas,Koch,,Kochweg,15,66666,Kochstadt,,,1992
+18_19,100.0,exact_normal,A,18,Julia,Hoffmann,,Hoffmannweg,25,88888,Hoffmannstadt,,1987-07-18,1980
+18_19,100.0,exact_normal,B,19,Julia,Hoffmann,,Hoffmannweg,25,88888,Hoffmannstadt,,,1987
