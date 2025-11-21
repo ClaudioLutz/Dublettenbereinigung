@@ -27,6 +27,7 @@ from dataclasses import dataclass, asdict
 import hashlib
 from rapidfuzz import fuzz
 import pickle
+import cologne_phonetics
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -95,6 +96,22 @@ class VectorizedAddressNormalizer:
         names = names.apply(lambda x: unidecode(x) if x else '')
         names = names.str.replace(r'\s+', ' ', regex=True).str.strip()
         return names
+
+def get_cologne_phonetic(name: str) -> str:
+    """
+    Get Cologne Phonetic code for a name safely.
+    Returns empty string if encoding fails or name is empty.
+    """
+    if pd.isna(name) or not str(name).strip():
+        return ''
+    try:
+        result = cologne_phonetics.encode(str(name).strip())
+        if result and len(result) > 0:
+            # cologne_phonetics.encode returns list of tuples: [('name', 'code')]
+            return result[0][1]
+    except:
+        pass
+    return ''
 
 class OptimizedBlockingStrategy:
     """Highly optimized blocking strategy using vectorized operations"""
@@ -168,6 +185,38 @@ class OptimizedBlockingStrategy:
         logger.info(f"Comparison reduction: {reduction:.1f}% ({original_comparisons:,} -> {blocked_comparisons:,})")
         
         return blocks
+
+class PhoneticBlockingStrategy(OptimizedBlockingStrategy):
+    """Enhanced blocking strategy with phonetic codes for German names"""
+    
+    def create_blocking_keys_vectorized(self, df: pd.DataFrame) -> pd.Series:
+        """Create blocking keys with phonetic fallback for no_address records"""
+        # Get standard address-based blocking keys
+        standard_keys = super().create_blocking_keys_vectorized(df)
+        
+        # Pre-compute phonetic codes (vectorized)
+        logger.info("Computing phonetic codes for names...")
+        df['vorname_phon'] = df['Vorname'].apply(get_cologne_phonetic)
+        df['name_phon'] = df['Name'].apply(get_cologne_phonetic)
+        
+        # Create phonetic blocking keys only for "no_address" records
+        phonetic_keys = pd.Series('no_phonetic', index=df.index)
+        no_address_mask = standard_keys == 'no_address'
+        
+        if no_address_mask.any():
+            # Only create phonetic keys for records without address data
+            phonetic_keys[no_address_mask] = (
+                'phon_' + 
+                df.loc[no_address_mask, 'vorname_phon'] + '_' + 
+                df.loc[no_address_mask, 'name_phon']
+            )
+            logger.info(f"Created phonetic blocking keys for {no_address_mask.sum()} records without address")
+        
+        # Use phonetic blocking for no_address records, standard for others
+        combined_keys = standard_keys.copy()
+        combined_keys[no_address_mask] = phonetic_keys[no_address_mask]
+        
+        return combined_keys
 
 class FastBusinessRules:
     """Optimized business rules engine"""
@@ -460,7 +509,32 @@ def process_block_worker(args: Tuple) -> List[Dict]:
             
             # Check if name similarity meets threshold
             if name_results['best_score'] < fuzzy_threshold:
-                continue
+                # PHONETIC FALLBACK: Check borderline matches (60% to threshold)
+                if 0.60 <= name_results['best_score'] < fuzzy_threshold:
+                    # Compute phonetic codes for borderline cases
+                    v_a_phon = get_cologne_phonetic(record_a.get('Vorname', ''))
+                    n_a_phon = get_cologne_phonetic(record_a.get('Name', ''))
+                    v_b_phon = get_cologne_phonetic(record_b.get('Vorname', ''))
+                    n_b_phon = get_cologne_phonetic(record_b.get('Name', ''))
+                    
+                    # Check phonetic match (normal and swapped)
+                    phonetic_match_normal = (v_a_phon and n_a_phon and v_b_phon and n_b_phon and
+                                            v_a_phon == v_b_phon and n_a_phon == n_b_phon)
+                    phonetic_match_swapped = (v_a_phon and n_a_phon and v_b_phon and n_b_phon and
+                                             v_a_phon == n_b_phon and n_a_phon == v_b_phon)
+                    
+                    if phonetic_match_normal or phonetic_match_swapped:
+                        # Boost score above threshold and mark as phonetic-assisted
+                        name_results['best_score'] = 0.72  # Just above 0.70 threshold
+                        name_results['is_swapped'] = phonetic_match_swapped
+                        name_results['phonetic_assisted'] = True
+                        # Continue with normal match creation flow
+                    else:
+                        # No phonetic match - skip this comparison
+                        continue
+                else:
+                    # Below 60% - too weak even with phonetic
+                    continue
             
             # Calculate address match ratio
             address_fields = ['Strasse', 'HausNummer', 'Plz', 'Ort']
@@ -479,24 +553,37 @@ def process_block_worker(args: Tuple) -> List[Dict]:
             address_ratio = address_matches / max(total_address_fields, 1)
             
             # Calculate fuzzy match confidence
-            # Base: name similarity * 50 (max 50 points from names)
-            # Address bonus: address_ratio * 30 (max 30 points from address)
-            # Swap penalty: -5 points if swapped (name swap is more suspicious)
-            base_confidence = name_results['best_score'] * 50
-            address_bonus = address_ratio * 30
-            
-            if name_results['is_swapped']:
-                # Fuzzy swapped: 65-85% range (slightly lower due to swap)
-                # Apply small penalty for swap
-                confidence = base_confidence + address_bonus - 5
-                match_type = 'fuzzy_swapped'
+            # Check if this is a phonetic-assisted match
+            if name_results.get('phonetic_assisted', False):
+                # Phonetic-assisted match confidence
+                if name_results['is_swapped']:
+                    # Phonetic assisted swapped: 70-80% range
+                    confidence = 70 + (address_ratio * 10)
+                    match_type = 'phonetic_assisted_swapped'
+                else:
+                    # Phonetic assisted normal: 72-82% range
+                    confidence = 72 + (address_ratio * 10)
+                    match_type = 'phonetic_assisted_normal'
             else:
-                # Fuzzy normal: 70-90% range
-                confidence = base_confidence + address_bonus
-                match_type = 'fuzzy_normal'
-            
-            # Cap fuzzy matches at 95% (never higher than exact matches)
-            confidence = min(confidence, 95)
+                # Regular fuzzy match confidence
+                # Base: name similarity * 50 (max 50 points from names)
+                # Address bonus: address_ratio * 30 (max 30 points from address)
+                # Swap penalty: -5 points if swapped (name swap is more suspicious)
+                base_confidence = name_results['best_score'] * 50
+                address_bonus = address_ratio * 30
+                
+                if name_results['is_swapped']:
+                    # Fuzzy swapped: 65-85% range (slightly lower due to swap)
+                    # Apply small penalty for swap
+                    confidence = base_confidence + address_bonus - 5
+                    match_type = 'fuzzy_swapped'
+                else:
+                    # Fuzzy normal: 70-90% range
+                    confidence = base_confidence + address_bonus
+                    match_type = 'fuzzy_normal'
+                
+                # Cap fuzzy matches at 95% (never higher than exact matches)
+                confidence = min(confidence, 95)
             
             if confidence >= confidence_threshold:
                 matches.append({
@@ -515,13 +602,21 @@ def process_block_worker(args: Tuple) -> List[Dict]:
     return matches
 
 class UltraFastDuplicateChecker:
-    """Ultra-optimized duplicate checker for millions of records"""
+    """Ultra-optimized duplicate checker for millions of records with phonetic matching"""
     
-    def __init__(self, fuzzy_threshold: float = 0.8, use_parallel: bool = True, n_workers: Optional[int] = None):
+    def __init__(self, fuzzy_threshold: float = 0.8, use_parallel: bool = True, n_workers: Optional[int] = None, use_phonetic: bool = True):
         self.fuzzy_threshold = fuzzy_threshold
         self.use_parallel = use_parallel
         self.n_workers = n_workers or max(1, mp.cpu_count() - 1)
-        self.blocking = OptimizedBlockingStrategy()
+        self.use_phonetic = use_phonetic
+        
+        # Use phonetic blocking strategy if enabled, otherwise standard blocking
+        if use_phonetic:
+            self.blocking = PhoneticBlockingStrategy()
+            logger.info("Phonetic matching enabled (Cologne Phonetic)")
+        else:
+            self.blocking = OptimizedBlockingStrategy()
+            logger.info("Phonetic matching disabled")
         
         logger.info(f"Initialized with {self.n_workers} workers, parallel={'enabled' if use_parallel else 'disabled'}")
     

@@ -1,4 +1,12 @@
 ﻿match_id,confidence,match_type,position,index,vorname,name,name2,strasse,hausnummer,plz,ort,crefo,geburtstag,jahrgang
+24_25,76.42857142857143,fuzzy_normal,A,24,Anna,Schmidt,,Hauptstrasse,5,3000,Bern,,1975-05-15,
+24_25,76.42857142857143,fuzzy_normal,B,25,Anna,Schmitt,,Hauptstrasse,5,3000,Bern,,1975-05-15,
+26_27,71.66666666666667,fuzzy_normal,A,26,Peter,Müller,,Dorfstrasse,1,4000,Basel,,1990-01-01,
+26_27,71.66666666666667,fuzzy_normal,B,27,Peter,Miler,,Dorfstrasse,1,4000,Basel,,1990-01-01,
+28_29,70.83333333333334,fuzzy_swapped,A,28,Klaus,Wagner,,Seestrasse,20,6000,Luzern,,1985-03-10,
+28_29,70.83333333333334,fuzzy_swapped,B,29,Vagner,Klaus,,Seestrasse,20,6000,Luzern,,1985-03-10,
+22_23,70.0,fuzzy_normal,A,22,Hans,Meyer,,Bahnhofstrasse,10,8001,Zürich,,1980-01-01,
+22_23,70.0,fuzzy_normal,B,23,Hans,Maier,,Bahnhofstrasse,10,8001,Zürich,,1980-01-01,
 4_5,73.75,fuzzy_normal,A,4,Hans,Mueller,,Muellerweg,5,11111,Muellerstadt,,1985-03-10,
 4_5,73.75,fuzzy_normal,B,5,Haus,Mueller,,Muellerweg,5,11111,Muellerstadt,,1985-03-10,
 0_1,100.0,exact_normal,A,0,Max,Mustermann,,Musterstrasse,1,12345,Musterstadt,,1980-01-15,

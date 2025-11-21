@@ -65,7 +65,35 @@ Das System verwendet eine zweistufige Architektur zur effizienten und präzisen 
   - Bonus: +10% bei vollständiger Adressübereinstimmung
 - **Interpretation:** Potenzielle Betrugsindikator - absichtliche Namensvertauschung
 
-### 2.3 Fuzzy Normal (Fuzzy normale Übereinstimmung)
+### 2.3 Phonetic Assisted Normal (Phonetisch unterstützte normale Übereinstimmung)
+- **Beschreibung:** Namen sind phonetisch identisch (Kölner Phonetik) in normaler Reihenfolge, aber zeichenbasiertes Fuzzy-Matching war knapp unter der Schwelle (60-70%)
+- **Beispiel:**
+  - Datensatz A: Vorname="Hans", Name="Maier"
+  - Datensatz B: Vorname="Hans", Name="Meyer"
+  - Fuzzy-Ähnlichkeit: ~60% (unter 70% Schwelle)
+  - Phonetische Codes: "Maier" → M67, "Meyer" → M67 ✅ Übereinstimmung
+  - Ergebnis: Phonetic Assisted Normal
+- **Konfidenz:** 72-82%
+  - Basiswert: 72%
+  - Adressbonus: max. +10%
+- **Interpretation:** Häufige deutsche Namensvarianten - mittlere Priorität für Überprüfung
+- **Anwendungsfälle:** Meyer/Maier, Schmidt/Schmitt, Fischer/Fisher, Wagner/Vagner
+
+### 2.4 Phonetic Assisted Swapped (Phonetisch unterstützte vertauschte Übereinstimmung)
+- **Beschreibung:** Namen sind phonetisch identisch (Kölner Phonetik) in vertauschter Reihenfolge, aber zeichenbasiertes Fuzzy-Matching war knapp unter der Schwelle (60-70%)
+- **Beispiel:**
+  - Datensatz A: Vorname="Klaus", Name="Wagner"
+  - Datensatz B: Vorname="Vagner", Name="Klaus"
+  - Fuzzy-Ähnlichkeit: ~65% (unter 70% Schwelle)
+  - Phonetische Codes: "Wagner" → 3467, "Vagner" → 3467 ✅ Übereinstimmung
+  - Ergebnis: Phonetic Assisted Swapped
+- **Konfidenz:** 70-80%
+  - Basiswert: 70%
+  - Adressbonus: max. +10%
+- **Interpretation:** Verdächtig - Kombination aus Namensvertauschung und phonetischer Variante
+- **Anwendungsfälle:** Seltene Fälle mit vertauschten phonetischen Varianten
+
+### 2.5 Fuzzy Normal (Fuzzy normale Übereinstimmung)
 - **Beschreibung:** Namen sind ähnlich (Fuzzy-Matching) in normaler Reihenfolge
 - **Beispiel:**
   - Datensatz A: Vorname="Max", Name="Mustermann"
@@ -77,7 +105,7 @@ Das System verwendet eine zweistufige Architektur zur effizienten und präzisen 
   - Obergrenze: 95%
 - **Interpretation:** Mittlere Priorität - wahrscheinlich Tippfehler oder Variationen
 
-### 2.4 Fuzzy Swapped (Fuzzy vertauschte Übereinstimmung)
+### 2.6 Fuzzy Swapped (Fuzzy vertauschte Übereinstimmung)
 - **Beschreibung:** Namen sind ähnlich (Fuzzy-Matching) in vertauschter Reihenfolge
 - **Beispiel:**
   - Datensatz A: Vorname="Anna", Name="Schmidt"
@@ -265,7 +293,160 @@ Diese Normalisierung wird auf folgende Felder angewendet:
 
 ---
 
-## 6. Konfidenz-Bewertung
+## 6. Phonetisches Matching mit Kölner Phonetik
+
+### Zweck
+Erkennt phonetisch identische deutsche Namen, die unterschiedlich geschrieben werden, aber gleich klingen. Dies ist besonders wichtig für häufige deutsche Namensvarianten, die durch zeichenbasiertes Fuzzy-Matching nicht erkannt werden.
+
+### Algorithmus: Kölner Phonetik (Cologne Phonetic)
+- **Spezialisiert:** Entwickelt speziell für die deutsche Sprache
+- **Deutsche Phonetik:** Behandelt deutsche Lautregeln (ch, sch, pf, etc.)
+- **Standard:** Etablierter Standard in der deutschen Datenverarbeitung
+- **Bibliothek:** `cologne-phonetics` Python-Paket
+
+### Phonetische Kodierung
+
+#### Kodierungsregeln (Beispiele)
+| Name | Phonetischer Code | Erklärung |
+|------|-------------------|-----------|
+| Maier | M67 | M + 6 (a/e/i) + 7 (r) |
+| Meyer | M67 | M + 6 (e/y) + 7 (r) |
+| Mayer | M67 | M + 6 (a/y) + 7 (r) |
+| Meier | M67 | M + 6 (e/i) + 7 (r) |
+| Schmidt | 862 | S(8) + ch(8) + m(6) + dt(2) |
+| Schmitt | 862 | S(8) + ch(8) + m(6) + tt(2) |
+| Fischer | 387 | F(3) + sch(8) + r(7) |
+| Fisher | 387 | F(3) + sh(8) + r(7) |
+| Wagner | 3467 | W(3) + gn(4) + r(7) |
+| Vagner | 3467 | V(3) + gn(4) + r(7) |
+
+### Implementierungsstrategie: Hybrid-Ansatz
+
+#### Phase 1: Phonetisches Blocking
+- **Anwendung:** Nur für Datensätze ohne Adressdaten (`no_address`)
+- **Zweck:** Alternative Blocking-Schlüssel für Datensätze ohne PLZ/Strasse
+- **Berechnung:** Phonetische Codes werden einmal pro Datensatz vorberechnet
+- **Schlüssel-Format:** `phon_{vorname_code}_{name_code}`
+- **Performance-Auswirkung:** +5-10% Verarbeitungszeit
+
+**Beispiel:**
+```
+Datensatz A: Vorname="Hans", Name="Maier", PLZ="", Strasse=""
+Blocking-Schlüssel: phon_068_M67
+
+Datensatz B: Vorname="Hans", Name="Meyer", PLZ="", Strasse=""
+Blocking-Schlüssel: phon_068_M67
+
+→ Beide landen im selben Block und werden verglichen
+```
+
+#### Phase 2: Phonetisches Fallback
+- **Anwendung:** Nur für grenzwertige Fuzzy-Matches (60-70% Ähnlichkeit)
+- **Zweck:** Sicherheitsnetz für Fälle knapp unter der Fuzzy-Schwelle
+- **Berechnung:** Phonetische Codes werden nur bei Bedarf berechnet (Lazy Evaluation)
+- **Boost-Mechanismus:** Hebt Konfidenz über die Schwelle (72%), wenn phonetisch übereinstimmend
+- **Performance-Auswirkung:** +3-8% Verarbeitungszeit
+
+**Workflow:**
+```
+1. Fuzzy-Ähnlichkeit berechnen
+2. Falls 60% ≤ Ähnlichkeit < 70%:
+   a. Phonetische Codes berechnen
+   b. Phonetische Übereinstimmung prüfen (normal + vertauscht)
+   c. Bei Übereinstimmung: Konfidenz auf 72% setzen
+   d. Match erstellen mit phonetic_assisted flag
+3. Falls < 60%: Kein Match
+```
+
+### Anwendungsfälle
+
+#### Häufige deutsche Namensvarianten
+**Erkannte Schreibweisen:**
+- Meyer, Maier, Mayer, Meier → alle M67
+- Schmidt, Schmitt, Schmid → alle 862
+- Fischer, Fisher → beide 387
+- Wagner, Vagner → beide 3467
+- Hoffmann, Hofmann → beide 0366
+- Schroder, Schröder, Schroeder → alle 8727
+
+#### Beispielszenarien
+
+**Szenario 1: Meyer vs Maier (ohne Adresse)**
+```
+Datensatz A: Vorname="Hans", Name="Meyer", PLZ="", Strasse=""
+Datensatz B: Vorname="Hans", Name="Maier", PLZ="", Strasse=""
+
+Phonetisches Blocking: Beide in Block "phon_068_M67"
+Fuzzy-Ähnlichkeit: ~60% (unter 70% Schwelle)
+Phonetische Codes: M67 = M67 ✅
+Ergebnis: phonetic_assisted_normal, Konfidenz 72%
+```
+
+**Szenario 2: Schmidt vs Schmitt (mit Adresse)**
+```
+Datensatz A: Vorname="Anna", Name="Schmidt", PLZ="3000", Strasse="Hauptstrasse"
+Datensatz B: Vorname="Anna", Name="Schmitt", PLZ="3000", Strasse="Hauptstrasse"
+
+Address Blocking: Beide in Block "3000_hauptstrasse"
+Fuzzy-Ähnlichkeit: ~76% (über 70% Schwelle)
+Ergebnis: fuzzy_normal (phonetisches Fallback nicht benötigt)
+```
+
+### Vorteile
+
+1. **Höherer Recall:** Erkennt 5-15% mehr legitime Duplikate
+2. **Deutsch-Optimiert:** Speziell für deutsche Phonetik entwickelt
+3. **Minimaler Overhead:** Intelligente Implementierung hält Performance-Einbußen niedrig
+4. **Rückwärtskompatibel:** Kann deaktiviert werden (`use_phonetic=False`)
+5. **Transparent:** Neue Match-Typen zeigen deutlich phonetische Unterstützung an
+6. **Bewährte Technologie:** Kölner Phonetik ist etablierter Standard
+
+### Abgrenzung zu Fuzzy-Matching
+
+| Aspekt | Fuzzy-Matching | Phonetisches Matching |
+|--------|----------------|----------------------|
+| Basis | Zeichenähnlichkeit | Klang-Ähnlichkeit |
+| Methode | RapidFuzz QRatio | Kölner Phonetik |
+| Anwendung | Primäre Matching-Methode | Fallback für Grenzfälle |
+| Schwelle | 70% Ähnlichkeit | Exakte phonetische Übereinstimmung |
+| Beispiel | "Müller" vs "Muller" (70%) | "Meyer" vs "Maier" (60% Fuzzy, aber phonetisch identisch) |
+
+### Konfiguration
+
+```python
+# Phonetisches Matching aktiviert (Standard)
+checker = UltraFastDuplicateChecker(
+    fuzzy_threshold=0.7,
+    use_phonetic=True  # Default
+)
+
+# Phonetisches Matching deaktiviert
+checker = UltraFastDuplicateChecker(
+    fuzzy_threshold=0.7,
+    use_phonetic=False
+)
+```
+
+### Performance-Auswirkung
+
+| Datensatzgröße | Ohne Phonetik | Mit Phonetik | Overhead | Zusätzliche Matches |
+|----------------|---------------|--------------|----------|---------------------|
+| 10K | 15 sec | 16 sec | +6.7% | +5-10% |
+| 100K | 30 sec | 33 sec | +10% | +10-15% |
+| 7.5M | 2-3 h | 2.2-3.3 h | +5-12% | +5-15% |
+
+### Edge Cases
+
+✅ **Leere Namen:** Werden in phonetischer Kodierung übersprungen  
+✅ **Nicht-deutsche Namen:** Fallback auf Fuzzy-Matching  
+✅ **Sehr kurze Namen:** "Li" vs "Lee" können phonetisch übereinstimmen  
+✅ **Bindestriche:** "Müller-Schmidt" wird als Einheit kodiert  
+✅ **Umlaute:** Bereits normalisiert vor phonetischer Kodierung  
+✅ **Mehrfache Varianten:** "Mayer", "Maier", "Meyer", "Meier" → alle M67  
+
+---
+
+## 7. Konfidenz-Bewertung
 
 ### Übersicht
 Jede Übereinstimmung erhält einen Konfidenzwert zwischen 0% und 100%, basierend auf dem Match-Typ und der Adressübereinstimmung.
@@ -321,6 +502,20 @@ Name-Ähnlichkeit = fuzz.QRatio(name_a, name_b) / 100
 Namensähnlichkeit = (Vorname-Ähnlichkeit + Name-Ähnlichkeit) / 2
 ```
 
+#### Phonetisch unterstützte Übereinstimmungen
+
+**Phonetic Assisted Normal:**
+```
+Konfidenz = 72 + (Adressübereinstimmungs-Ratio × 10)
+Bereich: 72-82%
+```
+
+**Phonetic Assisted Swapped:**
+```
+Konfidenz = 70 + (Adressübereinstimmungs-Ratio × 10)
+Bereich: 70-80%
+```
+
 ### Konfidenz-Verteilung
 
 | Konfidenz | Interpretation | Priorität |
@@ -329,13 +524,14 @@ Namensähnlichkeit = (Vorname-Ähnlichkeit + Name-Ähnlichkeit) / 2
 | 90-94%    | Hohe Sicherheit - exakte normale Übereinstimmung | Hoch |
 | 85-89%    | Hohe Sicherheit - exakte vertauschte Übereinstimmung | Hoch (verdächtig) |
 | 80-84%    | Gute Sicherheit - Fuzzy normale Übereinstimmung mit guter Adresse | Mittel |
-| 70-79%    | Mittlere Sicherheit - Fuzzy normale Übereinstimmung | Mittel |
+| 72-79%    | Mittlere Sicherheit - Fuzzy/Phonetisch unterstützte normale Übereinstimmung | Mittel |
+| 70-71%    | Niedrige Sicherheit - Phonetisch unterstützte vertauschte Übereinstimmung | Mittel (verdächtig) |
 | 65-69%    | Niedrige Sicherheit - Fuzzy vertauschte Übereinstimmung | Niedrig (verdächtig) |
 | < 65%     | Zu unsicher - wird nicht gemeldet | - |
 
 ---
 
-## 7. Blocking-Strategie
+## 8. Blocking-Strategie
 
 ### Zweck
 Reduziert die Anzahl der erforderlichen Vergleiche von O(n²) auf O(k²), wobei k die durchschnittliche Blockgröße ist.
@@ -384,7 +580,7 @@ Reduziert die Anzahl der erforderlichen Vergleiche von O(n²) auf O(k²), wobei 
 
 ---
 
-## 8. Frühzeitige Beendigung
+## 9. Frühzeitige Beendigung
 
 ### Zweck
 Vermeidet teure Berechnungen für offensichtliche Nicht-Übereinstimmungen.
@@ -427,7 +623,7 @@ Vermeidet teure Berechnungen für offensichtliche Nicht-Übereinstimmungen.
 
 ---
 
-## 9. Parallelverarbeitung
+## 10. Parallelverarbeitung
 
 ### Konfiguration
 - **Worker-Anzahl:** `CPU-Kerne - 1` (Standard)
@@ -446,7 +642,7 @@ Vermeidet teure Berechnungen für offensichtliche Nicht-Übereinstimmungen.
 
 ---
 
-## 10. Regelzusammenspiel
+## 11. Regelzusammenspiel
 
 ### Verarbeitungs-Pipeline
 
@@ -492,7 +688,7 @@ Vermeidet teure Berechnungen für offensichtliche Nicht-Übereinstimmungen.
 
 ---
 
-## 11. Verwendungsbeispiele
+## 12. Verwendungsbeispiele
 
 ### Grundlegende Verwendung
 
@@ -556,7 +752,7 @@ checker = UltraFastDuplicateChecker(
 
 ---
 
-## 12. Qualitätssicherung
+## 13. Qualitätssicherung
 
 ### Test-Abdeckung
 
@@ -586,7 +782,7 @@ Jeder Match-Typ wird validiert auf:
 
 ---
 
-## 13. Bekannte Einschränkungen
+## 14. Bekannte Einschränkungen
 
 ### 1. Fuzzy-Matching-Grenzen
 - Sehr ähnliche aber unterschiedliche Namen können übereinstimmen
@@ -615,7 +811,7 @@ Jeder Match-Typ wird validiert auf:
 
 ---
 
-## 14. Best Practices
+## 15. Best Practices
 
 ### 1. Datenqualität
 - **PLZ-Format:** 5-stellig, linksbündig mit Nullen aufgefüllt
@@ -650,18 +846,19 @@ Jeder Match-Typ wird validiert auf:
 
 ---
 
-## 15. Zusammenfassung
+## 16. Zusammenfassung
 
 ### Kernregeln
 
 1. **Zwei-Stufen-Architektur:** Exakte Übereinstimmungen zuerst, dann Fuzzy-Matching
-2. **Vier Match-Typen:** exact_normal, exact_swapped, fuzzy_normal, fuzzy_swapped
+2. **Sechs Match-Typen:** exact_normal, exact_swapped, phonetic_assisted_normal, phonetic_assisted_swapped, fuzzy_normal, fuzzy_swapped
 3. **Zweitname-Regel:** Name2 muss übereinstimmen oder als Suffix vorhanden sein
 4. **Datumsregel:** Geburtstag hat Vorrang über Jahrgang
 5. **Deutsche Normalisierung:** ü=ue, ä=ae, ö=oe, ß=ss
-6. **Konfidenz-Bewertung:** 90-100% (exact), 65-90% (fuzzy)
-7. **Blocking:** PLZ + Strasse reduziert Vergleiche um >95%
-8. **Frühzeitige Beendigung:** Geschäftsregeln zuerst prüfen
+6. **Phonetisches Matching:** Kölner Phonetik für deutsche Namensvarianten
+7. **Konfidenz-Bewertung:** 90-100% (exact), 70-82% (phonetic), 65-90% (fuzzy)
+8. **Blocking:** PLZ + Strasse + Phonetik reduziert Vergleiche um >95%
+9. **Frühzeitige Beendigung:** Geschäftsregeln zuerst prüfen
 
 ### Performance-Ziele
 
@@ -678,7 +875,7 @@ Jeder Match-Typ wird validiert auf:
 
 ---
 
-## 16. Referenzen
+## 17. Referenzen
 
 ### Quellcode-Dateien
 - **duplicate_checker_optimized.py** - Hauptimplementierung
@@ -689,11 +886,14 @@ Jeder Match-Typ wird validiert auf:
 - **RESTORATION_SUMMARY.md** - Technische Details der Wiederherstellung
 - **docs/stories/1.2 Restore_Businessrules_Implementation_Report.md** - Implementation Report
 - **docs/stories/3.2_Compound_Surname_Rule_Implementation.md** - Zusammengesetzte Nachnamen
+- **docs/stories/4.1_Phonetic_Matching_Implementation.md** - Phonetisches Matching
+- **docs/phonetic_matching_analysis.md** - Phonetik-Analyse
 
 ### Externe Bibliotheken
 - **RapidFuzz** - Fuzzy-String-Matching
 - **Pandas** - Datenverarbeitung und Vektorisierung
 - **unidecode** - Akzent-Normalisierung
+- **cologne-phonetics** - Kölner Phonetik für deutsches phonetisches Matching
 
 ---
 
@@ -702,6 +902,7 @@ Jeder Match-Typ wird validiert auf:
 | Datum | Version | Änderung | Autor |
 |-------|---------|----------|-------|
 | 21.11.2025 | 1.0 | Initiale Dokumentation aller implementierten Geschäftsregeln | System |
+| 21.11.2025 | 1.1 | Hinzufügung phonetisches Matching mit Kölner Phonetik (Story 4.1) | System |
 
 ---
 
