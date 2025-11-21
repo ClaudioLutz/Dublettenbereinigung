@@ -147,14 +147,16 @@ def main():
     
     if matches:
         # Match type breakdown
-        exact = sum(1 for m in matches if m.match_type == 'exact')
+        exact_normal = sum(1 for m in matches if m.match_type == 'exact_normal')
+        exact_swapped = sum(1 for m in matches if m.match_type == 'exact_swapped')
         fuzzy_normal = sum(1 for m in matches if m.match_type == 'fuzzy_normal')
         fuzzy_swapped = sum(1 for m in matches if m.match_type == 'fuzzy_swapped')
         
         print("Match type breakdown:")
-        print(f"  Exact matches:        {exact:,}")
-        print(f"  Fuzzy matches:        {fuzzy_normal:,}")
-        print(f"  Swapped name matches: {fuzzy_swapped:,}")
+        print(f"  Exact normal matches:    {exact_normal:,}")
+        print(f"  Exact swapped matches:   {exact_swapped:,}")
+        print(f"  Fuzzy normal matches:    {fuzzy_normal:,}")
+        print(f"  Fuzzy swapped matches:   {fuzzy_swapped:,}")
         print()
         
         # Confidence distribution

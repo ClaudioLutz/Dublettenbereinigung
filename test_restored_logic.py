@@ -277,7 +277,33 @@ def create_comprehensive_test_data() -> pd.DataFrame:
             'TestCase': 'rule4_B'
         },
         
-        # Test 21: No match case (completely different record)
+        # Test 21 & 22: Compound surname - name2 as suffix of name (should match)
+        {
+            'Name': 'Rohner-Stassek',
+            'Vorname': 'Ruth',
+            'Name2': '',
+            'Strasse': 'Ringstrasse',
+            'HausNummer': '42',
+            'Plz': '964200',
+            'Ort': 'Ebnat-Kappel',
+            'Geburtstag': '28.07.1955',
+            'Jahrgang': '1955',
+            'TestCase': 'compound_surname_A'
+        },
+        {
+            'Name': 'Rohner',
+            'Vorname': 'Ruth',
+            'Name2': '-Stassek',  # Matches end of "Rohner-Stassek"
+            'Strasse': 'Ringstrasse',
+            'HausNummer': '42',
+            'Plz': '964200',
+            'Ort': 'Ebnat-Kappel',
+            'Geburtstag': '28.07.1955',
+            'Jahrgang': '1955',
+            'TestCase': 'compound_surname_B'
+        },
+        
+        # Test 23: No match case (completely different record)
         {
             'Name': 'Different',
             'Vorname': 'Person',
@@ -386,6 +412,7 @@ def main():
         {'test_name': 'Date Rule (Geburtstag vs Jahrgang)', 'idx_a': 14, 'idx_b': 15, 'match_type': 'exact_normal', 'confidence_min': 90, 'confidence_max': 100, 'should_match': True},
         {'test_name': 'Date Rule Violation', 'idx_a': 16, 'idx_b': 17, 'match_type': None, 'confidence_min': 0, 'confidence_max': 0, 'should_match': False},
         {'test_name': 'Rule 4 (Geburtstag Precedence)', 'idx_a': 18, 'idx_b': 19, 'match_type': 'exact_normal', 'confidence_min': 90, 'confidence_max': 100, 'should_match': True},
+        {'test_name': 'Compound Surname (name2 as suffix)', 'idx_a': 20, 'idx_b': 21, 'match_type': 'fuzzy_normal', 'confidence_min': 60, 'confidence_max': 80, 'should_match': True},
     ]
     
     # Initialize checker

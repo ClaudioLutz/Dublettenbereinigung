@@ -187,13 +187,40 @@ class FastBusinessRules:
         return None
     
     @staticmethod
-    def check_zweitname(name2_a, name2_b) -> bool:
-        """Check Zweitname rule"""
-        norm_a = str(name2_a).strip().lower() if not pd.isna(name2_a) else ''
-        norm_b = str(name2_b).strip().lower() if not pd.isna(name2_b) else ''
+    def check_zweitname(name_a, name2_a, name_b, name2_b) -> bool:
+        """
+        Check Zweitname rule with compound surname support
         
-        if norm_a and norm_b:
-            return norm_a == norm_b
+        Handles cases where name2 might be the suffix of name:
+        - name="Rohner-Stassek", name2="" 
+        - name="Rohner", name2="-Stassek"
+        Should match!
+        
+        Returns True if records pass the Zweitname rule, False otherwise.
+        """
+        # Normalize all fields
+        norm_name_a = str(name_a).strip().lower() if not pd.isna(name_a) else ''
+        norm_name2_a = str(name2_a).strip().lower() if not pd.isna(name2_a) else ''
+        norm_name_b = str(name_b).strip().lower() if not pd.isna(name_b) else ''
+        norm_name2_b = str(name2_b).strip().lower() if not pd.isna(name2_b) else ''
+        
+        # Case 1: Both name2 fields populated - must match exactly
+        if norm_name2_a and norm_name2_b:
+            return norm_name2_a == norm_name2_b
+        
+        # Case 2: Both name2 fields empty - pass
+        if not norm_name2_a and not norm_name2_b:
+            return True
+        
+        # Case 3: One name2 populated, one empty - check if it's a suffix of the other's name
+        if norm_name2_a and not norm_name2_b:
+            # Check if name2_a matches the ending of name_b
+            return norm_name_b.endswith(norm_name2_a)
+        
+        if norm_name2_b and not norm_name2_a:
+            # Check if name2_b matches the ending of name_a
+            return norm_name_a.endswith(norm_name2_b)
+        
         return True
     
     @staticmethod
@@ -327,7 +354,10 @@ def process_block_worker(args: Tuple) -> List[Dict]:
             record_b = records[j]
             
             # Check business rules first (fast rejection)
-            if not FastBusinessRules.check_zweitname(record_a.get('Name2'), record_b.get('Name2')):
+            if not FastBusinessRules.check_zweitname(
+                record_a.get('Name'), record_a.get('Name2'),
+                record_b.get('Name'), record_b.get('Name2')
+            ):
                 continue
             
             if not FastBusinessRules.check_date_rule(
@@ -410,7 +440,10 @@ def process_block_worker(args: Tuple) -> List[Dict]:
             record_b = records[j]
             
             # Check business rules first (fast rejection)
-            if not FastBusinessRules.check_zweitname(record_a.get('Name2'), record_b.get('Name2')):
+            if not FastBusinessRules.check_zweitname(
+                record_a.get('Name'), record_a.get('Name2'),
+                record_b.get('Name'), record_b.get('Name2')
+            ):
                 continue
             
             if not FastBusinessRules.check_date_rule(

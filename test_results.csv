@@ -15,3 +15,5 @@
 14_15,100.0,exact_normal,B,15,Lukas,Koch,,Kochweg,15,66666,Kochstadt,,,1992
 18_19,100.0,exact_normal,A,18,Julia,Hoffmann,,Hoffmannweg,25,88888,Hoffmannstadt,,1987-07-18,1980
 18_19,100.0,exact_normal,B,19,Julia,Hoffmann,,Hoffmannweg,25,88888,Hoffmannstadt,,,1987
+20_21,70.0,fuzzy_normal,A,20,Ruth,Rohner-Stassek,,Ringstrasse,42,964200,Ebnat-Kappel,,28.07.1955,1955
+20_21,70.0,fuzzy_normal,B,21,Ruth,Rohner,-Stassek,Ringstrasse,42,964200,Ebnat-Kappel,,28.07.1955,1955
