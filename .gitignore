@@ -1,2 +1,8 @@
 venv/
 deprecated_code/
+.env
+*.csv
+__pycache__/
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
