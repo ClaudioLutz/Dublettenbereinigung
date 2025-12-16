@@ -1,2 +1,4 @@
 venv/
 deprecated_code/
+.env
+*.csv
