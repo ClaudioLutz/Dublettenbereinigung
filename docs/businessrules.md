@@ -99,10 +99,10 @@ Das System verwendet eine zweistufige Architektur zur effizienten und präzisen 
   - Datensatz A: Vorname="Max", Name="Mustermann"
   - Datensatz B: Vorname="Mux", Name="Mustermann"
   - Ergebnis: Fuzzy Normal (Tippfehler im Vornamen)
-- **Konfidenz:** 70-90%
+- **Konfidenz:** 70-80%
   - Namensähnlichkeit: max. 50 Punkte
   - Adressbonus: max. 30 Punkte
-  - Obergrenze: 95%
+  - Obergrenze: 80% (in der Praxis durch Formel begrenzt)
 - **Interpretation:** Mittlere Priorität - wahrscheinlich Tippfehler oder Variationen
 
 ### 2.6 Fuzzy Swapped (Fuzzy vertauschte Übereinstimmung)
@@ -111,11 +111,11 @@ Das System verwendet eine zweistufige Architektur zur effizienten und präzisen 
   - Datensatz A: Vorname="Anna", Name="Schmidt"
   - Datensatz B: Vorname="Schmitt", Name="Anna"
   - Ergebnis: Fuzzy Swapped
-- **Konfidenz:** 65-85%
+- **Konfidenz:** 65-75%
   - Namensähnlichkeit: max. 50 Punkte
   - Adressbonus: max. 30 Punkte
   - Vertauschungs-Malus: -5 Punkte
-  - Obergrenze: 95%
+  - Obergrenze: 75% (in der Praxis durch Formel begrenzt)
 - **Interpretation:** Verdächtig - Kombination aus Namensvertauschung und Variation
 
 ---
@@ -371,15 +371,16 @@ Blocking-Schlüssel: phon_068_M67
 
 #### Beispielszenarien
 
-**Szenario 1: Meyer vs Maier (ohne Adresse)**
+**Szenario 1: Meyer vs Maier (ohne Adresse, niedriger Gesamt-Score)**
 ```
 Datensatz A: Vorname="Hans", Name="Meyer", PLZ="", Strasse=""
 Datensatz B: Vorname="Hans", Name="Maier", PLZ="", Strasse=""
 
 Phonetisches Blocking: Beide in Block "phon_068_M67"
-Fuzzy-Ähnlichkeit: ~60% (unter 70% Schwelle)
+Fuzzy-Ähnlichkeit: Angenommen < 70% (durch abweichende Vornamen oder hohen Threshold)
 Phonetische Codes: M67 = M67 ✅
 Ergebnis: phonetic_assisted_normal, Konfidenz 72%
+Anmerkung: Bei identischen Vornamen ist der Score oft >= 70% -> fuzzy_normal
 ```
 
 **Szenario 2: Schmidt vs Schmitt (mit Adresse)**
@@ -480,8 +481,8 @@ Felder: Strasse, HausNummer, PLZ, Ort
 Basis = Namensähnlichkeit × 50  (max. 50 Punkte)
 Adressbonus = Adressübereinstimmungs-Ratio × 30  (max. 30 Punkte)
 Konfidenz = Basis + Adressbonus
-Bereich: 70-90%
-Obergrenze: 95%
+Bereich: 35-80% (gefiltert durch confidence_threshold, typisch >= 70%)
+Obergrenze: 80% (mathematisches Maximum)
 ```
 
 **Fuzzy Swapped:**
@@ -490,8 +491,8 @@ Basis = Namensähnlichkeit × 50  (max. 50 Punkte)
 Adressbonus = Adressübereinstimmungs-Ratio × 30  (max. 30 Punkte)
 Vertauschungs-Malus = -5 Punkte
 Konfidenz = Basis + Adressbonus - 5
-Bereich: 65-85%
-Obergrenze: 95%
+Bereich: 30-75% (gefiltert durch confidence_threshold)
+Obergrenze: 75% (mathematisches Maximum)
 ```
 
 ### Namensähnlichkeit
@@ -523,11 +524,11 @@ Bereich: 70-80%
 | 95-100%   | Sehr hohe Sicherheit - exakte normale Übereinstimmung mit voller Adresse | Hoch |
 | 90-94%    | Hohe Sicherheit - exakte normale Übereinstimmung | Hoch |
 | 85-89%    | Hohe Sicherheit - exakte vertauschte Übereinstimmung | Hoch (verdächtig) |
-| 80-84%    | Gute Sicherheit - Fuzzy normale Übereinstimmung mit guter Adresse | Mittel |
-| 72-79%    | Mittlere Sicherheit - Fuzzy/Phonetisch unterstützte normale Übereinstimmung | Mittel |
+| 80-84%    | Theoretischer Bereich (in Praxis kaum erreicht) | - |
+| 72-80%    | Mittlere Sicherheit - Fuzzy/Phonetisch unterstützte normale Übereinstimmung | Mittel |
 | 70-71%    | Niedrige Sicherheit - Phonetisch unterstützte vertauschte Übereinstimmung | Mittel (verdächtig) |
 | 65-69%    | Niedrige Sicherheit - Fuzzy vertauschte Übereinstimmung | Niedrig (verdächtig) |
-| < 65%     | Zu unsicher - wird nicht gemeldet | - |
+| < 65%     | Zu unsicher - wird nicht gemeldet (Standard-Filter) | - |
 
 ---
 
