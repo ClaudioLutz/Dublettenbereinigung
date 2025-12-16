@@ -12,8 +12,14 @@ Usage:
 import argparse
 import time
 import logging
-from duplicate_checker_optimized import UltraFastDuplicateChecker, benchmark_performance
-from data import lade_daten, engine
+import sys
+import os
+
+# Add src to path so we can import modules
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from dublettenbereinigung.duplicate_checker_optimized import UltraFastDuplicateChecker, benchmark_performance
+from dublettenbereinigung.data import lade_daten, get_engine
 
 # Configure logging
 logging.basicConfig(
@@ -72,6 +78,10 @@ def main():
           WHERE Erfasst < dateadd(day,-7,getdate())
         """
         
+        engine = get_engine()
+        if engine is None:
+             logger.error("Could not create database engine")
+             return 1
         df = lade_daten(engine, query)
     except Exception as e:
         logger.error(f"Failed to load data: {e}")

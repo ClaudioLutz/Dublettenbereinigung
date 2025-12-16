@@ -15,18 +15,15 @@ Performance target: Process 7.5M rows in minutes, not hours
 
 import pandas as pd
 import numpy as np
-from typing import List, Dict, Optional, Tuple, Set
+from typing import List, Dict, Optional, Tuple
 import logging
-from collections import defaultdict
 import re
 from unidecode import unidecode
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
 import time
-from dataclasses import dataclass, asdict
-import hashlib
+from dataclasses import dataclass
 from rapidfuzz import fuzz
-import pickle
 import cologne_phonetics
 
 # Configure logging

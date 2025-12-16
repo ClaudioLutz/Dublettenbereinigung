@@ -1,0 +1,8 @@
+pandas>=2.0.0
+numpy>=1.24.0
+sqlalchemy>=2.0.0
+rapidfuzz>=3.0.0
+unidecode>=1.3.0
+cologne-phonetics>=2.0.0
+python-dotenv>=1.0.0
+pyodbc>=5.0.0
