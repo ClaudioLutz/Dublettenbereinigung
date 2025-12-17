@@ -218,6 +218,229 @@ class PhoneticBlockingStrategy(OptimizedBlockingStrategy):
         
         return combined_keys
 
+class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
+    """Multi-pass blocking: Pass A (address) + Pass B (phonetic+year) for targeted records"""
+
+    def __init__(self, max_block_size: int = 1000):
+        super().__init__()
+        self.max_block_size = max_block_size
+        self.pass_b_generated = 0  # Track statistics
+
+    def _extract_year(self, date_val):
+        """Extract year from date value (string or object)"""
+        try:
+            if pd.isna(date_val) or date_val == '':
+                return None
+
+            if isinstance(date_val, str):
+                # Try YYYY-MM-DD or DD.MM.YYYY
+                match = re.search(r'(\d{4})', date_val)
+                if match:
+                    return int(match.group(1))
+            elif hasattr(date_val, 'year'):
+                return date_val.year
+            elif isinstance(date_val, (int, float)):
+                return int(date_val)
+        except:
+            pass
+        return None
+
+    def _create_pass_b_key(self, vorname_phon, name_phon, year):
+        """Create Pass-B key: passB_{min_phon}_{max_phon}_{year}"""
+        # Use min/max to handle name swaps automatically
+        if not vorname_phon or not name_phon or pd.isna(year):
+            return None
+
+        phon_min = min(vorname_phon, name_phon)
+        phon_max = max(vorname_phon, name_phon)
+
+        return f"passB_{phon_min}_{phon_max}_{int(year)}"
+
+    def create_blocking_keys_vectorized(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create blocking keys with selective Pass-B generation"""
+
+        # Get Pass-A keys from parent class (includes phonetic for no_address)
+        # This returns a Series
+        pass_a_keys = super().create_blocking_keys_vectorized(df)
+
+        # Ensure phonetic codes are computed (parent may have done this, but we need to be sure)
+        if 'vorname_phon' not in df.columns:
+            logger.info("Computing phonetic codes for Pass-B...")
+            df['vorname_phon'] = df['Vorname'].apply(get_cologne_phonetic)
+            df['name_phon'] = df['Name'].apply(get_cologne_phonetic)
+
+        # Compute effective birth year (prefer Geburtstag, fallback to Jahrgang)
+        # Vectorized year extraction would be better but iterating is safer for mixed types
+        df['effective_year'] = df.apply(
+            lambda row: self._extract_year(row['Geburtstag'])
+                        if self._extract_year(row['Geburtstag']) is not None
+                        else self._extract_year(row.get('Jahrgang')),
+            axis=1
+        )
+
+        # Identify records that need Pass-B keys
+        # Criteria: standard_key starts with 'plz_only_', 'street_only_', or 'phon_' AND effective_year is present
+        needs_pass_b = (
+            (pass_a_keys.str.startswith('plz_only_') |
+             pass_a_keys.str.startswith('street_only_') |
+             pass_a_keys.str.startswith('phon_') |
+             pass_a_keys.str.startswith('no_address')) & # Handle no_address (should become phon_ but just in case)
+            (df['effective_year'].notna())
+        )
+
+        # Create result DataFrame with Pass-A keys
+        # We need to preserve the original index
+        result_df = pd.DataFrame({
+            'original_index': df.index,
+            'blocking_key': pass_a_keys,
+            'blocking_pass': 'A'
+        })
+
+        # Generate Pass-B keys for selected records
+        if needs_pass_b.any():
+            pass_b_records = df[needs_pass_b].copy()
+
+            # Create Pass-B blocking keys
+            pass_b_keys = pass_b_records.apply(
+                lambda row: self._create_pass_b_key(
+                    row['vorname_phon'],
+                    row['name_phon'],
+                    row['effective_year']
+                ),
+                axis=1
+            )
+
+            # Filter out None keys (if any failed)
+            valid_pass_b = pass_b_keys.notna()
+            if valid_pass_b.any():
+                pass_b_df = pd.DataFrame({
+                    'original_index': pass_b_records[valid_pass_b].index,
+                    'blocking_key': pass_b_keys[valid_pass_b],
+                    'blocking_pass': 'B'
+                })
+
+                # Concatenate Pass-A and Pass-B keys
+                result_df = pd.concat([result_df, pass_b_df], ignore_index=True)
+
+                self.pass_b_generated = len(pass_b_df)
+                logger.info(f"Generated {self.pass_b_generated} Pass-B keys")
+
+        return result_df
+
+    def _handle_large_block(self, block_key, block_df, max_size=1000):
+        """Sub-block deterministically instead of arbitrary chunking"""
+        if len(block_df) <= max_size:
+            return [(block_key, block_df)]
+
+        sub_blocks = []
+
+        # Determine sub-blocking strategy based on key type
+        if block_key.startswith('street_only_'):
+            # Sub-block by year
+            # Ensure effective_year is in block_df
+            if 'effective_year' not in block_df.columns:
+                 block_df['effective_year'] = block_df.apply(
+                    lambda row: self._extract_year(row['Geburtstag'])
+                                if self._extract_year(row['Geburtstag']) is not None
+                                else self._extract_year(row.get('Jahrgang')),
+                    axis=1
+                )
+
+            for year, year_df in block_df.groupby('effective_year'):
+                if pd.notna(year):
+                    year_key = f"{block_key}_year_{int(year)}"
+                    if len(year_df) <= max_size:
+                        sub_blocks.append((year_key, year_df))
+                    else:
+                        # Further sub-block by first letter of Name
+                        self._sub_block_by_letter(year_key, year_df, sub_blocks, max_size)
+                else:
+                    self._sub_block_by_letter(f"{block_key}_noyear", year_df, sub_blocks, max_size)
+
+            return sub_blocks
+
+        elif block_key.startswith('passB_'):
+            # Already has year, sub-block by first letter
+            self._sub_block_by_letter(block_key, block_df, sub_blocks, max_size)
+            return sub_blocks
+
+        else:
+            # Fall back to current chunking for other types
+            if len(block_df) > max_size:
+                 self._sub_block_by_letter(block_key, block_df, sub_blocks, max_size)
+            else:
+                return [(block_key, block_df)]
+
+        # If still empty, return chunks
+        if not sub_blocks:
+             return self._chunk_block(block_key, block_df, max_size)
+
+        return sub_blocks
+
+    def _sub_block_by_letter(self, base_key, df, sub_blocks_list, max_size):
+        """Helper to sub-block by first letter of Name"""
+        # Create a temporary column for first letter
+        first_letters = df['Name'].fillna('').astype(str).str[0].str.upper()
+
+        for letter, letter_df in df.groupby(first_letters):
+            if not letter: continue # Skip empty
+
+            letter_key = f"{base_key}_L_{letter}"
+            if len(letter_df) <= max_size:
+                sub_blocks_list.append((letter_key, letter_df))
+            else:
+                # If still too large, fallback to chunking
+                chunks = self._chunk_block(letter_key, letter_df, max_size)
+                sub_blocks_list.extend(chunks)
+
+    def _chunk_block(self, block_key, block_df, max_size):
+        """Fallback to arbitrary chunking"""
+        chunks = []
+        block_size = len(block_df)
+        for i in range(0, block_size, max_size):
+            chunk = block_df.iloc[i:i+max_size]
+            if len(chunk) > 1:
+                chunks.append((f"{block_key}_chunk_{i}", chunk))
+        return chunks
+
+    def create_blocks(self, df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
+        """Override create_blocks to handle Multi-Pass logic"""
+        logger.info(f"Creating Multi-Pass blocks for {len(df)} records...")
+        start_time = time.time()
+
+        # Generate keys (DataFrame with original_index)
+        keys_df = self.create_blocking_keys_vectorized(df)
+
+        # Group keys_df by blocking_key
+        grouped = keys_df.groupby('blocking_key')
+
+        blocks = {}
+        total_records_in_blocks = 0
+
+        for key, group in grouped:
+            # Get the original indices for this block
+            indices = group['original_index'].values
+
+            # Extract the subset from original df
+            block_df = df.loc[indices].copy()
+
+            # Ensure we keep the original index as a column 'index'
+            block_df = block_df.reset_index(drop=False)
+            # if 'index' is already there, it means reset_index put the index into 'index'
+
+            # Handle large blocks
+            sub_blocks = self._handle_large_block(key, block_df, self.max_block_size)
+
+            for sub_key, sub_df in sub_blocks:
+                if len(sub_df) > 1:
+                    blocks[sub_key] = sub_df
+                    total_records_in_blocks += len(sub_df)
+
+        elapsed = time.time() - start_time
+        logger.info(f"Created {len(blocks)} blocks (Pass A & B) in {elapsed:.2f}s")
+
+        return blocks
+
 class FastBusinessRules:
     """Optimized business rules engine"""
     
@@ -379,7 +602,17 @@ def process_block_worker(args: Tuple) -> List[Dict]:
     
     Returns list of match dictionaries (not MatchResult objects for serialization)
     """
-    block_data, confidence_threshold, fuzzy_threshold = args
+    # Unpack arguments (handle optional block_key for backward compatibility/flexibility)
+    if len(args) == 4:
+        block_key, block_data, confidence_threshold, fuzzy_threshold = args
+    else:
+        block_data, confidence_threshold, fuzzy_threshold = args
+        block_key = "unknown"
+
+    # Determine blocking pass
+    blocking_pass = 'A'
+    if isinstance(block_key, str) and ('passB_' in block_key or '_passB_' in block_key):
+        blocking_pass = 'B'
     
     matches = []
     block_size = len(block_data)
@@ -464,7 +697,9 @@ def process_block_worker(args: Tuple) -> List[Dict]:
                     'details': {
                         'address_ratio': address_ratio,
                         'address_matches': address_matches,
-                        'total_address_fields': total_address_fields
+                        'total_address_fields': total_address_fields,
+                        'blocking_pass': blocking_pass,
+                        'block_key': block_key
                     }
                 })
                 
@@ -595,7 +830,9 @@ def process_block_worker(args: Tuple) -> List[Dict]:
                         'name_results': name_results,
                         'address_ratio': address_ratio,
                         'address_matches': address_matches,
-                        'total_address_fields': total_address_fields
+                        'total_address_fields': total_address_fields,
+                        'blocking_pass': blocking_pass,
+                        'block_key': block_key
                     }
                 })
     
@@ -604,14 +841,18 @@ def process_block_worker(args: Tuple) -> List[Dict]:
 class UltraFastDuplicateChecker:
     """Ultra-optimized duplicate checker for millions of records with phonetic matching"""
     
-    def __init__(self, fuzzy_threshold: float = 0.8, use_parallel: bool = True, n_workers: Optional[int] = None, use_phonetic: bool = True):
+    def __init__(self, fuzzy_threshold: float = 0.8, use_parallel: bool = True, n_workers: Optional[int] = None, use_phonetic: bool = True, use_multipass: bool = True):
         self.fuzzy_threshold = fuzzy_threshold
         self.use_parallel = use_parallel
         self.n_workers = n_workers or max(1, mp.cpu_count() - 1)
         self.use_phonetic = use_phonetic
+        self.use_multipass = use_multipass
         
-        # Use phonetic blocking strategy if enabled, otherwise standard blocking
-        if use_phonetic:
+        # Select blocking strategy
+        if use_multipass:
+            self.blocking = MultiPassBlockingStrategy()
+            logger.info("Multi-pass blocking enabled (Pass A + Pass B)")
+        elif use_phonetic:
             self.blocking = PhoneticBlockingStrategy()
             logger.info("Phonetic matching enabled (Cologne Phonetic)")
         else:
@@ -620,6 +861,34 @@ class UltraFastDuplicateChecker:
         
         logger.info(f"Initialized with {self.n_workers} workers, parallel={'enabled' if use_parallel else 'disabled'}")
     
+    def _deduplicate_pairs(self, matches: List[Dict]) -> List[Dict]:
+        """Remove duplicate pairs, keeping higher confidence match"""
+        if not matches:
+            return []
+
+        matches_df = pd.DataFrame(matches)
+
+        # Sort by confidence (descending)
+        matches_df = matches_df.sort_values('confidence_score', ascending=False)
+
+        # Create pair identifier (sorted to handle A-B vs B-A)
+        # Using record indices for pair id
+        matches_df['pair_id'] = matches_df.apply(
+            lambda row: tuple(sorted([row['record_a_idx'], row['record_b_idx']])),
+            axis=1
+        )
+
+        original_count = len(matches_df)
+
+        # Keep first occurrence (highest confidence)
+        deduplicated = matches_df.drop_duplicates(subset=['pair_id'], keep='first')
+
+        deduplicated_count = original_count - len(deduplicated)
+        if deduplicated_count > 0:
+            logger.info(f"Removed {deduplicated_count} duplicate pairs (kept highest confidence)")
+
+        return deduplicated.to_dict('records')
+
     def analyze_duplicates(self, df: pd.DataFrame, confidence_threshold: float = 70.0) -> List[MatchResult]:
         """
         Main analysis function - highly optimized for large datasets
@@ -638,8 +907,8 @@ class UltraFastDuplicateChecker:
         
         # Prepare block data for workers
         block_args = [
-            (block_df, confidence_threshold, self.fuzzy_threshold)
-            for block_df in blocks.values()
+            (key, block_df, confidence_threshold, self.fuzzy_threshold)
+            for key, block_df in blocks.items()
         ]
         
         all_matches = []
@@ -676,6 +945,10 @@ class UltraFastDuplicateChecker:
                 except Exception as e:
                     logger.error(f"Error processing block {i}: {e}")
         
+        # Deduplicate pairs if multi-pass
+        if self.use_multipass and len(all_matches) > 0:
+             all_matches = self._deduplicate_pairs(all_matches)
+
         # Convert dictionaries back to MatchResult objects
         result_objects = [
             MatchResult(
