@@ -100,10 +100,17 @@ python run_optimized_analysis.py --confidence 60.0 --fuzzy-threshold 0.6
 
 ## 📁 Files You Have
 
-1. **duplicate_checker_optimized.py** - Core optimized engine
-2. **run_optimized_analysis.py** - Main script to run analysis
-3. **performance_comparison.py** - Compare old vs new performance
+### Active Code (Use These)
+1. **run_optimized_analysis.py** - Main script to run analysis
+2. **duplicate_checker_optimized.py** - Core optimized engine
+3. **performance_comparison.py** - Compare performance metrics
 4. **README_OPTIMIZATION.md** - Detailed documentation
+
+### Legacy Code (For Reference Only)
+- **legacy/duplicate_checker_poc.py** - Original POC implementation
+- **legacy/duplicate_checker_integration.py** - Old integration layer
+
+> **Note:** Always use the active codebase for production work. Legacy files are preserved only for historical reference.
 
 ## 🎯 Recommended Workflow
 
