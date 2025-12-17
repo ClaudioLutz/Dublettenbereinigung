@@ -97,6 +97,105 @@ class VectorizedAddressNormalizer:
         names = names.str.replace(r'\s+', ' ', regex=True).str.strip()
         return names
 
+def normalize_street(street):
+    """Normalize street name for comparison"""
+    if pd.isna(street) or not str(street).strip():
+        return ''
+
+    street = str(street).strip().lower()
+
+    # Apply normalization rules (reuse from VectorizedAddressNormalizer)
+    # 1. Replace special characters
+    street = street.replace('ß', 'ss')
+    street = street.replace('ä', 'ae')
+    street = street.replace('ö', 'oe')
+    street = street.replace('ü', 'ue')
+
+    # 2. Remove punctuation
+    street = street.replace('.', '').replace(',', '').replace('-', ' ')
+
+    # 3. Normalize common abbreviations
+    abbreviations = {
+        'str': 'strasse',
+        'strasse': 'strasse',
+        'weg': 'weg',
+        'platz': 'platz',
+        'allee': 'allee',
+        'gasse': 'gasse'
+    }
+
+    for abbr, full in abbreviations.items():
+        if street.endswith(abbr):
+            street = street[:-len(abbr)] + full
+            break # Only apply one suffix
+
+    # 4. Remove extra whitespace
+    street = ' '.join(street.split())
+
+    return street
+
+def normalize_plz_scalar(plz):
+    """Normalize PLZ scalar safely handling floats"""
+    if pd.isna(plz):
+        return ''
+    s = str(plz).strip()
+    if s.endswith('.0'):
+        return s[:-2]
+    return s
+
+def compute_normalized_address_ratio_fast(record_a, record_b):
+    """Fast normalized address ratio computation using precomputed fields"""
+
+    # Use precomputed normalized fields
+    street_a = record_a.get('street_normalized', '')
+    street_b = record_b.get('street_normalized', '')
+    plz_a = record_a.get('plz_normalized', '')
+    plz_b = record_b.get('plz_normalized', '')
+
+    # PLZ comparison (exact match)
+    plz_ratio = 1.0 if plz_a and plz_b and plz_a == plz_b else 0.0
+
+    # Street comparison (fuzzy match)
+    if street_a and street_b:
+        street_ratio = fuzz.ratio(street_a, street_b) / 100.0
+    else:
+        street_ratio = 0.0
+
+    # Weighted combination (PLZ is more discriminative)
+    # Require at least one component to be present
+    if plz_a or street_a:
+        address_ratio = 0.6 * plz_ratio + 0.4 * street_ratio
+    else:
+        address_ratio = 0.0
+
+    return address_ratio
+
+def determine_address_assisted_match_type(is_swapped, has_phonetic):
+    """Determine match type for address-assisted matches"""
+    if is_swapped:
+        return 'address_assisted_swapped'
+    else:
+        return 'address_assisted_normal'
+
+def calculate_address_assisted_confidence(match_type, address_ratio):
+    """Calculate confidence for address-assisted matches"""
+
+    if match_type == 'address_assisted_normal':
+        # Base confidence 70, bonus up to 10
+        confidence = 70 + address_ratio * 10
+        # Range: 70-80 (requires address_ratio >= 0.75)
+
+    elif match_type == 'address_assisted_swapped':
+        # Small penalty for swapped names
+        confidence = 68 + address_ratio * 10
+        # Range: 68-78
+
+    else:
+        # Fallback (shouldn't happen)
+        confidence = 70
+
+    return round(confidence, 2)
+
 def get_cologne_phonetic(name: str) -> str:
     """
     Get Cologne Phonetic code for a name safely.
@@ -707,6 +806,13 @@ def process_block_worker(args: Tuple) -> List[Dict]:
                 matched_indices.add(i)
                 matched_indices.add(j)
     
+    # Precompute normalized address fields (once per record)
+    block_data['street_normalized'] = block_data['Strasse'].apply(normalize_street)
+    block_data['plz_normalized'] = block_data['Plz'].apply(normalize_plz_scalar)
+
+    # Update records with new fields
+    records = block_data.to_dict('records')
+
     # =======================
     # STAGE 2: FUZZY MATCHING
     # =======================
@@ -742,11 +848,47 @@ def process_block_worker(args: Tuple) -> List[Dict]:
                 record_b.get('Vorname', ''), record_b.get('Name', '')
             )
             
+            best_score = name_results['best_score']
+            is_swapped = name_results['is_swapped']
+
             # Check if name similarity meets threshold
-            if name_results['best_score'] < fuzzy_threshold:
-                # PHONETIC FALLBACK: Check borderline matches (60% to threshold)
-                if 0.60 <= name_results['best_score'] < fuzzy_threshold:
-                    # Compute phonetic codes for borderline cases
+            if best_score < fuzzy_threshold:
+                # NEW: Address-aware gate for borderline name scores
+                # Also handles Phonetic fallback within this block or separately?
+                # The requirements say: "Check address before rejecting" if 0.60 <= best_score < fuzzy_threshold
+
+                # Check for phonetic match (if needed for fallback)
+                # We need phonetic info for both address-assisted (as arg) and fallback
+                has_phonetic_match = False
+                phonetic_match_swapped = False
+
+                # Only compute phonetic if we are in the borderline range
+                if 0.60 <= best_score < fuzzy_threshold:
+                    # Check for address-assisted match first
+                    # Compute normalized address ratio (using precomputed fields)
+                    norm_address_ratio = compute_normalized_address_ratio_fast(record_a, record_b)
+
+                    if norm_address_ratio >= 0.75:
+                        # Strong address match -> create "address_assisted" match
+                        match_type = determine_address_assisted_match_type(is_swapped, False) # phonetic arg not used for type string
+                        confidence = calculate_address_assisted_confidence(match_type, norm_address_ratio)
+
+                        matches.append({
+                            'record_a_idx': int(original_indices[i]),
+                            'record_b_idx': int(original_indices[j]),
+                            'confidence_score': float(confidence),
+                            'match_type': match_type,
+                            'details': {
+                                'name_results': name_results,
+                                'address_ratio': norm_address_ratio, # Use normalized ratio here
+                                'blocking_pass': blocking_pass,
+                                'block_key': block_key
+                            }
+                        })
+                        continue # Pair handled, move to next
+
+                    # If address is not strong enough, check phonetic fallback
+                    # Compute phonetic codes
                     v_a_phon = get_cologne_phonetic(record_a.get('Vorname', ''))
                     n_a_phon = get_cologne_phonetic(record_a.get('Name', ''))
                     v_b_phon = get_cologne_phonetic(record_b.get('Vorname', ''))
@@ -765,7 +907,7 @@ def process_block_worker(args: Tuple) -> List[Dict]:
                         name_results['phonetic_assisted'] = True
                         # Continue with normal match creation flow
                     else:
-                        # No phonetic match - skip this comparison
+                        # No phonetic match and weak address - skip this comparison
                         continue
                 else:
                     # Below 60% - too weak even with phonetic
