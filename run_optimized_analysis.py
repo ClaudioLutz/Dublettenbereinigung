@@ -12,17 +12,49 @@ Usage:
 import argparse
 import time
 import logging
+import os
+import shutil
+from datetime import datetime
 from duplicate_checker_optimized import UltraFastDuplicateChecker, benchmark_performance
-from data import lade_daten, engine
+from data import lade_daten, engine, create_db_engine
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+def setup_logging():
+    """Configure logging with rotation"""
+    log_dir = 'logs'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    log_file = os.path.join(log_dir, 'duplicate_checker.log')
+
+    # Rotate existing log if it exists
+    if os.path.exists(log_file):
+        # Get last modification time for timestamp
+        mtime = os.path.getmtime(log_file)
+        timestamp = datetime.fromtimestamp(mtime).strftime('%Y%m%d_%H%M%S')
+        archive_name = f'duplicate_checker_{timestamp}.log'
+        archive_path = os.path.join(log_dir, archive_name)
+
+        try:
+            shutil.move(log_file, archive_path)
+            # print(f"Rotated old log to {archive_path}")
+        except Exception as e:
+            print(f"Failed to rotate log: {e}")
+
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ],
+        force=True
+    )
+
 logger = logging.getLogger(__name__)
 
 def main():
+    setup_logging()
     parser = argparse.ArgumentParser(description='Run optimized duplicate analysis')
     parser.add_argument('--limit', type=int, default=None,
                        help='Limit number of records to process (None = all)')
@@ -36,6 +68,10 @@ def main():
                        help='Run performance benchmark before full analysis')
     parser.add_argument('--output', type=str, default='duplicates_results.csv',
                        help='Output filename (default: duplicates_results.csv)')
+    parser.add_argument('--db-user', type=str, default=None,
+                       help='Database username (optional, defaults to Windows Auth)')
+    parser.add_argument('--db-password', type=str, default=None,
+                       help='Database password (optional)')
     
     args = parser.parse_args()
     
@@ -44,6 +80,17 @@ def main():
     print("=" * 80)
     print()
     
+    # Establish database connection
+    db_engine = engine # Default from import
+    if args.db_user:
+        logger.info(f"Connecting to database as user: {args.db_user}")
+        db_engine = create_db_engine(args.db_user, args.db_password)
+        if not db_engine:
+            logger.error("Failed to create database engine with provided credentials")
+            return 1
+    else:
+        logger.info("Connecting to database using Windows Authentication")
+
     # Load data from SQL Server
     logger.info(f"Loading data from SQL Server (limit: {args.limit or 'ALL'})")
     start_load = time.time()
@@ -72,7 +119,7 @@ def main():
           WHERE Erfasst < dateadd(day,-7,getdate())
         """
         
-        df = lade_daten(engine, query)
+        df = lade_daten(db_engine, query)
     except Exception as e:
         logger.error(f"Failed to load data: {e}")
         return 1

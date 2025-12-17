@@ -2,3 +2,5 @@ venv/
 deprecated_code/
 __pycache__/
 *.pyc
+logs/
+*.log
