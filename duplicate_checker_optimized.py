@@ -27,7 +27,7 @@ from rapidfuzz import fuzz
 import cologne_phonetics
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -1227,6 +1227,9 @@ def benchmark_performance(df: pd.DataFrame, sample_sizes: List[int] = None):
 
 # Example usage
 if __name__ == "__main__":
+    # Configure logging for standalone execution
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
     print("=== Ultra-Fast Duplicate Checker ===")
     print("Optimized for 7.5 Million+ records\n")
     
