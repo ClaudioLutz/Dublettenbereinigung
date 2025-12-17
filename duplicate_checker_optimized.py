@@ -17,16 +17,13 @@ import pandas as pd
 import numpy as np
 from typing import List, Dict, Optional, Tuple, Set
 import logging
-from collections import defaultdict
 import re
 from unidecode import unidecode
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
 import time
-from dataclasses import dataclass, asdict
-import hashlib
+from dataclasses import dataclass
 from rapidfuzz import fuzz
-import pickle
 import cologne_phonetics
 
 # Configure logging
@@ -48,13 +45,19 @@ class VectorizedAddressNormalizer:
     @staticmethod
     def normalize_plz_vectorized(plz_series: pd.Series) -> pd.Series:
         """Vectorized PLZ normalization"""
-        # Convert to string, remove non-digits, pad to 5 digits
-        return (plz_series
-                .fillna('')
-                .astype(str)
-                .str.replace(r'\D', '', regex=True)
-                .str.zfill(5)
-                .str[:5])
+        # Convert to string, remove non-digits
+        cleaned = (plz_series
+                   .fillna('')
+                   .astype(str)
+                   .str.replace(r'\D', '', regex=True))
+
+        # Pad to 5 digits, but keep empty strings empty to allow street_only blocking
+        # If cleaned is empty, it remains empty. Else zfill(5).
+        # We can use mask
+        mask = cleaned != ''
+        result = cleaned.copy()
+        result[mask] = result[mask].str.zfill(5).str[:5]
+        return result
     
     @staticmethod
     def normalize_street_vectorized(street_series: pd.Series) -> pd.Series:
@@ -135,13 +138,19 @@ def normalize_street(street):
     return street
 
 def normalize_plz_scalar(plz):
-    """Normalize PLZ scalar safely handling floats"""
+    """Normalize PLZ scalar to match vectorized behavior"""
     if pd.isna(plz):
         return ''
+
     s = str(plz).strip()
-    if s.endswith('.0'):
-        return s[:-2]
-    return s
+    # Remove non-digits
+    s = re.sub(r'\D', '', s)
+
+    if not s:
+        return ''
+
+    # Pad to 5 digits
+    return s.zfill(5)[:5]
 
 def compute_normalized_address_ratio_fast(record_a, record_b):
     """Fast normalized address ratio computation using precomputed fields"""
@@ -344,17 +353,6 @@ class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
             pass
         return None
 
-    def _create_pass_b_key(self, vorname_phon, name_phon, year):
-        """Create Pass-B key: passB_{min_phon}_{max_phon}_{year}"""
-        # Use min/max to handle name swaps automatically
-        if not vorname_phon or not name_phon or pd.isna(year):
-            return None
-
-        phon_min = min(vorname_phon, name_phon)
-        phon_max = max(vorname_phon, name_phon)
-
-        return f"passB_{phon_min}_{phon_max}_{int(year)}"
-
     def create_blocking_keys_vectorized(self, df: pd.DataFrame) -> pd.DataFrame:
         """Create blocking keys with selective Pass-B generation"""
 
@@ -368,14 +366,15 @@ class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
             df['vorname_phon'] = df['Vorname'].apply(get_cologne_phonetic)
             df['name_phon'] = df['Name'].apply(get_cologne_phonetic)
 
-        # Compute effective birth year (prefer Geburtstag, fallback to Jahrgang)
-        # Vectorized year extraction would be better but iterating is safer for mixed types
-        df['effective_year'] = df.apply(
-            lambda row: self._extract_year(row['Geburtstag'])
-                        if self._extract_year(row['Geburtstag']) is not None
-                        else self._extract_year(row.get('Jahrgang')),
-            axis=1
-        )
+        # Compute effective birth year (vectorized)
+        # Extract year from Geburtstag string
+        years_geb = df['Geburtstag'].astype(str).str.extract(r'(\d{4})')[0].astype(float)
+
+        # Clean up Jahrgang (force numeric, coerce errors)
+        years_jg = pd.to_numeric(df['Jahrgang'], errors='coerce')
+
+        # Combine: prefer Geburtstag year, fallback to Jahrgang
+        df['effective_year'] = years_geb.fillna(years_jg)
 
         # Identify records that need Pass-B keys
         # Criteria: standard_key starts with 'plz_only_', 'street_only_', or 'phon_' AND effective_year is present
@@ -399,22 +398,25 @@ class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
         if needs_pass_b.any():
             pass_b_records = df[needs_pass_b].copy()
 
-            # Create Pass-B blocking keys
-            pass_b_keys = pass_b_records.apply(
-                lambda row: self._create_pass_b_key(
-                    row['vorname_phon'],
-                    row['name_phon'],
-                    row['effective_year']
-                ),
-                axis=1
-            )
+            # Vectorized Pass-B key creation
+            v_phon = pass_b_records['vorname_phon']
+            n_phon = pass_b_records['name_phon']
+            years = pass_b_records['effective_year'].astype(int).astype(str)
 
-            # Filter out None keys (if any failed)
-            valid_pass_b = pass_b_keys.notna()
-            if valid_pass_b.any():
+            # Use numpy to get min/max phonetically element-wise (handling swaps)
+            p_min = np.minimum(v_phon, n_phon)
+            p_max = np.maximum(v_phon, n_phon)
+
+            # Create the key
+            pass_b_keys = 'passB_' + p_min + '_' + p_max + '_' + years
+
+            # Filter valid keys (non-empty phonetics)
+            valid_mask = (v_phon != '') & (n_phon != '')
+
+            if valid_mask.any():
                 pass_b_df = pd.DataFrame({
-                    'original_index': pass_b_records[valid_pass_b].index,
-                    'blocking_key': pass_b_keys[valid_pass_b],
+                    'original_index': pass_b_records[valid_mask].index,
+                    'blocking_key': pass_b_keys[valid_mask],
                     'blocking_pass': 'B'
                 })
 
@@ -436,16 +438,15 @@ class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
         # Determine sub-blocking strategy based on key type
         if block_key.startswith('street_only_'):
             # Sub-block by year
-            # Ensure effective_year is in block_df
+            # Ensure effective_year is in block_df (it should be from create_blocking_keys)
             if 'effective_year' not in block_df.columns:
-                 block_df['effective_year'] = block_df.apply(
-                    lambda row: self._extract_year(row['Geburtstag'])
-                                if self._extract_year(row['Geburtstag']) is not None
-                                else self._extract_year(row.get('Jahrgang')),
-                    axis=1
-                )
+                # Should not happen with new logic, but safety fallback
+                years_geb = block_df['Geburtstag'].astype(str).str.extract(r'(\d{4})')[0].astype(float)
+                years_jg = pd.to_numeric(block_df['Jahrgang'], errors='coerce')
+                block_df['effective_year'] = years_geb.fillna(years_jg)
 
-            for year, year_df in block_df.groupby('effective_year'):
+            # Group by year, keeping NaNs
+            for year, year_df in block_df.groupby('effective_year', dropna=False):
                 if pd.notna(year):
                     year_key = f"{block_key}_year_{int(year)}"
                     if len(year_df) <= max_size:
@@ -470,7 +471,7 @@ class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
             else:
                 return [(block_key, block_df)]
 
-        # If still empty, return chunks
+        # If still empty (shouldn't happen with dropna=False), return chunks
         if not sub_blocks:
              return self._chunk_block(block_key, block_df, max_size)
 
@@ -479,12 +480,23 @@ class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
     def _sub_block_by_letter(self, base_key, df, sub_blocks_list, max_size):
         """Helper to sub-block by first letter of Name"""
         # Create a temporary column for first letter
-        first_letters = df['Name'].fillna('').astype(str).str[0].str.upper()
+        # Ensure we really have strings for the .str accessor
+        # Note: str[0] returns NaN for empty strings, so fillna('') again to ensure string type for groupby keys if needed
+        # But wait, groupby handles mixed types. The issue is .str.upper() fails if previous result is all NaN (float)
+
+        first_chars = df['Name'].fillna('').astype(str).str[0]
+        # If all names were empty, first_chars contains all NaNs (float), and .str accessor fails on it.
+        # We need to ensure we treat it as string or object that can be grouped.
+
+        first_letters = first_chars.fillna('').astype(str).str.upper()
 
         for letter, letter_df in df.groupby(first_letters):
-            if not letter: continue # Skip empty
+            if not letter:
+                # Handle empty letter/name
+                letter_key = f"{base_key}_L_EMPTY"
+            else:
+                letter_key = f"{base_key}_L_{letter}"
 
-            letter_key = f"{base_key}_L_{letter}"
             if len(letter_df) <= max_size:
                 sub_blocks_list.append((letter_key, letter_df))
             else:
@@ -857,11 +869,6 @@ def process_block_worker(args: Tuple) -> List[Dict]:
                 # Also handles Phonetic fallback within this block or separately?
                 # The requirements say: "Check address before rejecting" if 0.60 <= best_score < fuzzy_threshold
 
-                # Check for phonetic match (if needed for fallback)
-                # We need phonetic info for both address-assisted (as arg) and fallback
-                has_phonetic_match = False
-                phonetic_match_swapped = False
-
                 # Only compute phonetic if we are in the borderline range
                 if 0.60 <= best_score < fuzzy_threshold:
                     # Check for address-assisted match first
@@ -870,29 +877,30 @@ def process_block_worker(args: Tuple) -> List[Dict]:
 
                     if norm_address_ratio >= 0.75:
                         # Strong address match -> create "address_assisted" match
-                        match_type = determine_address_assisted_match_type(is_swapped, False) # phonetic arg not used for type string
+                        match_type = determine_address_assisted_match_type(is_swapped, False)
                         confidence = calculate_address_assisted_confidence(match_type, norm_address_ratio)
 
-                        matches.append({
-                            'record_a_idx': int(original_indices[i]),
-                            'record_b_idx': int(original_indices[j]),
-                            'confidence_score': float(confidence),
-                            'match_type': match_type,
-                            'details': {
-                                'name_results': name_results,
-                                'address_ratio': norm_address_ratio, # Use normalized ratio here
-                                'blocking_pass': blocking_pass,
-                                'block_key': block_key
-                            }
-                        })
+                        if confidence >= confidence_threshold:
+                            matches.append({
+                                'record_a_idx': int(original_indices[i]),
+                                'record_b_idx': int(original_indices[j]),
+                                'confidence_score': float(confidence),
+                                'match_type': match_type,
+                                'details': {
+                                    'name_results': name_results,
+                                    'address_ratio': norm_address_ratio, # Use normalized ratio here
+                                    'blocking_pass': blocking_pass,
+                                    'block_key': block_key
+                                }
+                            })
                         continue # Pair handled, move to next
 
                     # If address is not strong enough, check phonetic fallback
-                    # Compute phonetic codes
-                    v_a_phon = get_cologne_phonetic(record_a.get('Vorname', ''))
-                    n_a_phon = get_cologne_phonetic(record_a.get('Name', ''))
-                    v_b_phon = get_cologne_phonetic(record_b.get('Vorname', ''))
-                    n_b_phon = get_cologne_phonetic(record_b.get('Name', ''))
+                    # Check for existing phonetic codes or compute
+                    v_a_phon = record_a.get('vorname_phon') or get_cologne_phonetic(record_a.get('Vorname', ''))
+                    n_a_phon = record_a.get('name_phon') or get_cologne_phonetic(record_a.get('Name', ''))
+                    v_b_phon = record_b.get('vorname_phon') or get_cologne_phonetic(record_b.get('Vorname', ''))
+                    n_b_phon = record_b.get('name_phon') or get_cologne_phonetic(record_b.get('Name', ''))
                     
                     # Check phonetic match (normal and swapped)
                     phonetic_match_normal = (v_a_phon and n_a_phon and v_b_phon and n_b_phon and
@@ -902,7 +910,7 @@ def process_block_worker(args: Tuple) -> List[Dict]:
                     
                     if phonetic_match_normal or phonetic_match_swapped:
                         # Boost score above threshold and mark as phonetic-assisted
-                        name_results['best_score'] = 0.72  # Just above 0.70 threshold
+                        # Don't mutate best_score, just flag it
                         name_results['is_swapped'] = phonetic_match_swapped
                         name_results['phonetic_assisted'] = True
                         # Continue with normal match creation flow
@@ -1038,6 +1046,9 @@ class UltraFastDuplicateChecker:
         logger.info(f"Starting duplicate analysis on {len(df):,} records")
         start_time = time.time()
         
+        # Ensure index is reset to prevent index misalignment issues
+        df = df.reset_index(drop=True)
+
         # Create blocks
         blocks = self.blocking.create_blocks(df)
         
