@@ -25,7 +25,10 @@ from unidecode import unidecode
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
 import time
-from duplicate_checker_poc import DuplicateChecker, MatchResult
+try:
+    from .duplicate_checker_poc import DuplicateChecker, MatchResult
+except ImportError:
+    from duplicate_checker_poc import DuplicateChecker, MatchResult
 from data import lade_daten, engine
 
 # Configure logging
@@ -176,26 +179,9 @@ class OptimizedDuplicateChecker:
                 record_i = block_df.iloc[i]
                 record_j = block_df.iloc[j]
                 
-                # DEBUG: Print details for problematic case
-                is_gloor_case = (('Gloor' in str(record_i.get('Name', '')) and 'David Pablo' in str(record_i.get('Vorname', ''))) or
-                                 ('Gloor' in str(record_j.get('Name', '')) and 'David Pablo' in str(record_j.get('Vorname', ''))))
-                
-                if is_gloor_case:
-                    print(f"DEBUG: Checking potential Gloor case:")
-                    print(f"  Record {i}: {record_i.get('Vorname')} {record_i.get('Name')}")
-                    print(f"    Geburtstag: '{record_i.get('Geburtstag')}', Jahrgang: '{record_i.get('Jahrgang')}'")
-                    print(f"  Record {j}: {record_j.get('Vorname')} {record_j.get('Name')}")
-                    print(f"    Geburtstag: '{record_j.get('Geburtstag')}', Jahrgang: '{record_j.get('Jahrgang')}'")
-                
                 # Check exact match first
                 exact_match = self.duplicate_checker.check_exact_match(record_i, record_j)
                 if exact_match and exact_match.confidence_score >= confidence_threshold:
-                    # DEBUG: Print if exact match found for Gloor case
-                    if is_gloor_case:
-                        print(f"DEBUG: EXACT MATCH FOUND for Gloor case!")
-                        print(f"  Confidence: {exact_match.confidence_score}")
-                        print(f"  Match Type: {exact_match.match_type}")
-                    
                     exact_match.record_a_idx = original_indices[i]
                     exact_match.record_b_idx = original_indices[j]
                     matches.append(exact_match)
