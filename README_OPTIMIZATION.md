@@ -4,6 +4,8 @@
 
 This optimized version can process **7.5 million records** in a reasonable time frame (minutes to hours, not days).
 
+> **Note on Legacy Code:** Previous implementations have been moved to the `legacy/` folder (`duplicate_checker_poc.py`, `duplicate_checker_integration.py`). These are preserved for reference but should not be used for new work. The current production implementation is `duplicate_checker_optimized.py`.
+
 ### Key Optimizations
 
 #### 1. **Eliminated `iterrows()`** ❌➡️✅
