@@ -95,7 +95,13 @@ class VectorizedAddressNormalizer:
     def normalize_name_vectorized(name_series: pd.Series) -> pd.Series:
         """Vectorized name normalization"""
         names = name_series.fillna('').astype(str).str.strip().str.lower()
+
+        # Replace common German umlauts/special chars
         names = names.str.replace('ß', 'ss')
+        names = names.str.replace('ä', 'ae')
+        names = names.str.replace('ö', 'oe')
+        names = names.str.replace('ü', 'ue')
+
         names = names.apply(lambda x: unidecode(x) if x else '')
         names = names.str.replace(r'\s+', ' ', regex=True).str.strip()
         return names
@@ -429,82 +435,158 @@ class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
         return result_df
 
     def _handle_large_block(self, block_key, block_df, max_size=1000):
-        """Sub-block deterministically instead of arbitrary chunking"""
+        """
+        Sub-block deterministically using recursive strategies.
+        Order of discrimination:
+        1. Effective Year (if available/useful for the key type)
+        2. Surname 1st letter
+        3. Surname 2 chars (prefix)
+        4. Firstname 1st letter
+        5. Stable Hash Bucket (last resort)
+        """
         if len(block_df) <= max_size:
             return [(block_key, block_df)]
 
         sub_blocks = []
 
-        # Determine sub-blocking strategy based on key type
-        if block_key.startswith('street_only_'):
-            # Sub-block by year
-            # Ensure effective_year is in block_df (it should be from create_blocking_keys)
-            if 'effective_year' not in block_df.columns:
-                # Should not happen with new logic, but safety fallback
-                years_geb = block_df['Geburtstag'].astype(str).str.extract(r'(\d{4})')[0].astype(float)
-                years_jg = pd.to_numeric(block_df['Jahrgang'], errors='coerce')
-                block_df['effective_year'] = years_geb.fillna(years_jg)
+        # Strategy 1: Sub-block by Year (only if not already part of key)
+        # We do this for street_only_ keys mainly.
+        # passB keys already have year in them.
+        should_split_by_year = (
+            block_key.startswith('street_only_') or
+            (not block_key.startswith('passB_') and 'effective_year' in block_df.columns)
+        )
 
+        # Ensure effective_year exists if we need it
+        if should_split_by_year and 'effective_year' not in block_df.columns:
+            years_geb = block_df['Geburtstag'].astype(str).str.extract(r'(\d{4})')[0].astype(float)
+            years_jg = pd.to_numeric(block_df['Jahrgang'], errors='coerce')
+            block_df['effective_year'] = years_geb.fillna(years_jg)
+
+        if should_split_by_year:
             # Group by year, keeping NaNs
-            for year, year_df in block_df.groupby('effective_year', dropna=False):
-                if pd.notna(year):
-                    year_key = f"{block_key}_year_{int(year)}"
-                    if len(year_df) <= max_size:
-                        sub_blocks.append((year_key, year_df))
+            # If the block is already specific to a year (rare), this won't hurt, just 1 group
+            grouped_year = block_df.groupby('effective_year', dropna=False)
+            if len(grouped_year) > 1: # Only useful if it actually splits something
+                for year, year_df in grouped_year:
+                    if pd.notna(year):
+                        year_key = f"{block_key}_Y{int(year)}"
                     else:
-                        # Further sub-block by first letter of Name
-                        self._sub_block_by_letter(year_key, year_df, sub_blocks, max_size)
-                else:
-                    self._sub_block_by_letter(f"{block_key}_noyear", year_df, sub_blocks, max_size)
+                        year_key = f"{block_key}_Y_NA"
 
-            return sub_blocks
+                    self._recursive_sub_block(year_key, year_df, sub_blocks, max_size, depth=1)
+                return sub_blocks
 
-        elif block_key.startswith('passB_'):
-            # Already has year, sub-block by first letter
-            self._sub_block_by_letter(block_key, block_df, sub_blocks, max_size)
-            return sub_blocks
-
-        else:
-            # Fall back to current chunking for other types
-            if len(block_df) > max_size:
-                 self._sub_block_by_letter(block_key, block_df, sub_blocks, max_size)
-            else:
-                return [(block_key, block_df)]
-
-        # If still empty (shouldn't happen with dropna=False), return chunks
-        if not sub_blocks:
-             return self._chunk_block(block_key, block_df, max_size)
-
+        # If year split didn't happen or didn't help (e.g. all same year), proceed to recursive logic
+        self._recursive_sub_block(block_key, block_df, sub_blocks, max_size, depth=1)
         return sub_blocks
 
-    def _sub_block_by_letter(self, base_key, df, sub_blocks_list, max_size):
-        """Helper to sub-block by first letter of Name"""
-        # Create a temporary column for first letter
-        # Ensure we really have strings for the .str accessor
-        # Note: str[0] returns NaN for empty strings, so fillna('') again to ensure string type for groupby keys if needed
-        # But wait, groupby handles mixed types. The issue is .str.upper() fails if previous result is all NaN (float)
+    def _recursive_sub_block(self, base_key, df, sub_blocks_list, max_size, depth):
+        """
+        Recursive helper to sub-block by progressively more granular criteria.
+        Depth levels:
+        1 = Surname 1st letter
+        2 = Surname 2 chars
+        3 = Firstname 1st letter
+        4 = Stable Hash
+        """
+        if len(df) <= max_size:
+            sub_blocks_list.append((base_key, df))
+            return
 
-        first_chars = df['Name'].fillna('').astype(str).str[0]
-        # If all names were empty, first_chars contains all NaNs (float), and .str accessor fails on it.
-        # We need to ensure we treat it as string or object that can be grouped.
+        # LEVEL 1: Surname 1st letter
+        if depth == 1:
+            first_chars = df['Name'].fillna('').astype(str).str[0].fillna('').str.upper()
+            grouped = df.groupby(first_chars)
 
-        first_letters = first_chars.fillna('').astype(str).str.upper()
+            # If all are same letter (len=1), skip to next depth immediately
+            if len(grouped) == 1:
+                self._recursive_sub_block(base_key, df, sub_blocks_list, max_size, depth=2)
+                return
 
-        for letter, letter_df in df.groupby(first_letters):
-            if not letter:
-                # Handle empty letter/name
-                letter_key = f"{base_key}_L_EMPTY"
-            else:
-                letter_key = f"{base_key}_L_{letter}"
+            for letter, letter_df in grouped:
+                letter_key = f"{base_key}_L1_{letter}" if letter else f"{base_key}_L1_NA"
+                self._recursive_sub_block(letter_key, letter_df, sub_blocks_list, max_size, depth=2)
+            return
 
-            if len(letter_df) <= max_size:
-                sub_blocks_list.append((letter_key, letter_df))
-            else:
-                # If still too large, fallback to chunking
-                chunks = self._chunk_block(letter_key, letter_df, max_size)
-                sub_blocks_list.extend(chunks)
+        # LEVEL 2: Surname 2 chars (first 2 letters)
+        if depth == 2:
+            first_2 = df['Name'].fillna('').astype(str).str[:2].fillna('').str.upper()
+            grouped = df.groupby(first_2)
 
-    def _chunk_block(self, block_key, block_df, max_size):
+            if len(grouped) == 1:
+                self._recursive_sub_block(base_key, df, sub_blocks_list, max_size, depth=3)
+                return
+
+            for chars, chars_df in grouped:
+                chars_key = f"{base_key}_L2_{chars}" if chars else f"{base_key}_L2_NA"
+                self._recursive_sub_block(chars_key, chars_df, sub_blocks_list, max_size, depth=3)
+            return
+
+        # LEVEL 3: Firstname 1st letter
+        if depth == 3:
+            v_first = df['Vorname'].fillna('').astype(str).str[0].fillna('').str.upper()
+            grouped = df.groupby(v_first)
+
+            if len(grouped) == 1:
+                self._recursive_sub_block(base_key, df, sub_blocks_list, max_size, depth=4)
+                return
+
+            for letter, letter_df in grouped:
+                letter_key = f"{base_key}_V1_{letter}" if letter else f"{base_key}_V1_NA"
+                self._recursive_sub_block(letter_key, letter_df, sub_blocks_list, max_size, depth=4)
+            return
+
+        # LEVEL 4: Stable Hash Bucket (Deterministic fallback)
+        if depth == 4:
+            # We must split this block deterministically.
+            # We can hash (Vorname + Name + Year) or just use integer modulo on a hash of the content.
+            # Using row index is NOT deterministic across runs if input order changes (though here inputs are from SQL).
+            # But the requirement is "similarity-preserving" where possible.
+            # If we are here, we have identical Name[:2] and Vorname[0].
+            # We can try full Name? Or just hash.
+
+            # Let's try full Name group first? No, might be too many groups or just 1.
+            # Let's go to deterministic hash bucket.
+
+            # Create a stable hash string
+            s_hash = (
+                df['Vorname'].fillna('').astype(str) +
+                df['Name'].fillna('').astype(str) +
+                df.get('effective_year', pd.Series(0, index=df.index)).fillna(0).astype(str)
+            )
+            # Simple hash using pandas util or just adler32?
+            # Let's use python's hash() - wait, python hash is randomized per session!
+            # Use zlib.adler32 or similar for stability.
+            import zlib
+
+            # Apply hash
+            def get_bucket(s):
+                return zlib.adler32(s.encode('utf-8')) % 10 # Split into 10 buckets
+
+            buckets = s_hash.apply(get_bucket)
+
+            for bucket, bucket_df in df.groupby(buckets):
+                bucket_key = f"{base_key}_H{bucket}"
+                if len(bucket_df) <= max_size:
+                    sub_blocks_list.append((bucket_key, bucket_df))
+                else:
+                    # If a single hash bucket is still too big, we have MANY identical records.
+                    # At this point, we must arbitrary chunk (safe because they are identical/highly similar).
+                    # Or we can increase buckets.
+                    # Let's fall back to chunking for this extreme edge case.
+                    self._chunk_block(bucket_key, bucket_df, sub_blocks_list, max_size)
+            return
+
+    def _chunk_block(self, block_key, block_df, sub_blocks_list, max_size):
+        """Fallback to arbitrary chunking, appending to list"""
+        block_size = len(block_df)
+        for i in range(0, block_size, max_size):
+            chunk = block_df.iloc[i:i+max_size]
+            if len(chunk) > 1:
+                sub_blocks_list.append((f"{block_key}_chk_{i}", chunk))
+
+    def _chunk_block_legacy(self, block_key, block_df, max_size):
         """Fallback to arbitrary chunking"""
         chunks = []
         block_size = len(block_df)
@@ -713,10 +795,15 @@ def process_block_worker(args: Tuple) -> List[Dict]:
     
     Returns list of match dictionaries (not MatchResult objects for serialization)
     """
-    # Unpack arguments (handle optional block_key for backward compatibility/flexibility)
-    if len(args) == 4:
+    # Unpack arguments (handle optional block_key and enable_address_aware)
+    enable_address_aware = True # Default
+
+    if len(args) == 5:
+        block_key, block_data, confidence_threshold, fuzzy_threshold, enable_address_aware = args
+    elif len(args) == 4:
         block_key, block_data, confidence_threshold, fuzzy_threshold = args
     else:
+        # Legacy unpacking
         block_data, confidence_threshold, fuzzy_threshold = args
         block_key = "unknown"
 
@@ -871,29 +958,30 @@ def process_block_worker(args: Tuple) -> List[Dict]:
 
                 # Only compute phonetic if we are in the borderline range
                 if 0.60 <= best_score < fuzzy_threshold:
-                    # Check for address-assisted match first
-                    # Compute normalized address ratio (using precomputed fields)
-                    norm_address_ratio = compute_normalized_address_ratio_fast(record_a, record_b)
+                    # Check for address-assisted match first (IF ENABLED)
+                    if enable_address_aware:
+                        # Compute normalized address ratio (using precomputed fields)
+                        norm_address_ratio = compute_normalized_address_ratio_fast(record_a, record_b)
 
-                    if norm_address_ratio >= 0.75:
-                        # Strong address match -> create "address_assisted" match
-                        match_type = determine_address_assisted_match_type(is_swapped, False)
-                        confidence = calculate_address_assisted_confidence(match_type, norm_address_ratio)
+                        if norm_address_ratio >= 0.75:
+                            # Strong address match -> create "address_assisted" match
+                            match_type = determine_address_assisted_match_type(is_swapped, False)
+                            confidence = calculate_address_assisted_confidence(match_type, norm_address_ratio)
 
-                        if confidence >= confidence_threshold:
-                            matches.append({
-                                'record_a_idx': int(original_indices[i]),
-                                'record_b_idx': int(original_indices[j]),
-                                'confidence_score': float(confidence),
-                                'match_type': match_type,
-                                'details': {
-                                    'name_results': name_results,
-                                    'address_ratio': norm_address_ratio, # Use normalized ratio here
-                                    'blocking_pass': blocking_pass,
-                                    'block_key': block_key
-                                }
-                            })
-                        continue # Pair handled, move to next
+                            if confidence >= confidence_threshold:
+                                matches.append({
+                                    'record_a_idx': int(original_indices[i]),
+                                    'record_b_idx': int(original_indices[j]),
+                                    'confidence_score': float(confidence),
+                                    'match_type': match_type,
+                                    'details': {
+                                        'name_results': name_results,
+                                        'address_ratio': norm_address_ratio, # Use normalized ratio here
+                                        'blocking_pass': blocking_pass,
+                                        'block_key': block_key
+                                    }
+                                })
+                            continue # Pair handled, move to next
 
                     # If address is not strong enough, check phonetic fallback
                     # Check for existing phonetic codes or compute
@@ -991,17 +1079,20 @@ def process_block_worker(args: Tuple) -> List[Dict]:
 class UltraFastDuplicateChecker:
     """Ultra-optimized duplicate checker for millions of records with phonetic matching"""
     
-    def __init__(self, fuzzy_threshold: float = 0.8, use_parallel: bool = True, n_workers: Optional[int] = None, use_phonetic: bool = True, use_multipass: bool = True):
+    def __init__(self, fuzzy_threshold: float = 0.8, use_parallel: bool = True, n_workers: Optional[int] = None,
+                 use_phonetic: bool = True, use_multipass: bool = True, max_block_size: int = 1000,
+                 enable_address_aware: bool = True):
         self.fuzzy_threshold = fuzzy_threshold
         self.use_parallel = use_parallel
         self.n_workers = n_workers or max(1, mp.cpu_count() - 1)
         self.use_phonetic = use_phonetic
         self.use_multipass = use_multipass
+        self.enable_address_aware = enable_address_aware
         
         # Select blocking strategy
         if use_multipass:
-            self.blocking = MultiPassBlockingStrategy()
-            logger.info("Multi-pass blocking enabled (Pass A + Pass B)")
+            self.blocking = MultiPassBlockingStrategy(max_block_size=max_block_size)
+            logger.info(f"Multi-pass blocking enabled (Pass A + Pass B), max_block_size={max_block_size}")
         elif use_phonetic:
             self.blocking = PhoneticBlockingStrategy()
             logger.info("Phonetic matching enabled (Cologne Phonetic)")
@@ -1012,30 +1103,58 @@ class UltraFastDuplicateChecker:
         logger.info(f"Initialized with {self.n_workers} workers, parallel={'enabled' if use_parallel else 'disabled'}")
     
     def _deduplicate_pairs(self, matches: List[Dict]) -> List[Dict]:
-        """Remove duplicate pairs, keeping higher confidence match"""
+        """
+        Remove duplicate pairs across passes.
+        - Keeps highest confidence match.
+        - Merges provenance (blocking_pass) into list of passes.
+        """
         if not matches:
             return []
 
         matches_df = pd.DataFrame(matches)
 
-        # Sort by confidence (descending)
-        matches_df = matches_df.sort_values('confidence_score', ascending=False)
-
         # Create pair identifier (sorted to handle A-B vs B-A)
-        # Using record indices for pair id
         matches_df['pair_id'] = matches_df.apply(
             lambda row: tuple(sorted([row['record_a_idx'], row['record_b_idx']])),
             axis=1
         )
 
+        # Identify all passes for each pair
+        # details dict is in 'details' column. Extract blocking_pass from it.
+        # We need to act carefully not to break if details is missing blocking_pass
+        def get_pass(details):
+            return details.get('blocking_pass') if isinstance(details, dict) else None
+
+        matches_df['temp_blocking_pass'] = matches_df['details'].apply(get_pass)
+
+        # Group by pair_id to collect all passes
+        passes_by_pair = matches_df.groupby('pair_id')['temp_blocking_pass'].apply(lambda x: sorted(list(set(x.dropna()))))
+
+        # Sort by confidence (descending) to prepare for drop_duplicates
+        matches_df = matches_df.sort_values('confidence_score', ascending=False)
+
         original_count = len(matches_df)
 
         # Keep first occurrence (highest confidence)
-        deduplicated = matches_df.drop_duplicates(subset=['pair_id'], keep='first')
+        deduplicated = matches_df.drop_duplicates(subset=['pair_id'], keep='first').copy()
+
+        # Merge the collected passes back into the details
+        # We iterate or apply. Since deduplicated has unique pair_id, we can map.
+        deduplicated['all_passes'] = deduplicated['pair_id'].map(passes_by_pair)
+
+        def update_details(row):
+            d = row['details'].copy()
+            d['blocking_passes'] = row['all_passes']
+            return d
+
+        deduplicated['details'] = deduplicated.apply(update_details, axis=1)
+
+        # Cleanup
+        deduplicated = deduplicated.drop(columns=['pair_id', 'temp_blocking_pass', 'all_passes'])
 
         deduplicated_count = original_count - len(deduplicated)
         if deduplicated_count > 0:
-            logger.info(f"Removed {deduplicated_count} duplicate pairs (kept highest confidence)")
+            logger.info(f"Removed {deduplicated_count} duplicate pairs (merged provenance)")
 
         return deduplicated.to_dict('records')
 
@@ -1059,8 +1178,9 @@ class UltraFastDuplicateChecker:
         logger.info(f"Processing {len(blocks)} blocks...")
         
         # Prepare block data for workers
+        # Pass enable_address_aware setting
         block_args = [
-            (key, block_df, confidence_threshold, self.fuzzy_threshold)
+            (key, block_df, confidence_threshold, self.fuzzy_threshold, self.enable_address_aware)
             for key, block_df in blocks.items()
         ]
         
