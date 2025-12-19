@@ -119,6 +119,28 @@ Benchmarks on typical hardware (8 cores):
 *   `performance_comparison.py`: Script to compare the optimized version against legacy implementations.
 *   `QUICK_START.md`: A quick guide for immediate usage.
 *   `README_OPTIMIZATION.md`: Detailed technical explanation of the optimizations applied.
+*   `dedupe/`: New modular pipeline for streaming dedupe (blocking, candidates, scoring, pipeline).
+*   `scripts/run_dedupe.py`: CLI entrypoint for the modular pipeline.
+
+## 🔐 Secrets & Environment
+
+The modular pipeline loads database credentials from environment variables (no passwords on the CLI):
+
+```
+DEDUPE_DB_SERVER=your-sql-host
+DEDUPE_DB_DATABASE=your-db
+DEDUPE_DB_USER=your-user
+DEDUPE_DB_PASSWORD=your-password
+DEDUPE_DB_DRIVER=ODBC Driver 17 for SQL Server     # optional
+DEDUPE_DB_ENCRYPT=true                             # optional
+DEDUPE_DB_TRUST_SERVER_CERTIFICATE=true            # optional
+```
+
+Run the modular pipeline with:
+
+```bash
+python scripts/run_dedupe.py --query-file path/to/query.sql --out results.csv
+```
 
 ## 🤝 Troubleshooting
 
