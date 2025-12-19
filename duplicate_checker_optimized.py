@@ -22,6 +22,8 @@ from unidecode import unidecode
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
 import time
+import zlib
+import math
 from dataclasses import dataclass
 from rapidfuzz import fuzz
 import cologne_phonetics
@@ -252,188 +254,6 @@ class OptimizedBlockingStrategy:
         
         return blocking_keys
     
-    def create_blocks(self, df: pd.DataFrame, max_block_size: int = 10000) -> Dict[str, pd.DataFrame]:
-        """Create blocks efficiently using groupby"""
-        logger.info(f"Creating blocks for {len(df)} records...")
-        start_time = time.time()
-        
-        # Create blocking keys vectorized
-        blocking_keys = self.create_blocking_keys_vectorized(df)
-        
-        # Add to dataframe
-        df_with_keys = df.copy()
-        df_with_keys['blocking_key'] = blocking_keys
-        
-        # Group by blocking key efficiently
-        grouped = df_with_keys.groupby('blocking_key')
-        
-        # Filter blocks by size
-        blocks = {}
-        total_records = 0
-        skipped_blocks = 0
-        
-        for key, group_df in grouped:
-            block_size = len(group_df)
-            if 1 < block_size <= max_block_size:  # Only blocks with 2+ records, not too large
-                blocks[key] = group_df.reset_index(drop=False)  # Keep original index
-                total_records += block_size
-            elif block_size > max_block_size:
-                # Split large blocks into smaller chunks
-                for i in range(0, block_size, max_block_size):
-                    chunk = group_df.iloc[i:i+max_block_size]
-                    if len(chunk) > 1:
-                        blocks[f"{key}_chunk_{i}"] = chunk.reset_index(drop=False)
-                        total_records += len(chunk)
-                skipped_blocks += 1
-        
-        elapsed = time.time() - start_time
-        logger.info(f"Created {len(blocks)} blocks in {elapsed:.2f}s")
-        logger.info(f"Average block size: {total_records/len(blocks):.1f} records")
-        if skipped_blocks > 0:
-            logger.info(f"Split {skipped_blocks} oversized blocks")
-        
-        # Calculate comparison reduction
-        original_comparisons = len(df) * (len(df) - 1) // 2
-        blocked_comparisons = sum(len(b) * (len(b) - 1) // 2 for b in blocks.values())
-        reduction = (1 - blocked_comparisons / original_comparisons) * 100 if original_comparisons > 0 else 0
-        logger.info(f"Comparison reduction: {reduction:.1f}% ({original_comparisons:,} -> {blocked_comparisons:,})")
-        
-        return blocks
-
-class PhoneticBlockingStrategy(OptimizedBlockingStrategy):
-    """Enhanced blocking strategy with phonetic codes for German names"""
-    
-    def create_blocking_keys_vectorized(self, df: pd.DataFrame) -> pd.Series:
-        """Create blocking keys with phonetic fallback for no_address records"""
-        # Get standard address-based blocking keys
-        standard_keys = super().create_blocking_keys_vectorized(df)
-        
-        # Pre-compute phonetic codes (vectorized)
-        logger.info("Computing phonetic codes for names...")
-        df['vorname_phon'] = df['Vorname'].apply(get_cologne_phonetic)
-        df['name_phon'] = df['Name'].apply(get_cologne_phonetic)
-        
-        # Create phonetic blocking keys only for "no_address" records
-        phonetic_keys = pd.Series('no_phonetic', index=df.index)
-        no_address_mask = standard_keys == 'no_address'
-        
-        if no_address_mask.any():
-            # Only create phonetic keys for records without address data
-            phonetic_keys[no_address_mask] = (
-                'phon_' + 
-                df.loc[no_address_mask, 'vorname_phon'] + '_' + 
-                df.loc[no_address_mask, 'name_phon']
-            )
-            logger.info(f"Created phonetic blocking keys for {no_address_mask.sum()} records without address")
-        
-        # Use phonetic blocking for no_address records, standard for others
-        combined_keys = standard_keys.copy()
-        combined_keys[no_address_mask] = phonetic_keys[no_address_mask]
-        
-        return combined_keys
-
-class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
-    """Multi-pass blocking: Pass A (address) + Pass B (phonetic+year) for targeted records"""
-
-    def __init__(self, max_block_size: int = 1000):
-        super().__init__()
-        self.max_block_size = max_block_size
-        self.pass_b_generated = 0  # Track statistics
-
-    def _extract_year(self, date_val):
-        """Extract year from date value (string or object)"""
-        try:
-            if pd.isna(date_val) or date_val == '':
-                return None
-
-            if isinstance(date_val, str):
-                # Try YYYY-MM-DD or DD.MM.YYYY
-                match = re.search(r'(\d{4})', date_val)
-                if match:
-                    return int(match.group(1))
-            elif hasattr(date_val, 'year'):
-                return date_val.year
-            elif isinstance(date_val, (int, float)):
-                return int(date_val)
-        except:
-            pass
-        return None
-
-    def create_blocking_keys_vectorized(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Create blocking keys with selective Pass-B generation"""
-
-        # Get Pass-A keys from parent class (includes phonetic for no_address)
-        # This returns a Series
-        pass_a_keys = super().create_blocking_keys_vectorized(df)
-
-        # Ensure phonetic codes are computed (parent may have done this, but we need to be sure)
-        if 'vorname_phon' not in df.columns:
-            logger.info("Computing phonetic codes for Pass-B...")
-            df['vorname_phon'] = df['Vorname'].apply(get_cologne_phonetic)
-            df['name_phon'] = df['Name'].apply(get_cologne_phonetic)
-
-        # Compute effective birth year (vectorized)
-        # Extract year from Geburtstag string
-        years_geb = df['Geburtstag'].astype(str).str.extract(r'(\d{4})')[0].astype(float)
-
-        # Clean up Jahrgang (force numeric, coerce errors)
-        years_jg = pd.to_numeric(df['Jahrgang'], errors='coerce')
-
-        # Combine: prefer Geburtstag year, fallback to Jahrgang
-        df['effective_year'] = years_geb.fillna(years_jg)
-
-        # Identify records that need Pass-B keys
-        # Criteria: standard_key starts with 'plz_only_', 'street_only_', or 'phon_' AND effective_year is present
-        needs_pass_b = (
-            (pass_a_keys.str.startswith('plz_only_') |
-             pass_a_keys.str.startswith('street_only_') |
-             pass_a_keys.str.startswith('phon_') |
-             pass_a_keys.str.startswith('no_address')) & # Handle no_address (should become phon_ but just in case)
-            (df['effective_year'].notna())
-        )
-
-        # Create result DataFrame with Pass-A keys
-        # We need to preserve the original index
-        result_df = pd.DataFrame({
-            'original_index': df.index,
-            'blocking_key': pass_a_keys,
-            'blocking_pass': 'A'
-        })
-
-        # Generate Pass-B keys for selected records
-        if needs_pass_b.any():
-            pass_b_records = df[needs_pass_b].copy()
-
-            # Vectorized Pass-B key creation
-            v_phon = pass_b_records['vorname_phon']
-            n_phon = pass_b_records['name_phon']
-            years = pass_b_records['effective_year'].astype(int).astype(str)
-
-            # Use numpy to get min/max phonetically element-wise (handling swaps)
-            p_min = np.minimum(v_phon, n_phon)
-            p_max = np.maximum(v_phon, n_phon)
-
-            # Create the key
-            pass_b_keys = 'passB_' + p_min + '_' + p_max + '_' + years
-
-            # Filter valid keys (non-empty phonetics)
-            valid_mask = (v_phon != '') & (n_phon != '')
-
-            if valid_mask.any():
-                pass_b_df = pd.DataFrame({
-                    'original_index': pass_b_records[valid_mask].index,
-                    'blocking_key': pass_b_keys[valid_mask],
-                    'blocking_pass': 'B'
-                })
-
-                # Concatenate Pass-A and Pass-B keys
-                result_df = pd.concat([result_df, pass_b_df], ignore_index=True)
-
-                self.pass_b_generated = len(pass_b_df)
-                logger.info(f"Generated {self.pass_b_generated} Pass-B keys")
-
-        return result_df
-
     def _handle_large_block(self, block_key, block_df, max_size=1000):
         """
         Sub-block deterministically using recursive strategies.
@@ -539,30 +359,19 @@ class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
 
         # LEVEL 4: Stable Hash Bucket (Deterministic fallback)
         if depth == 4:
-            # We must split this block deterministically.
-            # We can hash (Vorname + Name + Year) or just use integer modulo on a hash of the content.
-            # Using row index is NOT deterministic across runs if input order changes (though here inputs are from SQL).
-            # But the requirement is "similarity-preserving" where possible.
-            # If we are here, we have identical Name[:2] and Vorname[0].
-            # We can try full Name? Or just hash.
-
-            # Let's try full Name group first? No, might be too many groups or just 1.
-            # Let's go to deterministic hash bucket.
-
             # Create a stable hash string
             s_hash = (
                 df['Vorname'].fillna('').astype(str) +
                 df['Name'].fillna('').astype(str) +
                 df.get('effective_year', pd.Series(0, index=df.index)).fillna(0).astype(str)
             )
-            # Simple hash using pandas util or just adler32?
-            # Let's use python's hash() - wait, python hash is randomized per session!
-            # Use zlib.adler32 or similar for stability.
-            import zlib
+
+            # Dynamic bucket sizing
+            bucket_count = max(10, math.ceil(len(df) / max_size))
 
             # Apply hash
             def get_bucket(s):
-                return zlib.adler32(s.encode('utf-8')) % 10 # Split into 10 buckets
+                return zlib.adler32(s.encode('utf-8')) % bucket_count
 
             buckets = s_hash.apply(get_bucket)
 
@@ -571,10 +380,7 @@ class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
                 if len(bucket_df) <= max_size:
                     sub_blocks_list.append((bucket_key, bucket_df))
                 else:
-                    # If a single hash bucket is still too big, we have MANY identical records.
-                    # At this point, we must arbitrary chunk (safe because they are identical/highly similar).
-                    # Or we can increase buckets.
-                    # Let's fall back to chunking for this extreme edge case.
+                    # Fall back to arbitrary chunking for this extreme edge case
                     self._chunk_block(bucket_key, bucket_df, sub_blocks_list, max_size)
             return
 
@@ -586,15 +392,175 @@ class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
             if len(chunk) > 1:
                 sub_blocks_list.append((f"{block_key}_chk_{i}", chunk))
 
-    def _chunk_block_legacy(self, block_key, block_df, max_size):
-        """Fallback to arbitrary chunking"""
-        chunks = []
-        block_size = len(block_df)
-        for i in range(0, block_size, max_size):
-            chunk = block_df.iloc[i:i+max_size]
-            if len(chunk) > 1:
-                chunks.append((f"{block_key}_chunk_{i}", chunk))
-        return chunks
+    def create_blocks(self, df: pd.DataFrame, max_block_size: int = 10000) -> Dict[str, pd.DataFrame]:
+        """Create blocks efficiently using groupby"""
+        logger.info(f"Creating blocks for {len(df)} records...")
+        start_time = time.time()
+        
+        # Create blocking keys vectorized
+        blocking_keys = self.create_blocking_keys_vectorized(df)
+        
+        # Add to dataframe
+        df_with_keys = df.copy()
+        df_with_keys['blocking_key'] = blocking_keys
+        
+        # Group by blocking key efficiently
+        grouped = df_with_keys.groupby('blocking_key')
+        
+        # Filter blocks by size
+        blocks = {}
+        total_records = 0
+        skipped_blocks = 0
+        
+        for key, group_df in grouped:
+            block_size = len(group_df)
+            if 1 < block_size <= max_block_size:  # Only blocks with 2+ records, not too large
+                blocks[key] = group_df.reset_index(drop=False)  # Keep original index
+                total_records += block_size
+            else:
+                # Use deterministic sub-blocking logic
+                # We need to pass the group with index handled correctly
+                block_df = group_df.reset_index(drop=False) # Keep original index
+
+                # _handle_large_block returns list of (key, df)
+                sub_blocks = self._handle_large_block(key, block_df, max_block_size)
+
+                for sub_key, sub_df in sub_blocks:
+                    if len(sub_df) > 1:
+                        blocks[sub_key] = sub_df
+                        total_records += len(sub_df)
+
+                skipped_blocks += 1
+        
+        elapsed = time.time() - start_time
+        logger.info(f"Created {len(blocks)} blocks in {elapsed:.2f}s")
+        logger.info(f"Average block size: {total_records/len(blocks):.1f} records" if blocks else "Average block size: 0 records")
+        if skipped_blocks > 0:
+            logger.info(f"Split {skipped_blocks} oversized blocks using deterministic strategy")
+        
+        # Calculate comparison reduction
+        original_comparisons = len(df) * (len(df) - 1) // 2
+        blocked_comparisons = sum(len(b) * (len(b) - 1) // 2 for b in blocks.values())
+        reduction = (1 - blocked_comparisons / original_comparisons) * 100 if original_comparisons > 0 else 0
+        logger.info(f"Comparison reduction: {reduction:.1f}% ({original_comparisons:,} -> {blocked_comparisons:,})")
+        
+        return blocks
+
+class PhoneticBlockingStrategy(OptimizedBlockingStrategy):
+    """Enhanced blocking strategy with phonetic codes for German names"""
+    
+    def create_blocking_keys_vectorized(self, df: pd.DataFrame) -> pd.Series:
+        """Create blocking keys with phonetic fallback for no_address records"""
+        # Get standard address-based blocking keys
+        standard_keys = super().create_blocking_keys_vectorized(df)
+        
+        # Pre-compute phonetic codes (vectorized)
+        logger.info("Computing phonetic codes for names...")
+        df['vorname_phon'] = df['Vorname'].apply(get_cologne_phonetic)
+        df['name_phon'] = df['Name'].apply(get_cologne_phonetic)
+        
+        # Create phonetic blocking keys only for "no_address" records
+        phonetic_keys = pd.Series('no_phonetic', index=df.index)
+        no_address_mask = standard_keys == 'no_address'
+        
+        if no_address_mask.any():
+            # Only create phonetic keys for records without address data
+            phonetic_keys[no_address_mask] = (
+                'phon_' + 
+                df.loc[no_address_mask, 'vorname_phon'] + '_' + 
+                df.loc[no_address_mask, 'name_phon']
+            )
+            logger.info(f"Created phonetic blocking keys for {no_address_mask.sum()} records without address")
+        
+        # Use phonetic blocking for no_address records, standard for others
+        combined_keys = standard_keys.copy()
+        combined_keys[no_address_mask] = phonetic_keys[no_address_mask]
+        
+        return combined_keys
+
+class MultiPassBlockingStrategy(PhoneticBlockingStrategy):
+    """Multi-pass blocking: Pass A (address) + Pass B (phonetic+year) for targeted records"""
+
+    def __init__(self, max_block_size: int = 1000):
+        super().__init__()
+        self.max_block_size = max_block_size
+        self.pass_b_generated = 0  # Track statistics
+
+    def create_blocking_keys_vectorized(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Create blocking keys with selective Pass-B generation"""
+
+        # Get Pass-A keys from parent class (includes phonetic for no_address)
+        # This returns a Series
+        pass_a_keys = super().create_blocking_keys_vectorized(df)
+
+        # Ensure phonetic codes are computed (parent may have done this, but we need to be sure)
+        if 'vorname_phon' not in df.columns:
+            logger.info("Computing phonetic codes for Pass-B...")
+            df['vorname_phon'] = df['Vorname'].apply(get_cologne_phonetic)
+            df['name_phon'] = df['Name'].apply(get_cologne_phonetic)
+
+        # Compute effective birth year (vectorized)
+        # Extract year from Geburtstag string
+        years_geb = df['Geburtstag'].astype(str).str.extract(r'(\d{4})')[0].astype(float)
+
+        # Clean up Jahrgang (force numeric, coerce errors)
+        years_jg = pd.to_numeric(df['Jahrgang'], errors='coerce')
+
+        # Combine: prefer Geburtstag year, fallback to Jahrgang
+        df['effective_year'] = years_geb.fillna(years_jg)
+
+        # Identify records that need Pass-B keys
+        # Criteria: standard_key starts with 'plz_only_', 'street_only_', or 'phon_' AND effective_year is present
+        needs_pass_b = (
+            (pass_a_keys.str.startswith('plz_only_') |
+             pass_a_keys.str.startswith('street_only_') |
+             pass_a_keys.str.startswith('phon_') |
+             pass_a_keys.str.startswith('no_address')) & # Handle no_address (should become phon_ but just in case)
+            (df['effective_year'].notna())
+        )
+
+        # Create result DataFrame with Pass-A keys
+        # We need to preserve the original index
+        result_df = pd.DataFrame({
+            'original_index': df.index,
+            'blocking_key': pass_a_keys,
+            'blocking_pass': 'A'
+        })
+
+        # Generate Pass-B keys for selected records
+        if needs_pass_b.any():
+            pass_b_records = df[needs_pass_b].copy()
+
+            # Vectorized Pass-B key creation
+            v_phon = pass_b_records['vorname_phon']
+            n_phon = pass_b_records['name_phon']
+            years = pass_b_records['effective_year'].astype(int).astype(str)
+
+            # Use numpy to get min/max phonetically element-wise (handling swaps)
+            p_min = np.minimum(v_phon, n_phon)
+            p_max = np.maximum(v_phon, n_phon)
+
+            # Create the key
+            pass_b_keys = 'passB_' + p_min + '_' + p_max + '_' + years
+
+            # Filter valid keys (non-empty phonetics)
+            valid_mask = (v_phon != '') & (n_phon != '')
+
+            if valid_mask.any():
+                pass_b_df = pd.DataFrame({
+                    'original_index': pass_b_records[valid_mask].index,
+                    'blocking_key': pass_b_keys[valid_mask],
+                    'blocking_pass': 'B'
+                })
+
+                # Concatenate Pass-A and Pass-B keys
+                result_df = pd.concat([result_df, pass_b_df], ignore_index=True)
+
+                self.pass_b_generated = len(pass_b_df)
+                logger.info(f"Generated {self.pass_b_generated} Pass-B keys")
+
+        return result_df
+
 
     def create_blocks(self, df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
         """Override create_blocks to handle Multi-Pass logic"""
