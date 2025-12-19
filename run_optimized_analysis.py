@@ -62,6 +62,12 @@ def main():
                        help='Confidence threshold (default: 70.0)')
     parser.add_argument('--fuzzy-threshold', type=float, default=0.7,
                        help='Fuzzy match threshold (default: 0.7)')
+    parser.add_argument('--no-multipass', action='store_true',
+                       help='Disable multi-pass blocking (Pass A + Pass B)')
+    parser.add_argument('--max-block-size', type=int, default=1000,
+                       help='Maximum block size for sub-blocking (default: 1000)')
+    parser.add_argument('--no-address-aware', action='store_true',
+                       help='Disable address-aware prefiltering for borderline matches')
     parser.add_argument('--no-parallel', action='store_true',
                        help='Disable parallel processing')
     parser.add_argument('--benchmark', action='store_true',
@@ -161,7 +167,10 @@ def main():
     # Initialize checker
     checker = UltraFastDuplicateChecker(
         fuzzy_threshold=args.fuzzy_threshold,
-        use_parallel=not args.no_parallel
+        use_parallel=not args.no_parallel,
+        use_multipass=not args.no_multipass,
+        max_block_size=args.max_block_size,
+        enable_address_aware=not args.no_address_aware
     )
     
     # Run analysis
@@ -198,12 +207,17 @@ def main():
         exact_swapped = sum(1 for m in matches if m.match_type == 'exact_swapped')
         fuzzy_normal = sum(1 for m in matches if m.match_type == 'fuzzy_normal')
         fuzzy_swapped = sum(1 for m in matches if m.match_type == 'fuzzy_swapped')
+        addr_normal = sum(1 for m in matches if m.match_type == 'address_assisted_normal')
+        addr_swapped = sum(1 for m in matches if m.match_type == 'address_assisted_swapped')
         
         print("Match type breakdown:")
         print(f"  Exact normal matches:    {exact_normal:,}")
         print(f"  Exact swapped matches:   {exact_swapped:,}")
         print(f"  Fuzzy normal matches:    {fuzzy_normal:,}")
         print(f"  Fuzzy swapped matches:   {fuzzy_swapped:,}")
+        if addr_normal + addr_swapped > 0:
+            print(f"  Address-assisted normal: {addr_normal:,}")
+            print(f"  Address-assisted swapped:{addr_swapped:,}")
         print()
         
         # Confidence distribution
