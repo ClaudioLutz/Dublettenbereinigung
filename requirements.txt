@@ -1,0 +1,13 @@
+splink==4.0.11
+duckdb
+pyarrow
+polars
+pandas
+numpy
+sqlalchemy
+pyodbc
+unidecode
+matplotlib
+rapidfuzz
+cologne-phonetics
+networkx
