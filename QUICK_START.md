@@ -2,9 +2,9 @@
 
 ## 🚀 Immediate Actions
 
-### 1. Install Dependencies (if needed)
+### 1. Install Dependencies
 ```bash
-pip install pandas numpy rapidfuzz unidecode --break-system-packages
+pip install -r requirements.txt
 ```
 
 ### 2. Test with Sample Data (Recommended First Step)
@@ -73,6 +73,17 @@ The script shows real-time progress:
 2025-11-18 10:10:30 - INFO - Analysis complete: Found 15,234 matches
 ```
 
+## 🧠 Advanced: Probabilistic Matching (Splink)
+
+If you need higher recall or statistical match probabilities, you can use the integrated Splink pipeline:
+
+```bash
+# Run the end-to-end Splink pipeline
+python scripts/run_splink_end2end.py
+```
+
+See `README.md` for more details on the Splink integration.
+
 ## ❗ Important Notes
 
 1. **Always test with a sample first** - Use `--limit 100000` to verify everything works
@@ -84,7 +95,7 @@ The script shows real-time progress:
 
 **Out of memory?**
 ```bash
-python run_optimized_analysis.py --no-parallel
+python run_optimized_analysis.py --no-parallel --max-block-size 5000
 ```
 
 **Too slow?**
@@ -94,8 +105,8 @@ python run_optimized_analysis.py --no-parallel
 
 **Not finding duplicates you expect?**
 ```bash
-# Try more lenient settings
-python run_optimized_analysis.py --confidence 60.0 --fuzzy-threshold 0.6
+# Try more lenient settings or disable multi-pass blocking
+python run_optimized_analysis.py --confidence 60.0 --no-multipass
 ```
 
 ## 📁 Files You Have

@@ -7,20 +7,16 @@ A high-performance Python tool designed to identify duplicate records in large d
 *   **Vectorized Operations**: Replaces slow iterative processing with optimized Pandas vector operations, achieving up to 200x speed improvement in blocking key creation.
 *   **Parallel Processing**: Utilizes multi-core CPUs to process data blocks in parallel, ensuring near-linear scaling.
 *   **Smart Blocking**: Implements efficient blocking strategies (including phonetic blocking for German names) to reduce the number of necessary comparisons by >99.9%.
+*   **Multi-Pass Blocking**: Uses a multi-pass strategy (Address Pass + Phonetic/Year Pass) to maximize recall while maintaining performance.
+*   **Address-Aware Prefiltering**: Uses normalized address data to pre-filter candidates, improving accuracy for borderline cases.
 *   **Fuzzy Matching**: Uses `rapidfuzz` for high-performance approximate string matching.
+*   **Splink Integration**: Includes a probabilistic deduplication pipeline using Splink v4 and DuckDB for complex, high-recall scenarios.
 *   **Business Logic**: Incorporates specific business rules for German addresses, name handling (including swapped names), and date verification.
 
 ## 📋 Prerequisites
 
 *   Python 3.8+
-*   The following Python packages:
-    *   `pandas`
-    *   `numpy`
-    *   `rapidfuzz`
-    *   `unidecode`
-    *   `cologne-phonetics`
-    *   `sqlalchemy` (for database connection)
-    *   `matplotlib` (for data visualization/reporting if used)
+*   SQL Server (for default data loading, though CSV is supported)
 
 ## 🛠️ Installation
 
@@ -32,7 +28,7 @@ A high-performance Python tool designed to identify duplicate records in large d
 
 2.  Install the required dependencies:
     ```bash
-    pip install pandas numpy rapidfuzz unidecode cologne-phonetics sqlalchemy matplotlib
+    pip install -r requirements.txt
     ```
 
 ## ⚙️ Configuration
@@ -55,7 +51,7 @@ df = pd.read_csv('your_data.csv')
 
 ## 🏃 Usage
 
-The main entry point for running the analysis is `run_optimized_analysis.py`.
+The main entry point for running the heuristic analysis is `run_optimized_analysis.py`.
 
 ### Basic Run
 Process the full dataset with default settings:
@@ -73,6 +69,11 @@ python run_optimized_analysis.py
 | `--no-parallel` | Disable parallel processing (run on a single core). | `False` |
 | `--benchmark` | Run a performance benchmark on sample sizes before full analysis. | `False` |
 | `--output <file>` | Filename for the results CSV. | `duplicates_results.csv` |
+| `--no-multipass` | Disable the multi-pass blocking strategy (runs only the primary pass). | `False` |
+| `--max-block-size <n>` | Maximum size of a block before sub-blocking is triggered. | `10000` |
+| `--no-address-aware` | Disable address-aware prefiltering. | `False` |
+| `--db-user <user>` | SQL Server username. | Env `DB_USER` |
+| `--db-password <pwd>` | SQL Server password. | Env `DB_PASSWORD` |
 
 ### Examples
 
@@ -86,10 +87,21 @@ python run_optimized_analysis.py --benchmark --limit 100000
 python run_optimized_analysis.py --confidence 80.0 --fuzzy-threshold 0.8
 ```
 
-**Run with lenient matching for finding more potential duplicates:**
+**Run without multi-pass blocking (faster but lower recall):**
 ```bash
-python run_optimized_analysis.py --confidence 60.0 --fuzzy-threshold 0.6
+python run_optimized_analysis.py --no-multipass
 ```
+
+## 🧠 Splink Probabilistic Deduplication
+
+For scenarios requiring probabilistic matching (e.g., estimating match probabilities based on field-specific weights), this project includes a Splink v4 integration.
+
+### Usage
+The Splink pipeline is located in `dedupe_splink/` and can be run via:
+```bash
+python scripts/run_splink_end2end.py
+```
+This script handles training, prediction, and cluster generation using DuckDB for efficient processing of large datasets.
 
 ## 📊 Output
 
@@ -116,30 +128,25 @@ Benchmarks on typical hardware (8 cores):
 *   `duplicate_checker_optimized.py`: Core logic containing `UltraFastDuplicateChecker`, blocking strategies, and matching algorithms.
 *   `run_optimized_analysis.py`: CLI wrapper to run the analysis.
 *   `data.py`: Database connection and data loading utilities.
+*   `dedupe_splink/`: Probabilistic deduplication module using Splink v4.
+*   `scripts/`: Helper scripts for Splink execution (`run_splink_end2end.py`, etc.).
+*   `tests/`: Unit and integration tests.
+*   `logs/`: Log files (auto-rotated).
 *   `performance_comparison.py`: Script to compare the optimized version against legacy implementations.
 *   `QUICK_START.md`: A quick guide for immediate usage.
 *   `README_OPTIMIZATION.md`: Detailed technical explanation of the optimizations applied.
-*   `dedupe/`: New modular pipeline for streaming dedupe (blocking, candidates, scoring, pipeline).
-*   `scripts/run_dedupe.py`: CLI entrypoint for the modular pipeline.
 
 ## 🔐 Secrets & Environment
 
-The modular pipeline loads database credentials from environment variables (no passwords on the CLI):
+The project loads database credentials from environment variables. Create a `.env` file based on `.env.example` (if available) or set the following:
 
 ```
-DEDUPE_DB_SERVER=your-sql-host
-DEDUPE_DB_DATABASE=your-db
-DEDUPE_DB_USER=your-user
-DEDUPE_DB_PASSWORD=your-password
-DEDUPE_DB_DRIVER=ODBC Driver 17 for SQL Server     # optional
-DEDUPE_DB_ENCRYPT=true                             # optional
-DEDUPE_DB_TRUST_SERVER_CERTIFICATE=true            # optional
-```
-
-Run the modular pipeline with:
-
-```bash
-python scripts/run_dedupe.py --query-file path/to/query.sql --out results.csv
+DB_SERVER=your-sql-host
+DB_DATABASE=your-db
+DB_USER=your-user
+DB_PASSWORD=your-password
+DB_DRIVER=ODBC Driver 17 for SQL Server     # optional
+DB_TRUST_SERVER_CERTIFICATE=yes             # optional
 ```
 
 ## 🤝 Troubleshooting
