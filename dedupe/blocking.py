@@ -68,10 +68,20 @@ def split_oversized_block(
     house = cols["house"].to_numpy()
     last = cols["last"].to_numpy()
 
-    k2 = np.char.add(np.char.add(np.char.substr(street[idx], 0, 4), "|"), house[idx])
-    missing = (street[idx] == "") | (house[idx] == "")
+    # Use pandas for safe slicing (NumPy has no simple char.substr)
+    street_s = pd.Series(street[idx], copy=False).astype("string")
+    house_s = pd.Series(house[idx], copy=False).astype("string")
+    last_s = pd.Series(last[idx], copy=False).astype("string")
+
+    street_prefix4 = street_s.str.slice(0, 4).fillna("").to_numpy()
+    last_prefix6 = last_s.str.slice(0, 6).fillna("").to_numpy()
+
+    k2 = np.char.add(np.char.add(street_prefix4, "|"), house_s.fillna("").to_numpy())
+
+    missing = (street_s.to_numpy() == "") | (house_s.to_numpy() == "")
+    k2 = k2.astype(object)
     if missing.any():
-        k2[missing] = np.char.substr(last[idx][missing], 0, 6)
+        k2[missing] = last_prefix6[missing]
 
     codes, _ = pd.factorize(pd.Series(k2), sort=False)
     secondary_order = np.argsort(codes, kind="mergesort")
