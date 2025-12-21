@@ -47,6 +47,8 @@ def main():
         parquet_glob=sample_glob,
         out_settings_json=trained_json,
         unique_id_col=args.unique_id_col,
+        threads=args.threads,
+        memory_limit=args.memory_limit,
     )
 
     # 3) Predict per shard
