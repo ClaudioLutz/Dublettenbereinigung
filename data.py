@@ -7,9 +7,22 @@ import matplotlib.pyplot as plt
 import urllib.parse
 
 ### Umgebungsvariablen
-driver = 'ODBC Driver 17 for SQL Server'
-server = 'PRODSVCREPORT70'
-db = 'CAG_Analyse'
+try:
+    from dedupe.config import DbConfig
+    _config = DbConfig.from_env(prefix="DEDUPE_DB_")
+    server = _config.server
+    db = _config.database
+    driver = _config.driver
+    _db_user = _config.user
+    _db_password = _config.password
+    _use_sql_auth_default = True
+except (ImportError, KeyError, Exception):
+    driver = 'ODBC Driver 17 for SQL Server'
+    server = 'PRODSVCREPORT70'
+    db = 'CAG_Analyse'
+    _db_user = None
+    _db_password = None
+    _use_sql_auth_default = False
 
 ### Hilfsfunktionen
 def conn_string_sql_alchemy(server, db, driver, user=None, password=None):
@@ -48,6 +61,11 @@ def erzeuge_engine_von_conn_string_sql_alchemy(conn_string):
 
 def create_db_engine(user=None, password=None):
     """Factory function to create engine with optional credentials"""
+    # Use defaults from env if not provided and available
+    if user is None and password is None and _use_sql_auth_default:
+        user = _db_user
+        password = _db_password
+
     conn_str = conn_string_sql_alchemy(server, db, driver, user, password)
     return erzeuge_engine_von_conn_string_sql_alchemy(conn_str)
 
@@ -60,7 +78,10 @@ def lade_daten(engine,query):
     return query_resultat
 
 # Default engine (Windows Auth) for backward compatibility
-conn_string = conn_string_sql_alchemy(server, db, driver)
+if _use_sql_auth_default:
+     conn_string = conn_string_sql_alchemy(server, db, driver, _db_user, _db_password)
+else:
+     conn_string = conn_string_sql_alchemy(server, db, driver)
 engine = erzeuge_engine_von_conn_string_sql_alchemy(conn_string)
 print(conn_string)
 

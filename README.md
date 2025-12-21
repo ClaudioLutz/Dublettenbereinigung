@@ -33,23 +33,34 @@ A high-performance Python tool designed to identify duplicate records in large d
 
 ## ⚙️ Configuration
 
-### Data Source
-The project is currently configured to load data from a SQL Server database via `data.py`.
+### Environment Variables
+The project uses `DEDUPE_DB_*` environment variables for database configuration. Create a `.env` file in the root directory (using `.env.example` as a template):
 
-To use your own data source:
-1.  **Option A**: Modify `data.py` to connect to your specific database.
-2.  **Option B**: Modify `run_optimized_analysis.py` to load your data (e.g., from a CSV file) into a Pandas DataFrame instead of calling `lade_daten`.
-
-Example for CSV loading in `run_optimized_analysis.py`:
-```python
-# Replace this:
-# df = lade_daten(engine, query)
-
-# With this:
-df = pd.read_csv('your_data.csv')
+```bash
+DEDUPE_DB_SERVER=localhost
+DEDUPE_DB_DATABASE=CAG_Analyse
+DEDUPE_DB_USER=sa
+DEDUPE_DB_PASSWORD=yourStrong(!)Password
+DEDUPE_DB_DRIVER=ODBC Driver 17 for SQL Server
+DEDUPE_DB_TRUST_SERVER_CERTIFICATE=yes
+DEDUPE_DB_ENCRYPT=true
 ```
 
+For detailed documentation on input requirements, see [DATA_CONTRACT.md](docs/DATA_CONTRACT.md).
+
 ## 🏃 Usage
+
+### Which pipeline should I run?
+
+| Use case | Recommended pipeline | Why |
+| :--- | :--- | :--- |
+| "Fast results, operational run, 7.5M records" | `python run_optimized_analysis.py` | Optimized blocking + parallel CPU; simple output |
+| "Need probabilistic match probabilities + clustering" | `python scripts/run_splink_end2end.py` | EM-trained weights, match probability, clusters |
+| "Developing new rules / debugging logic" | See [README_OPTIMIZATION.md](README_OPTIMIZATION.md) | Deep technical reasoning + architecture |
+
+**Default Path**: Start with `QUICK_START.md`, then use the heuristic pipeline (`run_optimized_analysis.py`) unless you specifically need probabilistic scoring or complex clustering.
+
+### Heuristic Pipeline
 
 The main entry point for running the heuristic analysis is `run_optimized_analysis.py`.
 
@@ -70,10 +81,10 @@ python run_optimized_analysis.py
 | `--benchmark` | Run a performance benchmark on sample sizes before full analysis. | `False` |
 | `--output <file>` | Filename for the results CSV. | `duplicates_results.csv` |
 | `--no-multipass` | Disable the multi-pass blocking strategy (runs only the primary pass). | `False` |
-| `--max-block-size <n>` | Maximum size of a block before sub-blocking is triggered. | `10000` |
+| `--max-block-size <n>` | Maximum size of a block before sub-blocking is triggered. | `1000` |
 | `--no-address-aware` | Disable address-aware prefiltering. | `False` |
-| `--db-user <user>` | SQL Server username. | Env `DB_USER` |
-| `--db-password <pwd>` | SQL Server password. | Env `DB_PASSWORD` |
+| `--db-user <user>` | SQL Server username (defaults to Windows Auth if unused). | `None` |
+| `--db-password <pwd>` | SQL Server password. | `None` |
 
 ### Examples
 
@@ -105,6 +116,9 @@ This script handles training, prediction, and cluster generation using DuckDB fo
 
 ## 📊 Output
 
+For a detailed explanation of outputs from both pipelines, see [OUTPUTS.md](docs/OUTPUTS.md).
+
+### Heuristic Output
 The script generates a CSV file (default: `duplicates_results.csv`) containing pairs of potential duplicates.
 
 Each match consists of two rows (Record A and Record B) sharing the same `match_id`.
@@ -136,19 +150,6 @@ Benchmarks on typical hardware (8 cores):
 *   `QUICK_START.md`: A quick guide for immediate usage.
 *   `README_OPTIMIZATION.md`: Detailed technical explanation of the optimizations applied.
 
-## 🔐 Secrets & Environment
-
-The project loads database credentials from environment variables. Create a `.env` file based on `.env.example` (if available) or set the following:
-
-```
-DB_SERVER=your-sql-host
-DB_DATABASE=your-db
-DB_USER=your-user
-DB_PASSWORD=your-password
-DB_DRIVER=ODBC Driver 17 for SQL Server     # optional
-DB_TRUST_SERVER_CERTIFICATE=yes             # optional
-```
-
 ## 🤝 Troubleshooting
 
 *   **Memory Errors**: If running on a machine with limited RAM, try reducing the `max_block_size` in `duplicate_checker_optimized.py` or disable parallel processing with `--no-parallel`.
@@ -156,4 +157,13 @@ DB_TRUST_SERVER_CERTIFICATE=yes             # optional
 
 ## 📜 License
 
-[Insert License Here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📦 Versioning & Compatibility
+
+*   **Python**: 3.8+ required (tested on 3.12)
+*   **OS**: Windows (optimized for SQL Server) or Linux (supported via ODBC/Docker)
+*   **Key Dependencies**:
+    *   `rapidfuzz`: High-performance fuzzy matching
+    *   `duckdb`: Embedded analytical database for Splink
+    *   `splink` (v4): Probabilistic record linkage
