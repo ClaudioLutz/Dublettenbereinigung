@@ -1,0 +1,6 @@
+duckdb>=0.10
+pyarrow>=14
+pandas>=2.0
+sqlalchemy>=2.0
+pyodbc>=5.0
+splink>=3.0
