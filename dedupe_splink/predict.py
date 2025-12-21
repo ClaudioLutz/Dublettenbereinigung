@@ -1,6 +1,7 @@
 # dedupe_splink/predict.py
 from __future__ import annotations
 from pathlib import Path
+import json
 import duckdb
 # Splink 4 imports
 from splink import DuckDBAPI, Linker
@@ -21,10 +22,11 @@ def predict_shard(
     con.execute(f"CREATE VIEW input_table AS SELECT * FROM read_parquet('{parquet_glob}')")
 
     settings_str = trained_settings_json.read_text(encoding="utf-8")
+    settings = json.loads(settings_str)
 
     # Splink 4 Linker setup
     db_api = DuckDBAPI(connection=con)
-    linker = Linker("input_table", settings_str, db_api)
+    linker = Linker("input_table", settings, db_api)
 
     # Predict and filter early (critical)
     pred = linker.predict(threshold_match_probability=threshold_match_probability)
