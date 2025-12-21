@@ -871,24 +871,20 @@ def process_block_worker(args: Tuple) -> List[Dict]:
                 matched_indices.add(i)
                 matched_indices.add(j)
     
-    # Precompute normalized address fields (once per record)
-    block_data['street_normalized'] = block_data['Strasse'].apply(normalize_street)
-    block_data['plz_normalized'] = block_data['Plz'].apply(normalize_plz_scalar)
+    # Precompute normalized address fields - now moved to main process
+    # block_data['street_normalized'] = block_data['Strasse'].apply(normalize_street)
+    # block_data['plz_normalized'] = block_data['Plz'].apply(normalize_plz_scalar)
 
-    # Update records with new fields
-    records = block_data.to_dict('records')
+    # Update records with new fields - No need, already in block_data/records if passed correctly
+    # records = block_data.to_dict('records')
 
     # =======================
     # STAGE 2: FUZZY MATCHING
     # =======================
     for i in range(block_size):
-        # Skip if already matched in Stage 1
-        if i in matched_indices:
-            continue
-            
         for j in range(i + 1, block_size):
-            # Skip if already matched in Stage 1
-            if j in matched_indices:
+            # Skip only if BOTH are already matched in Stage 1
+            if i in matched_indices and j in matched_indices:
                 continue
             
             record_a = records[i]
@@ -1133,6 +1129,11 @@ class UltraFastDuplicateChecker:
         
         # Ensure index is reset to prevent index misalignment issues
         df = df.reset_index(drop=True)
+
+        # Precompute normalized address fields once
+        logger.info("Precomputing normalized address fields...")
+        df['street_normalized'] = df['Strasse'].apply(normalize_street)
+        df['plz_normalized'] = df['Plz'].apply(normalize_plz_scalar)
 
         # Create blocks
         blocks = self.blocking.create_blocks(df)

@@ -14,6 +14,8 @@ def train_model_on_parquet_sample(
     unique_id_col: str = "unique_id",
     em_blocking_rule: str | None = None,
     max_u_pairs: int = 2_000_000,
+    threads: int = 4,
+    memory_limit: str = "6GB",
 ) -> None:
     settings = build_splink_settings(unique_id_col=unique_id_col)
 
@@ -22,8 +24,8 @@ def train_model_on_parquet_sample(
         em_blocking_rule = "l.plz_prefix3 = r.plz_prefix3 AND l.surname_initial = r.surname_initial"
 
     con = duckdb.connect(database=":memory:")
-    con.execute("PRAGMA threads=4;")
-    con.execute("PRAGMA memory_limit='6GB';")  # tune for your laptop
+    con.execute(f"PRAGMA threads={threads};")
+    con.execute(f"PRAGMA memory_limit='{memory_limit}';")
 
     # Load parquet sample into DuckDB as a view
     con.execute(f"CREATE VIEW input_table AS SELECT * FROM read_parquet('{parquet_glob}')")
