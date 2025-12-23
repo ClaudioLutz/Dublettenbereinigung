@@ -1,7 +1,12 @@
 # scripts/run_splink_predict.py
 from __future__ import annotations
+import sys
 import argparse
 from pathlib import Path
+
+# Add project root to path to import local dedupe_splink module
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from dedupe_splink.predict import predict_shard
 
 def main():
