@@ -15,9 +15,9 @@ from dedupe_splink.cluster import cluster_edges_to_mapping
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--query-file", required=True)
-    ap.add_argument("--cache-dir", required=True, help="Parquet staging output")
-    ap.add_argument("--out-dir", required=True, help="Edges + clusters output")
+    ap.add_argument("--query-file", required=False, help="SQL query file (optional if using data.py)")
+    ap.add_argument("--cache-dir", default="cache_splink", help="Parquet staging output")
+    ap.add_argument("--out-dir", default="output_splink", help="Edges + clusters output")
     ap.add_argument("--unique-id-col", default="unique_id")
     ap.add_argument("--chunksize", type=int, default=200_000)
 
@@ -26,14 +26,45 @@ def main():
     ap.add_argument("--threshold", type=float, default=0.95)
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--memory-limit", default="6GB")
+    ap.add_argument("--use-data-py", action="store_true", 
+                    help="Use query and DB config from data.py instead of query-file and env vars")
 
     args = ap.parse_args()
 
-    query = Path(args.query_file).read_text(encoding="utf-8")
-    db_cfg = DbConfig.from_env(prefix="DEDUPE_DB_")
+    # Get query and database config
+    if args.use_data_py or args.query_file is None:
+        # Import from data.py
+        try:
+            import data
+            query = data.query
+            # Create DbConfig from data.py settings (Windows Auth, no user/password)
+            db_cfg = DbConfig(
+                server=data.server,
+                database=data.db,
+                user="",  # Windows Auth
+                password="",  # Windows Auth
+                driver=data.driver,
+                trust_server_certificate=True,
+                encrypt=False  # Windows Auth typically doesn't need encryption
+            )
+            print(f"Using query and DB config from data.py")
+            print(f"Server: {db_cfg.server}, Database: {db_cfg.database}")
+        except ImportError as e:
+            print(f"Error: Could not import data.py: {e}")
+            sys.exit(1)
+        except AttributeError as e:
+            print(f"Error: data.py is missing required attributes (server, db, driver, query): {e}")
+            sys.exit(1)
+    else:
+        # Use query file and environment variables
+        query = Path(args.query_file).read_text(encoding="utf-8")
+        db_cfg = DbConfig.from_env(prefix="DEDUPE_DB_")
 
     cache_dir = Path(args.cache_dir)
     out_dir = Path(args.out_dir)
+    
+    print(f"Cache directory: {cache_dir}")
+    print(f"Output directory: {out_dir}")
     trained_json = out_dir / "model" / "trained_settings.json"
 
     # 1) Stage

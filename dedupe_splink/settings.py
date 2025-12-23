@@ -14,40 +14,39 @@ def build_splink_settings(unique_id_col: str = "unique_id") -> dict:
             {
                 "output_column_name": "first_name_norm",
                 "comparison_levels": [
-                    {"sql_condition": "l.first_name_norm = r.first_name_norm", "label_for_charts": "Exact"},
-                    {"sql_condition": "jaro_winkler_similarity(l.first_name_norm, r.first_name_norm) >= 0.92", "label_for_charts": "JW>=0.92"},
-                    {"sql_condition": "jaro_winkler_similarity(l.first_name_norm, r.first_name_norm) >= 0.88", "label_for_charts": "JW>=0.88"},
-                    {"sql_condition": "1=1", "label_for_charts": "Else"},
+                    {"sql_condition": "first_name_norm_l = first_name_norm_r", "label_for_charts": "Exact"},
+                    {"sql_condition": "jaro_winkler_similarity(first_name_norm_l, first_name_norm_r) >= 0.92", "label_for_charts": "JW>=0.92"},
+                    {"sql_condition": "jaro_winkler_similarity(first_name_norm_l, first_name_norm_r) >= 0.88", "label_for_charts": "JW>=0.88"},
+                    {"sql_condition": "ELSE", "label_for_charts": "Else"},
                 ],
             },
-            # Surname fuzzy levels + TF adjustment
+            # Surname fuzzy levels
             {
                 "output_column_name": "surname_norm",
                 "comparison_levels": [
-                    {"sql_condition": "l.surname_norm = r.surname_norm", "label_for_charts": "Exact"},
-                    {"sql_condition": "jaro_winkler_similarity(l.surname_norm, r.surname_norm) >= 0.94", "label_for_charts": "JW>=0.94"},
-                    {"sql_condition": "jaro_winkler_similarity(l.surname_norm, r.surname_norm) >= 0.90", "label_for_charts": "JW>=0.90"},
-                    {"sql_condition": "1=1", "label_for_charts": "Else"},
+                    {"sql_condition": "surname_norm_l = surname_norm_r", "label_for_charts": "Exact"},
+                    {"sql_condition": "jaro_winkler_similarity(surname_norm_l, surname_norm_r) >= 0.94", "label_for_charts": "JW>=0.94"},
+                    {"sql_condition": "jaro_winkler_similarity(surname_norm_l, surname_norm_r) >= 0.90", "label_for_charts": "JW>=0.90"},
+                    {"sql_condition": "ELSE", "label_for_charts": "Else"},
                 ],
-                "term_frequency_adjustments": True,
             },
             # Birth year exact (cheap, strong)
             {
                 "output_column_name": "birth_year",
                 "comparison_levels": [
-                    {"sql_condition": "l.birth_year = r.birth_year AND l.birth_year != 0", "label_for_charts": "ExactYear"},
-                    {"sql_condition": "(l.birth_year = 0 OR r.birth_year = 0)", "label_for_charts": "Missing"},
-                    {"sql_condition": "1=1", "label_for_charts": "Different"},
+                    {"sql_condition": "birth_year_l = birth_year_r AND birth_year_l != 0", "label_for_charts": "ExactYear"},
+                    {"sql_condition": "(birth_year_l = 0 OR birth_year_r = 0)", "label_for_charts": "Missing"},
+                    {"sql_condition": "ELSE", "label_for_charts": "Different"},
                 ],
             },
             # PLZ exact or prefix match (cheap)
             {
                 "output_column_name": "plz_norm",
                 "comparison_levels": [
-                    {"sql_condition": "l.plz_norm = r.plz_norm AND l.plz_norm != ''", "label_for_charts": "ExactPLZ"},
-                    {"sql_condition": "l.plz_prefix3 = r.plz_prefix3 AND l.plz_prefix3 != ''", "label_for_charts": "PLZPrefix3"},
-                    {"sql_condition": "(l.plz_norm = '' OR r.plz_norm = '')", "label_for_charts": "Missing"},
-                    {"sql_condition": "1=1", "label_for_charts": "Different"},
+                    {"sql_condition": "plz_norm_l = plz_norm_r AND plz_norm_l != ''", "label_for_charts": "ExactPLZ"},
+                    {"sql_condition": "plz_prefix3_l = plz_prefix3_r AND plz_prefix3_l != ''", "label_for_charts": "PLZPrefix3"},
+                    {"sql_condition": "(plz_norm_l = '' OR plz_norm_r = '')", "label_for_charts": "Missing"},
+                    {"sql_condition": "ELSE", "label_for_charts": "Different"},
                 ],
             },
         ],
