@@ -14,12 +14,14 @@ def predict_shard(
     threads: int = 4,
     memory_limit: str = "6GB",
 ) -> None:
+    # Create output directory before connecting to database
+    out_edges_parquet.parent.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect(database=str(out_edges_parquet.with_suffix(".duckdb")))
     con.execute(f"PRAGMA threads={threads};")
     con.execute(f"PRAGMA memory_limit='{memory_limit}';")
 
     parquet_glob = str(shard_dir / "*.parquet")
-    con.execute(f"CREATE VIEW input_table AS SELECT * FROM read_parquet('{parquet_glob}')")
+    con.execute(f"CREATE OR REPLACE VIEW input_table AS SELECT * FROM read_parquet('{parquet_glob}')")
 
     settings_str = trained_settings_json.read_text(encoding="utf-8")
     settings = json.loads(settings_str)
@@ -28,9 +30,9 @@ def predict_shard(
     db_api = DuckDBAPI(connection=con)
     linker = Linker("input_table", settings, db_api)
 
-    # Predict and filter early (critical)
-    pred = linker.predict(threshold_match_probability=threshold_match_probability)
+    # Predict and filter early (critical) - Splink 4 API
+    pred = linker.inference.predict(threshold_match_probability=threshold_match_probability)
 
     # Persist just the edges we need
     out_edges_parquet.parent.mkdir(parents=True, exist_ok=True)
-    pred.to_parquet(str(out_edges_parquet))
+    pred.to_parquet(str(out_edges_parquet), overwrite=True)

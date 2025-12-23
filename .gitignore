@@ -1,6 +1,74 @@
+# Python
 venv/
+env/
+ENV/
 deprecated_code/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+*.cover
+
+# Logs
 logs/
 *.log
+
+# Temporary directories
+.tmp/
+tmp/
+temp/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Project-specific: Splink cache and outputs
+cache_splink/
+output_splink/
+
+# Project-specific: Generated reports
+duplicate_report.csv
+*_report.csv
+
+# Data files (uncomment if needed)
+# *.csv
+# *.parquet
+# data/

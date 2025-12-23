@@ -46,4 +46,8 @@ def train_model_on_parquet_sample(
 
     trained = linker.misc.save_model_to_json()
     out_settings_json.parent.mkdir(parents=True, exist_ok=True)
-    out_settings_json.write_text(trained, encoding="utf-8")
+    # Handle both dict and string returns
+    if isinstance(trained, dict):
+        out_settings_json.write_text(json.dumps(trained, indent=2), encoding="utf-8")
+    else:
+        out_settings_json.write_text(trained, encoding="utf-8")

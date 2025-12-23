@@ -3,8 +3,13 @@
 import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine, text
-import matplotlib.pyplot as plt
 import urllib.parse
+
+# Optional matplotlib import
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 
 ### Umgebungsvariablen
 driver = 'ODBC Driver 17 for SQL Server'
@@ -66,7 +71,7 @@ print(conn_string)
 
 
 query = """
-SELECT TOP (1000) [Name]
+SELECT [Name]
       ,[Vorname]
       ,[Name2]
       ,[Strasse]
