@@ -1,4 +1,4 @@
-SELECT TOP (10000) [Name]
+SELECT TOP (100000) [Name]
       ,[Vorname]
       ,[Name2]
       ,[Strasse]
