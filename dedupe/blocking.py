@@ -13,7 +13,18 @@ class BlockingParams:
     secondary_split_enabled: bool = True
 
 
+def _last_full(cols: dict[str, object]) -> pd.Series:
+    """Helper to combine last + name2 for swap-invariant blocking"""
+    last = cols["last"].astype("string")
+    name2 = cols.get("name2")
+    if name2 is None:
+        return last
+    name2 = name2.astype("string")
+    return (last + " " + name2).str.strip().astype("string")
+
+
 def compute_primary_key(cols: dict[str, object]) -> pd.Series:
+    """Pass A: original order-dependent blocking key"""
     last = cols["last"]
     first = cols["first"]
     plz = cols["plz"]
@@ -29,6 +40,55 @@ def compute_primary_key(cols: dict[str, object]) -> pd.Series:
         + year.astype("string")
     )
     return k.astype("string")
+
+
+def compute_swap_invariant_key(cols: dict[str, object]) -> pd.Series:
+    """
+    Pass B: swap-invariant blocking key.
+    Idea: build an unordered signature of (first_prefix, last_full_prefix).
+    """
+    first = cols["first"].astype("string")
+    plz = cols["plz"].astype("string")
+    year = pd.Series(cols["year"]).astype("string")
+
+    last_full = _last_full(cols)
+
+    a = first.str.slice(0, 3).fillna("").to_numpy(dtype=object)
+    b = last_full.str.slice(0, 3).fillna("").to_numpy(dtype=object)
+
+    p_min = np.minimum(a, b)
+    p_max = np.maximum(a, b)
+
+    p_min_s = pd.Series(p_min, index=first.index).astype("string")
+    p_max_s = pd.Series(p_max, index=first.index).astype("string")
+
+    k = (
+        "B|"
+        + p_min_s + "|"
+        + p_max_s + "|"
+        + plz.str.slice(0, 2) + "|"
+        + year
+    )
+    return k.astype("string")
+
+
+def compute_swap_fallback_for_secondary_split(cols: dict[str, object]) -> pd.Series:
+    """
+    Used only for split_oversized_block() fallback when street/house is missing.
+    Make it swap-invariant too, so swapped duplicates don't get separated in the secondary split.
+    """
+    first = cols["first"].astype("string")
+    last_full = _last_full(cols)
+
+    a = first.str.slice(0, 6).fillna("").to_numpy(dtype=object)
+    b = last_full.str.slice(0, 6).fillna("").to_numpy(dtype=object)
+
+    p_min = np.minimum(a, b)
+    p_max = np.maximum(a, b)
+
+    # "last" placeholder used by split_oversized_block()
+    out = np.char.add(np.char.add(p_min, "|"), p_max)
+    return pd.Series(out, index=first.index).astype("string")
 
 
 def iter_blocks(

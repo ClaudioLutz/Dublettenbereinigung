@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv
+import itertools
 import os
+import threading
 from typing import Iterable
 import numpy as np
 import pandas as pd
@@ -10,31 +12,62 @@ import pandas as pd
 from .config import DbConfig
 from .io import create_mssql_engine, read_sql_df
 from .preprocess import preprocess
-from .blocking import BlockingParams, compute_primary_key, iter_blocks
+from .blocking import (
+    BlockingParams,
+    compute_primary_key,
+    compute_swap_invariant_key,
+    compute_swap_fallback_for_secondary_split,
+    iter_blocks,
+)
 from .candidates import iter_exact_pairs, iter_fuzzy_pairs
 from .scoring import score_pair, MatchResult
 
 
-def process_block(idx: np.ndarray, cols: dict[str, object], params: BlockingParams,
-                  fuzzy_threshold: float = 0.80, enable_address_aware: bool = True) -> list[MatchResult]:
+def process_block(
+    idx: np.ndarray,
+    cols: dict[str, object],
+    params: BlockingParams,
+    fuzzy_threshold: float = 0.80,
+    enable_address_aware: bool = True,
+    *,
+    global_seen: set[tuple[int, int]],
+    global_lock: threading.Lock,
+) -> list[MatchResult]:
+    """
+    Process a single block with global deduplication across passes.
+    """
     results: list[MatchResult] = []
-    seen_pairs = set()  # Track pairs to avoid duplicates
+    local_seen: set[tuple[int, int]] = set()
 
     for i, j in iter_exact_pairs(idx, cols):
-        pair = (min(i, j), max(i, j))  # Canonical form
-        if pair not in seen_pairs:
-            mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
-            if mr:
-                results.append(mr)
-                seen_pairs.add(pair)
+        pair = (min(i, j), max(i, j))
+        if pair in local_seen:
+            continue
+        local_seen.add(pair)
+
+        with global_lock:
+            if pair in global_seen:
+                continue
+            global_seen.add(pair)
+
+        mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
+        if mr:
+            results.append(mr)
 
     for i, j in iter_fuzzy_pairs(idx, cols, k=10, name_threshold=88):
-        pair = (min(i, j), max(i, j))  # Canonical form
-        if pair not in seen_pairs:
-            mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
-            if mr:
-                results.append(mr)
-                seen_pairs.add(pair)
+        pair = (min(i, j), max(i, j))
+        if pair in local_seen:
+            continue
+        local_seen.add(pair)
+
+        with global_lock:
+            if pair in global_seen:
+                continue
+            global_seen.add(pair)
+
+        mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
+        if mr:
+            results.append(mr)
 
     return results
 
@@ -127,15 +160,41 @@ def run_pipeline(
 
         for df_chunk in dfs:
             cols = preprocess(df_chunk)
-            key = compute_primary_key(cols)
             params = BlockingParams()
 
-            blocks = iter_blocks(key, params=params, cols=cols)
+            # Pass A: order-dependent blocking
+            key_a = compute_primary_key(cols)
+            blocks_a = iter_blocks(key_a, params=params, cols=cols)
+
+            # Pass B: swap-invariant blocking
+            key_b = compute_swap_invariant_key(cols)
+            # Use swap-invariant fallback for secondary split in Pass B
+            cols_b_split = dict(cols)
+            cols_b_split["last"] = compute_swap_fallback_for_secondary_split(cols)
+            blocks_b = iter_blocks(key_b, params=params, cols=cols_b_split)
+
+            # Union both passes
+            blocks = itertools.chain(blocks_a, blocks_b)
+
+            # Global deduplication across both passes
+            global_seen: set[tuple[int, int]] = set()
+            global_lock = threading.Lock()
 
             with ThreadPoolExecutor(max_workers=max_workers) as ex:
                 futures = []
                 for idx in blocks:
-                    futures.append(ex.submit(process_block, idx, cols, params, fuzzy_threshold, enable_address_aware))
+                    futures.append(
+                        ex.submit(
+                            process_block,
+                            idx,
+                            cols,
+                            params,
+                            fuzzy_threshold,
+                            enable_address_aware,
+                            global_seen=global_seen,
+                            global_lock=global_lock,
+                        )
+                    )
                     if len(futures) >= in_flight:
                         for fut in as_completed(futures[:max_workers]):
                             _write_results(fut.result(), writer, df_chunk)

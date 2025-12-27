@@ -16,9 +16,10 @@ def test_german_umlaut_normalization():
         'Vorname': ['Max', 'Max'],
         'Name': ['Müller', 'Mueller'],
         'Name2': ['', ''],
-        'Strasse': ['', ''],
-        'Plz': ['', ''],
-        'HausNummer': ['', ''],
+        'Strasse': ['Hauptstr', 'Hauptstr'],
+        'Plz': ['8000', '8000'],
+        'HausNummer': ['1', '1'],
+        'Ort': ['Zurich', 'Zurich'],
         'Geburtstag': ['1980-01-01', '1980-01-01']
     })
     
@@ -67,7 +68,7 @@ def test_name2_rule_compound_surname():
 
 
 def test_name_swapping_detection():
-    """Test that name swapping is detected"""
+    """Test that name swapping is detected and scores 100 when everything matches"""
     print("Testing Name Swapping Detection...")
     
     df = pd.DataFrame({
@@ -77,6 +78,7 @@ def test_name_swapping_detection():
         'Strasse': ['Hauptstr', 'Hauptstr'],
         'Plz': ['8000', '8000'],
         'HausNummer': ['1', '1'],
+        'Ort': ['Zurich', 'Zurich'],
         'Geburtstag': ['1980-01-01', '1980-01-01']
     })
     
@@ -86,9 +88,38 @@ def test_name_swapping_detection():
     assert result is not None, "Should match"
     assert result.is_swapped == True, f"Expected is_swapped=True, got {result.is_swapped}"
     assert result.reason == 'exact_swapped', f"Expected exact_swapped, got {result.reason}"
-    assert 85 <= result.score <= 95, f"Expected score 85-95, got {result.score}"
+    # NEW: Score should be 100 when everything else matches perfectly
+    assert result.score == 100.0, f"Expected score 100.0, got {result.score}"
     
     print("✅ Name Swapping Detection: PASS")
+    return True
+
+
+def test_name_swapping_with_name2_in_first():
+    """Test that swapped names with Name2 in Vorname field are detected and score 100"""
+    print("Testing Name Swapping with Name2 in Vorname...")
+    
+    df = pd.DataFrame({
+        'Vorname': ['Hans', 'Müller-Bensel'],
+        'Name': ['Müller', 'Hans'],
+        'Name2': ['-Bensel', ''],
+        'Strasse': ['Hauptstrasse', 'Hauptstrasse'],
+        'Plz': ['8000', '8000'],
+        'HausNummer': ['10', '10A'],
+        'Ort': ['Zürich', 'Zürich'],
+        'Geburtstag': ['1980-01-01', '1980-01-01'],
+    })
+    
+    cols = preprocess(df)
+    result = score_pair(0, 1, cols)
+    
+    assert result is not None, f"Should match, but got None"
+    assert result.reason == 'exact_swapped', f"Expected exact_swapped, got {result.reason}"
+    assert result.is_swapped is True, f"Expected is_swapped=True, got {result.is_swapped}"
+    # NEW: Score should be 100 when everything else matches perfectly (10 vs 10A is equivalent)
+    assert result.score == 100.0, f"Expected score 100.0, got {result.score}"
+    
+    print("✅ Name Swapping with Name2 in Vorname: PASS")
     return True
 
 
@@ -189,6 +220,7 @@ def run_all_tests():
         test_name2_rule_both_populated,
         test_name2_rule_compound_surname,
         test_name_swapping_detection,
+        test_name_swapping_with_name2_in_first,
         test_exact_vs_fuzzy_stages,
         test_date_rule,
         test_compare_names_with_swap,

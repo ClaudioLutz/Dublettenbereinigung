@@ -11,25 +11,35 @@ def iter_exact_pairs(
     idx: np.ndarray, cols: dict[str, object], *, max_group: int = 200
 ) -> Iterator[Tuple[int, int]]:
     """
-    Generate exact match pairs (both normal and swapped)
-    This implements Stage 1 of the two-stage architecture
+    Generate exact match pairs using swap-invariant unordered signature.
+    This implements Stage 1 of the two-stage architecture.
+    
+    Uses min/max of (first, last_full) to create order-independent hash,
+    where last_full = last + name2. This catches:
+    - Hans Müller vs Müller Hans
+    - Hans Müller + Name2=Bensel vs Müller Bensel Hans
     """
-    first = cols["first"].iloc[idx].reset_index(drop=True)
-    last = cols["last"].iloc[idx].reset_index(drop=True)
+    first = cols["first"].iloc[idx].reset_index(drop=True).astype("string")
+    last = cols["last"].iloc[idx].reset_index(drop=True).astype("string")
+    name2 = cols["name2"].iloc[idx].reset_index(drop=True).astype("string")
     year = pd.Series(cols["year"][idx])
-    name2 = cols["name2"].iloc[idx].reset_index(drop=True)
 
-    # Hash for normal name order
-    tmp_normal = pd.DataFrame({"f": first, "l": last, "y": year, "n2": name2})
-    h_normal = pd.util.hash_pandas_object(tmp_normal, index=False).to_numpy(dtype=np.uint64, copy=False)
+    # Combine last + name2 for comparison
+    last_full = (last + " " + name2).str.strip().astype("string")
 
-    # Hash for swapped name order (first <-> last)
-    tmp_swapped = pd.DataFrame({"f": last, "l": first, "y": year, "n2": name2})
-    h_swapped = pd.util.hash_pandas_object(tmp_swapped, index=False).to_numpy(dtype=np.uint64, copy=False)
+    # Create unordered signature: min/max of (first, last_full)
+    a = first.to_numpy(dtype=object)
+    b = last_full.to_numpy(dtype=object)
+    mn = np.minimum(a, b)
+    mx = np.maximum(a, b)
 
-    # Process normal order matches
-    order = np.argsort(h_normal, kind="mergesort")
-    h_sorted = h_normal[order]
+    # Hash the unordered signature + year
+    tmp = pd.DataFrame({"a": mn, "b": mx, "y": year})
+    h = pd.util.hash_pandas_object(tmp, index=False).to_numpy(dtype=np.uint64, copy=False)
+
+    # Sort by hash and group
+    order = np.argsort(h, kind="mergesort")
+    h_sorted = h[order]
     idx_sorted = idx[order]
 
     s = 0
@@ -39,36 +49,10 @@ def iter_exact_pairs(
         while e < n and h_sorted[e] == h_sorted[s]:
             e += 1
         g = e - s
-        if g > 1:
-            if g <= max_group:
-                group_ids = idx_sorted[s:e]
-                for a, b in itertools.combinations(group_ids, 2):
-                    yield (int(a), int(b))
-        s = e
-    
-    # Process swapped order matches
-    # Create mapping from original idx to position for comparison
-    seen_pairs = set()  # Track pairs we've already yielded to avoid duplicates
-    
-    order_swap = np.argsort(h_swapped, kind="mergesort")
-    h_sorted_swap = h_swapped[order_swap]
-    idx_sorted_swap = idx[order_swap]
-
-    s = 0
-    while s < n:
-        e = s + 1
-        while e < n and h_sorted_swap[e] == h_sorted_swap[s]:
-            e += 1
-        g = e - s
-        if g > 1:
-            if g <= max_group:
-                group_ids = idx_sorted_swap[s:e]
-                for a, b in itertools.combinations(group_ids, 2):
-                    # Create canonical pair (smaller index first)
-                    pair = (min(int(a), int(b)), max(int(a), int(b)))
-                    if pair not in seen_pairs:
-                        seen_pairs.add(pair)
-                        yield pair
+        if g > 1 and g <= max_group:
+            group_ids = idx_sorted[s:e]
+            for a, b in itertools.combinations(group_ids, 2):
+                yield (int(a), int(b))
         s = e
 
 
