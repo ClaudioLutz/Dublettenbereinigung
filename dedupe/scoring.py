@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from rapidfuzz import fuzz
+try:
+    import cologne_phonetics
+    COLOGNE_PHONETICS_AVAILABLE = True
+except ImportError:
+    COLOGNE_PHONETICS_AVAILABLE = False
 
 
 @dataclass(frozen=True)
@@ -13,6 +18,27 @@ class MatchResult:
     addr_score: float
     reason: str
     is_swapped: bool = False
+
+
+def get_cologne_phonetic(name: str) -> str:
+    """
+    Get Cologne Phonetic code for a name safely.
+    Returns empty string if encoding fails, name is empty, or library not available.
+    """
+    if not COLOGNE_PHONETICS_AVAILABLE:
+        return ''
+    
+    if not name or not name.strip():
+        return ''
+    
+    try:
+        result = cologne_phonetics.encode(str(name).strip())
+        if result and len(result) > 0:
+            # cologne_phonetics.encode returns list of tuples: [('name', 'code')]
+            return result[0][1]
+    except:
+        pass
+    return ''
 
 
 def check_zweitname(name2_a: str, name_a: str, name2_b: str, name_b: str) -> bool:
@@ -78,13 +104,53 @@ def compare_names_with_swap(first_a: str, last_a: str, first_b: str, last_b: str
     }
 
 
-def score_pair(i: int, j: int, cols: dict[str, object]) -> MatchResult | None:
+def compute_normalized_address_ratio(plz_i: str, plz_j: str, street_i: str, street_j: str) -> float:
+    """
+    Compute normalized address ratio for address-assisted matching
+    
+    Args:
+        plz_i, plz_j: PLZ (postal codes) - already normalized
+        street_i, street_j: Street names - already normalized
+    
+    Returns:
+        Float between 0.0 and 1.0 representing address match quality
+    """
+    # PLZ comparison (exact match)
+    plz_ratio = 1.0 if plz_i and plz_j and plz_i == plz_j else 0.0
+    
+    # Street comparison (fuzzy match)
+    if street_i and street_j:
+        street_ratio = fuzz.ratio(street_i, street_j) / 100.0
+    else:
+        street_ratio = 0.0
+    
+    # Weighted combination (PLZ is more discriminative)
+    # Require at least one component to be present
+    if plz_i or street_i:
+        address_ratio = 0.6 * plz_ratio + 0.4 * street_ratio
+    else:
+        address_ratio = 0.0
+    
+    return address_ratio
+
+
+def score_pair(i: int, j: int, cols: dict[str, object], 
+               fuzzy_threshold: float = 0.80, 
+               enable_address_aware: bool = True) -> MatchResult | None:
     """
     Score a pair with business rules:
     1. Date rule (year equality)
     2. Name2/Zweitname rule
     3. Name swapping detection
     4. Two-stage: exact matching, then fuzzy matching
+    5. Address-assisted matching (borderline names + strong address)
+    6. Phonetic fallback (borderline names + phonetic match)
+    
+    Args:
+        i, j: Indices of records to compare
+        cols: Preprocessed columns dictionary
+        fuzzy_threshold: Minimum name similarity for fuzzy match (default: 0.80)
+        enable_address_aware: Enable address-assisted matching (default: True)
     """
     # Business Rule 1: Date rule
     yi = int(cols["year"][i])
@@ -170,13 +236,77 @@ def score_pair(i: int, j: int, cols: dict[str, object]) -> MatchResult | None:
     
     # Stage 2: Fuzzy matching with swap detection
     name_comparison = compare_names_with_swap(first_i, last_i, first_j, last_j)
-    name_score = name_comparison['best_score'] * 100.0
+    best_score = name_comparison['best_score']
     is_swapped = name_comparison['is_swapped']
+    
+    # Check if name similarity meets threshold
+    if best_score < fuzzy_threshold:
+        # NEW: Address-aware gate for borderline name scores (60-80% range)
+        if 0.60 <= best_score < fuzzy_threshold:
+            # Check for address-assisted match first (if enabled)
+            if enable_address_aware:
+                # Compute normalized address ratio
+                norm_address_ratio = compute_normalized_address_ratio(plz_i, plz_j, street_i, street_j)
+                
+                if norm_address_ratio >= 0.75:
+                    # Strong address match -> create "address_assisted" match
+                    if is_swapped:
+                        reason = 'address_assisted_swapped'
+                        confidence = 68.0 + (norm_address_ratio * 10.0)  # 68-78%
+                    else:
+                        reason = 'address_assisted_normal'
+                        confidence = 70.0 + (norm_address_ratio * 10.0)  # 70-80%
+                    
+                    return MatchResult(
+                        i=i, j=j,
+                        score=confidence,
+                        name_score=best_score * 100.0,
+                        addr_score=addr_score,
+                        reason=reason,
+                        is_swapped=is_swapped
+                    )
+            
+            # If address is not strong enough, check phonetic fallback
+            if COLOGNE_PHONETICS_AVAILABLE:
+                # Get phonetic codes (compute if not in cols, or use precomputed if available)
+                v_i_phon = get_cologne_phonetic(first_i)
+                n_i_phon = get_cologne_phonetic(last_i)
+                v_j_phon = get_cologne_phonetic(first_j)
+                n_j_phon = get_cologne_phonetic(last_j)
+                
+                # Check phonetic match (normal and swapped)
+                phonetic_match_normal = (v_i_phon and n_i_phon and v_j_phon and n_j_phon and
+                                        v_i_phon == v_j_phon and n_i_phon == n_j_phon)
+                phonetic_match_swapped = (v_i_phon and n_i_phon and v_j_phon and n_j_phon and
+                                         v_i_phon == n_j_phon and n_i_phon == v_j_phon)
+                
+                if phonetic_match_normal or phonetic_match_swapped:
+                    # Phonetic-assisted match
+                    is_swapped = phonetic_match_swapped
+                    
+                    if is_swapped:
+                        reason = 'phonetic_assisted_swapped'
+                        confidence = 70.0 + (address_ratio * 10.0)  # 70-80%
+                    else:
+                        reason = 'phonetic_assisted_normal'
+                        confidence = 72.0 + (address_ratio * 10.0)  # 72-82%
+                    
+                    return MatchResult(
+                        i=i, j=j,
+                        score=confidence,
+                        name_score=best_score * 100.0,
+                        addr_score=addr_score,
+                        reason=reason,
+                        is_swapped=is_swapped
+                    )
+        
+        # No phonetic match and weak address - reject
+        return None
     
     # Calculate confidence based on fuzzy match
     # Base: name similarity * 50 (max 50 points from names)
     # Address bonus: address_ratio * 30 (max 30 points from address)
-    base_confidence = name_comparison['best_score'] * 50.0
+    base_confidence = best_score * 50.0
     address_bonus = address_ratio * 30.0
     
     if is_swapped:
@@ -197,7 +327,7 @@ def score_pair(i: int, j: int, cols: dict[str, object]) -> MatchResult | None:
     return MatchResult(
         i=i, j=j, 
         score=confidence, 
-        name_score=name_score, 
+        name_score=best_score * 100.0, 
         addr_score=addr_score, 
         reason=reason,
         is_swapped=is_swapped
