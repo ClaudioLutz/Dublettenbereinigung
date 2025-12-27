@@ -158,32 +158,32 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     if yi != -1 and yj != -1 and yi != yj:
         return None
 
-    # Business Rule 2: Zweitname rule
+    # Business Rule 2: Zweitname rule (swap-aware)
     name2_i = cols["name2"].iloc[i]
     name2_j = cols["name2"].iloc[j]
     last_i = cols["last"].iloc[i]
     last_j = cols["last"].iloc[j]
-    
-    if not check_zweitname(name2_i, last_i, name2_j, last_j):
-        return None
-
-    # Get name components
     first_i = cols["first"].iloc[i]
     first_j = cols["first"].iloc[j]
     
+    if not check_zweitname(name2_i, last_i, name2_j, last_j):
+        # Swapped placement fallback: surname(+name2) might be in Vorname field
+        if not check_zweitname(name2_i, last_i, name2_j, first_j) and not check_zweitname(name2_j, last_j, name2_i, first_i):
+            return None
+    
     # CRITICAL FIX: When name2 is present in one record but not the other,
-    # combine name+name2 for fair comparison
+    # combine name+name2 for fair comparison (swap-aware)
     # Example: "Haller" + "Bensel" vs "Haller Bensel" should match 100%
     last_i_for_comparison = last_i
     last_j_for_comparison = last_j
     
     if name2_i and not name2_j:
-        # Combine last_i with name2_i if name2_i is a suffix of last_j
-        if last_j.endswith(name2_i):
+        # Combine last_i with name2_i if name2_i is a suffix of last_j OR first_j
+        if last_j.endswith(name2_i) or first_j.endswith(name2_i):
             last_i_for_comparison = (last_i + " " + name2_i).strip()
     elif name2_j and not name2_i:
-        # Combine last_j with name2_j if name2_j is a suffix of last_i
-        if last_i.endswith(name2_j):
+        # Combine last_j with name2_j if name2_j is a suffix of last_i OR first_i
+        if last_i.endswith(name2_j) or first_i.endswith(name2_j):
             last_j_for_comparison = (last_j + " " + name2_j).strip()
     
     # Check for exact match (Stage 1) - use the combined names for comparison
@@ -285,13 +285,46 @@ def score_pair(i: int, j: int, cols: dict[str, object],
             )
         
         if is_exact_swapped:
-            # Exact swapped: penalize by 5% for name swapping
-            if address_ratio >= 0.9:
-                confidence = 90.0 + (address_ratio * 5.0)  # 90-95%
-            elif address_ratio >= 0.5:
-                confidence = 65.0 + (address_ratio * 25.0)  # 65-90%
+            # NEW: Score=100 when everything else matches perfectly
+            def _house_equivalent(h1: str, h2: str) -> bool:
+                """Check if house numbers are equivalent (e.g., 10 == 10A)"""
+                if (not h1) and (not h2):
+                    return True
+                if h1 and h2:
+                    if h1 == h2:
+                        return True
+                    n1 = ''.join(filter(str.isdigit, h1))
+                    n2 = ''.join(filter(str.isdigit, h2))
+                    return bool(n1 and n2 and n1 == n2)
+                return False
+            
+            def _strong_text_match(a: str, b: str, score: float) -> bool:
+                """Check if text fields match strongly"""
+                if (not a) and (not b):
+                    return True
+                if a and b:
+                    return score >= 95.0
+                return False
+            
+            # Check if everything else matches perfectly
+            strict_other_match = (
+                (plz_i and plz_j and plz_i == plz_j) and
+                _house_equivalent(house_i, house_j) and
+                _strong_text_match(street_i, street_j, street_score) and
+                _strong_text_match(ort_i, ort_j, ort_score)
+            )
+            
+            if strict_other_match:
+                # Perfect match except for swapped names -> Score 100
+                confidence = 100.0
             else:
-                confidence = 45.0 + (address_ratio * 20.0)  # 45-65%
+                # Old swapped confidence formula (fallback)
+                if address_ratio >= 0.9:
+                    confidence = 90.0 + (address_ratio * 5.0)  # 90-95%
+                elif address_ratio >= 0.5:
+                    confidence = 65.0 + (address_ratio * 25.0)  # 65-90%
+                else:
+                    confidence = 45.0 + (address_ratio * 20.0)  # 45-65%
             
             return MatchResult(
                 i=i, j=j, 
