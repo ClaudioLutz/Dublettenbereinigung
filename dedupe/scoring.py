@@ -210,29 +210,55 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     address_ratio = address_matches / max(total_address_fields, 1)
 
     # Stage 1: Exact matches
-    if is_exact_normal:
-        # Exact normal: 90-100% based on address
-        confidence = 90.0 + (address_ratio * 10.0)
-        return MatchResult(
-            i=i, j=j, 
-            score=confidence, 
-            name_score=100.0, 
-            addr_score=addr_score, 
-            reason="exact_normal",
-            is_swapped=False
-        )
-    
-    if is_exact_swapped:
-        # Exact swapped: 85-95% based on address
-        confidence = 85.0 + (address_ratio * 10.0)
-        return MatchResult(
-            i=i, j=j, 
-            score=confidence, 
-            name_score=100.0, 
-            addr_score=addr_score, 
-            reason="exact_swapped",
-            is_swapped=True
-        )
+    # VERY STRICT RULE: Even with exact name match, addresses must match VERY closely
+    if is_exact_normal or is_exact_swapped:
+        # CRITICAL: Require same PLZ (if both have PLZ data)
+        if plz_i and plz_j and plz_i != plz_j:
+            # Different PLZ = different people, reject immediately
+            return None
+        
+        # CRITICAL: Require high street similarity (>70%)
+        # This filters out completely different streets like "Avenue de la Gare" vs "chemin du Chaugand"
+        if street_i and street_j and street_score < 70.0:
+            # Very different streets = likely different people
+            return None
+        
+        # CRITICAL: Require matching house numbers (if both have house number data)
+        # Different house numbers on same street = different people!
+        if house_i and house_j and house_i != house_j:
+            # Allow minor variations like "17" vs "17b" or "17a" vs "17"
+            # Strip letters and compare numeric part
+            house_i_num = ''.join(filter(str.isdigit, house_i))
+            house_j_num = ''.join(filter(str.isdigit, house_j))
+            
+            # If both have numeric parts and they differ, reject
+            if house_i_num and house_j_num and house_i_num != house_j_num:
+                return None
+        
+        # If we get here, addresses match closely enough
+        if is_exact_normal:
+            # Exact normal: 90-100% based on address
+            confidence = 90.0 + (address_ratio * 10.0)
+            return MatchResult(
+                i=i, j=j, 
+                score=confidence, 
+                name_score=100.0, 
+                addr_score=addr_score, 
+                reason="exact_normal",
+                is_swapped=False
+            )
+        
+        if is_exact_swapped:
+            # Exact swapped: 85-95% based on address
+            confidence = 85.0 + (address_ratio * 10.0)
+            return MatchResult(
+                i=i, j=j, 
+                score=confidence, 
+                name_score=100.0, 
+                addr_score=addr_score, 
+                reason="exact_swapped",
+                is_swapped=True
+            )
     
     # Stage 2: Fuzzy matching with swap detection
     name_comparison = compare_names_with_swap(first_i, last_i, first_j, last_j)
@@ -304,6 +330,33 @@ def score_pair(i: int, j: int, cols: dict[str, object],
         return None
     
     # Calculate confidence based on fuzzy match
+    # NEW RULE: For fuzzy matches, require better address similarity
+    # If names are not exactly matching, addresses should be very similar
+    
+    # Reject fuzzy matches with poor address similarity
+    if address_ratio < 0.30:
+        # If addresses are very different, reject unless names are very close (>95%)
+        if best_score < 0.95:
+            return None
+    
+    # Strict PLZ mismatch rule for fuzzy matches
+    if plz_i and plz_j and plz_i != plz_j:
+        # Different PLZ with fuzzy name match? Reject unless street is very similar (>85%)
+        if street_score < 85.0:
+            return None
+    
+    # CRITICAL: Require matching house numbers for fuzzy matches (if both have house number data)
+    # Different house numbers on same street = different people!
+    if house_i and house_j and house_i != house_j:
+        # Allow minor variations like "17" vs "17b" or "17a" vs "17"
+        # Strip letters and compare numeric part
+        house_i_num = ''.join(filter(str.isdigit, house_i))
+        house_j_num = ''.join(filter(str.isdigit, house_j))
+        
+        # If both have numeric parts and they differ, reject
+        if house_i_num and house_j_num and house_i_num != house_j_num:
+            return None
+    
     # Base: name similarity * 50 (max 50 points from names)
     # Address bonus: address_ratio * 30 (max 30 points from address)
     base_confidence = best_score * 50.0
@@ -319,10 +372,6 @@ def score_pair(i: int, j: int, cols: dict[str, object],
         confidence = base_confidence + address_bonus
         confidence = min(confidence, 95.0)  # Cap at 95%
         reason = "fuzzy_normal"
-    
-    # PLZ mismatch rule: if different PLZ and score < 95, reject
-    if plz_i and plz_j and plz_i != plz_j and confidence < 95:
-        return None
 
     return MatchResult(
         i=i, j=j, 
