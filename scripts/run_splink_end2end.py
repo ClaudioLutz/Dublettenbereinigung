@@ -4,9 +4,6 @@ import sys
 import argparse
 from pathlib import Path
 
-# Add project root to path to import local dedupe module
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from dedupe.config import DbConfig
 from dedupe_splink.stage import StageConfig, stage_query_to_parquet
 from dedupe_splink.train import train_model_on_parquet_sample

@@ -5,9 +5,6 @@ import argparse
 import getpass
 from pathlib import Path
 
-# Add project root to path to import local dedupe module
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from dedupe.config import DbConfig
 from dedupe.pipeline import run_pipeline
 

@@ -26,71 +26,37 @@ A high-performance Python tool designed to identify duplicate records in large d
     cd <repository-directory>
     ```
 
-2.  Install the required dependencies:
+2.  Install the package in editable mode:
     ```bash
-    pip install -r requirements.txt
+    pip install -e .
     ```
 
 ## ⚙️ Configuration
 
 ### Data Source
-The project is currently configured to load data from a SQL Server database via `data.py`.
-
-To use your own data source:
-1.  **Option A**: Modify `data.py` to connect to your specific database.
-2.  **Option B**: Modify `run_optimized_analysis.py` to load your data (e.g., from a CSV file) into a Pandas DataFrame instead of calling `lade_daten`.
-
-Example for CSV loading in `run_optimized_analysis.py`:
-```python
-# Replace this:
-# df = lade_daten(engine, query)
-
-# With this:
-df = pd.read_csv('your_data.csv')
-```
+The project is configured to load data from a SQL Server database. Configure your connection using environment variables (see below) or by passing a connection string/config object.
 
 ## 🏃 Usage
 
-The main entry point for running the heuristic analysis is `run_optimized_analysis.py`.
+The main entry point for running the deduplication pipeline is `scripts/run_dedupe.py`.
 
 ### Basic Run
-Process the full dataset with default settings:
+Process the dataset using a SQL query:
 ```bash
-python run_optimized_analysis.py
+python scripts/run_dedupe.py --query-file query.sql --out results.csv
 ```
 
 ### Command Line Arguments
 
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `--limit <n>` | Process only the first `n` records (useful for testing). | `None` (All) |
-| `--confidence <n>` | Minimum confidence score (0-100) to consider a match. | `70.0` |
-| `--fuzzy-threshold <n>` | Threshold (0.0-1.0) for fuzzy string matching. | `0.7` |
-| `--no-parallel` | Disable parallel processing (run on a single core). | `False` |
-| `--benchmark` | Run a performance benchmark on sample sizes before full analysis. | `False` |
-| `--output <file>` | Filename for the results CSV. | `duplicates_results.csv` |
-| `--no-multipass` | Disable the multi-pass blocking strategy (runs only the primary pass). | `False` |
-| `--max-block-size <n>` | Maximum size of a block before sub-blocking is triggered. | `10000` |
-| `--no-address-aware` | Disable address-aware prefiltering. | `False` |
-| `--db-user <user>` | SQL Server username. | Env `DB_USER` |
-| `--db-password <pwd>` | SQL Server password. | Env `DB_PASSWORD` |
+| Argument | Description |
+|----------|-------------|
+| `--query-file` | Path to SQL query file (Required) |
+| `--out` | Output CSV path (Required) |
+| `--workers` | Number of worker threads (0=auto) |
+| `--prompt-password` | Prompt for DB password instead of env var |
 
-### Examples
-
-**Run a benchmark to estimate processing time:**
-```bash
-python run_optimized_analysis.py --benchmark --limit 100000
-```
-
-**Run analysis with stricter matching criteria:**
-```bash
-python run_optimized_analysis.py --confidence 80.0 --fuzzy-threshold 0.8
-```
-
-**Run without multi-pass blocking (faster but lower recall):**
-```bash
-python run_optimized_analysis.py --no-multipass
-```
+### Legacy Code
+The old monolithic pipeline (`run_optimized_analysis.py`, `duplicate_checker_optimized.py`, etc.) has been moved to the `legacy/` directory. It is no longer supported but kept for reference.
 
 ## 🧠 Splink Probabilistic Deduplication
 
@@ -125,16 +91,18 @@ Benchmarks on typical hardware (8 cores):
 
 ## 📁 Project Structure
 
-*   `duplicate_checker_optimized.py`: Core logic containing `UltraFastDuplicateChecker`, blocking strategies, and matching algorithms.
-*   `run_optimized_analysis.py`: CLI wrapper to run the analysis.
-*   `data.py`: Database connection and data loading utilities.
+*   `dedupe/`: Core package containing the new modular pipeline.
+    *   `pipeline.py`: Main pipeline logic.
+    *   `blocking.py`: Blocking strategies.
+    *   `scoring.py`: Matching algorithms.
+*   `scripts/`: Entry points for running the pipeline.
+    *   `run_dedupe.py`: Main script to run the heuristic analysis.
+    *   `run_splink_*.py`: Scripts for the Splink probabilistic pipeline.
 *   `dedupe_splink/`: Probabilistic deduplication module using Splink v4.
-*   `scripts/`: Helper scripts for Splink execution (`run_splink_end2end.py`, etc.).
 *   `tests/`: Unit and integration tests.
+*   `legacy/`: Archived legacy code (`duplicate_checker_optimized.py`, etc.).
 *   `logs/`: Log files (auto-rotated).
-*   `performance_comparison.py`: Script to compare the optimized version against legacy implementations.
 *   `QUICK_START.md`: A quick guide for immediate usage.
-*   `README_OPTIMIZATION.md`: Detailed technical explanation of the optimizations applied.
 
 ## 🔐 Secrets & Environment
 
@@ -151,8 +119,8 @@ DB_TRUST_SERVER_CERTIFICATE=yes             # optional
 
 ## 🤝 Troubleshooting
 
-*   **Memory Errors**: If running on a machine with limited RAM, try reducing the `max_block_size` in `duplicate_checker_optimized.py` or disable parallel processing with `--no-parallel`.
-*   **Database Connection**: If `data.py` fails, ensure your SQL Server credentials and driver are correctly configured, or switch to CSV input.
+*   **Memory Errors**: If running on a machine with limited RAM, try reducing the chunk size or disabling parallel processing.
+*   **Database Connection**: Ensure your SQL Server credentials and driver are correctly configured in the environment variables.
 
 ## 📜 License
 

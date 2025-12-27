@@ -34,7 +34,7 @@ def process_block(idx: np.ndarray, cols: dict[str, object], params: BlockingPara
 
 def _write_results(rows: Iterable[MatchResult], writer: csv.writer, df: pd.DataFrame) -> None:
     """
-    Write results in the same format as duplicate_checker_optimized.py
+    Write results in the legacy format.
     Creates 2 rows per match (one for record A, one for record B)
     """
     for mr in rows:
@@ -111,7 +111,7 @@ def run_pipeline(
 
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        # Write header matching duplicate_checker_optimized.py format
+        # Write header matching legacy format
         writer.writerow([
             "match_id", "confidence", "match_type", "position", "index",
             "vorname", "name", "name2", "strasse", "hausnummer", "plz", "ort",

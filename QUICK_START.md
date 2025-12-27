@@ -2,32 +2,21 @@
 
 ## 🚀 Immediate Actions
 
-### 1. Install Dependencies
+### 1. Install Package
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
-### 2. Test with Sample Data (Recommended First Step)
-```bash
-# Test with 100K records to verify it works
-python run_optimized_analysis.py --limit 100000 --benchmark
+### 2. Prepare SQL Query
+Create a file named `query.sql` with your SQL query to fetch data:
+```sql
+SELECT TOP 100000 * FROM YourTable
 ```
 
-This will:
-- Load 100K records from your database
-- Run performance benchmarks on smaller samples
-- Show estimated time for full 7.5M dataset
-- Ask if you want to continue
-
-**Expected time**: 30-60 seconds for 100K records
-
-### 3. Run Full Analysis on 7.5M Records
+### 3. Run Analysis
 ```bash
-# Process all records
-python run_optimized_analysis.py --output duplicates_7_5M.csv
+python scripts/run_dedupe.py --query-file query.sql --out results.csv
 ```
-
-**Expected time**: 10-30 minutes (depending on your hardware)
 
 ## 📋 What You'll Get
 
@@ -39,17 +28,11 @@ The script will create a CSV file with all duplicate pairs:
 ## ⚙️ Common Options
 
 ```bash
-# Run with higher confidence threshold (fewer matches, higher quality)
-python run_optimized_analysis.py --confidence 80.0
+# Run with specific number of worker threads
+python scripts/run_dedupe.py --query-file query.sql --out results.csv --workers 8
 
-# Run with more lenient matching (more matches, some false positives)
-python run_optimized_analysis.py --confidence 60.0 --fuzzy-threshold 0.6
-
-# Disable parallel processing (if you have issues)
-python run_optimized_analysis.py --no-parallel
-
-# Custom output filename
-python run_optimized_analysis.py --output my_results.csv
+# Prompt for database password
+python scripts/run_dedupe.py --query-file query.sql --out results.csv --prompt-password
 ```
 
 ## 🔍 Key Improvements Over Original
@@ -91,57 +74,17 @@ See `README.md` for more details on the Splink integration.
 3. **Monitor memory usage** - Should be fine for 7.5M rows on most systems
 4. **Review results** - Check a sample of matches to ensure quality
 
-## 🐛 If Something Goes Wrong
-
-**Out of memory?**
-```bash
-python run_optimized_analysis.py --no-parallel --max-block-size 5000
-```
-
-**Too slow?**
-- Check that parallel processing is enabled (it should be by default)
-- Verify you're using the optimized files (not the old ones)
-- Check CPU usage - should be using multiple cores
-
-**Not finding duplicates you expect?**
-```bash
-# Try more lenient settings or disable multi-pass blocking
-python run_optimized_analysis.py --confidence 60.0 --no-multipass
-```
-
 ## 📁 Files You Have
 
 ### Active Code (Use These)
-1. **run_optimized_analysis.py** - Main script to run analysis
-2. **duplicate_checker_optimized.py** - Core optimized engine
-3. **performance_comparison.py** - Compare performance metrics
-4. **README_OPTIMIZATION.md** - Detailed documentation
+1. **scripts/run_dedupe.py** - Main script to run analysis
+2. **dedupe/** - Core package
+3. **dedupe_splink/** - Splink integration
 
 ### Legacy Code (For Reference Only)
-- **legacy/duplicate_checker_poc.py** - Original POC implementation
-- **legacy/duplicate_checker_integration.py** - Old integration layer
+- **legacy/** - Archived legacy code (`duplicate_checker_optimized.py`, etc.)
 
 > **Note:** Always use the active codebase for production work. Legacy files are preserved only for historical reference.
-
-## 🎯 Recommended Workflow
-
-```bash
-# Step 1: Quick test (1-2 minutes)
-python run_optimized_analysis.py --limit 100000 --benchmark
-
-# Step 2: Review sample results
-# Open duplicates_results.csv and check if matches look correct
-
-# Step 3: Adjust settings if needed
-# If too many false positives: --confidence 80.0
-# If missing matches: --confidence 60.0
-
-# Step 4: Run full analysis (10-30 minutes)
-python run_optimized_analysis.py --output duplicates_7_5M_final.csv
-
-# Step 5: Analyze results
-# Review the CSV file, focus on high-confidence matches first
-```
 
 ## ✅ Success Criteria
 

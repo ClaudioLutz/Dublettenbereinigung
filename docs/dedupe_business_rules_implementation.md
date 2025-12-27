@@ -1,14 +1,14 @@
 # Dedupe Module Business Rules Implementation
 
-**Date:** 27. December 2025  
-**Version:** 3.0  
-**Status:** ✅ **FULLY** Aligned with duplicate_checker_optimized.py
+**Date:** 27. December 2025
+**Version:** 3.0
+**Status:** ✅ **FULLY** Aligned with legacy implementation
 
 ---
 
 ## Overview
 
-This document describes the implementation of business rules in the `dedupe/` module, now **FULLY aligned** with the established business rules in `duplicate_checker_optimized.py`, including advanced features like **phonetic matching** and **address-assisted matching**.
+This document describes the implementation of business rules in the `dedupe/` module, now **FULLY aligned** with the established business rules in the legacy implementation (`legacy/duplicate_checker_optimized.py`), including advanced features like **phonetic matching** and **address-assisted matching**.
 
 ## Changes Summary
 
@@ -190,7 +190,7 @@ result = score_pair(i, j, cols, fuzzy_threshold=0.70)
 
 ---
 
-## Compatibility with duplicate_checker_optimized.py
+## Compatibility with Legacy Code
 
 ### ✅ **100% Compatible - ALL Rules Implemented:**
 
@@ -208,7 +208,7 @@ result = score_pair(i, j, cols, fuzzy_threshold=0.70)
 ### ⚠️ Not Implemented (Architecture Difference):
 - **Multi-Pass Blocking:** Not applicable to dedupe/'s single-pass architecture
   - dedupe/ uses a different blocking strategy (hash-based)
-  - duplicate_checker_optimized.py uses multi-pass with phonetic blocking
+  - Legacy code uses multi-pass with phonetic blocking
   - Both achieve similar results through different approaches
 
 ---
@@ -239,8 +239,8 @@ python tests/test_advanced_business_rules.py
 
 **New Signature:**
 ```python
-def score_pair(i: int, j: int, cols: dict[str, object], 
-               fuzzy_threshold: float = 0.80, 
+def score_pair(i: int, j: int, cols: dict[str, object],
+               fuzzy_threshold: float = 0.80,
                enable_address_aware: bool = True) -> MatchResult | None:
 ```
 
@@ -252,9 +252,9 @@ def score_pair(i: int, j: int, cols: dict[str, object],
 
 **New Signature:**
 ```python
-def run_pipeline(query: str, db_cfg: DbConfig, out_path: str, 
+def run_pipeline(query: str, db_cfg: DbConfig, out_path: str,
                  workers: int = 0, chunksize: int = 200_000,
-                 fuzzy_threshold: float = 0.80, 
+                 fuzzy_threshold: float = 0.80,
                  enable_address_aware: bool = True) -> None:
 ```
 
@@ -278,8 +278,8 @@ run_pipeline(query, db_config, "output.csv", fuzzy_threshold=0.90)
 run_pipeline(query, db_config, "output.csv", enable_address_aware=False)
 
 # Both customizations
-run_pipeline(query, db_config, "output.csv", 
-             fuzzy_threshold=0.85, 
+run_pipeline(query, db_config, "output.csv",
+             fuzzy_threshold=0.85,
              enable_address_aware=False)
 ```
 
@@ -316,7 +316,7 @@ run_pipeline(query, db_config, "output.csv",
 - Code without new parameters continues to work
 - New features are enabled by default
 
-**MatchResult Enhancement:** 
+**MatchResult Enhancement:**
 - Added `is_swapped` field (defaults to False if not provided)
 - Fully backward compatible
 
@@ -331,7 +331,7 @@ run_pipeline(query, db_config, "output.csv",
    ```python
    # Before
    run_pipeline(query, db_config, "output.csv", workers=4)
-   
+
    # After (if you want custom threshold)
    run_pipeline(query, db_config, "output.csv", workers=4, fuzzy_threshold=0.85)
    ```
@@ -346,7 +346,7 @@ run_pipeline(query, db_config, "output.csv",
 
 ## References
 
-- **Source:** `duplicate_checker_optimized.py`
+- **Source:** `legacy/duplicate_checker_optimized.py`
 - **Implementation:** `dedupe/scoring.py`, `dedupe/preprocess.py`, `dedupe/candidates.py`, `dedupe/pipeline.py`
 - **Tests:** `tests/test_dedupe_business_rules.py`, `tests/test_advanced_business_rules.py`
 
@@ -356,7 +356,7 @@ run_pipeline(query, db_config, "output.csv",
 
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
-| 2025-12-27 | 3.0 | **FULL alignment with duplicate_checker_optimized.py** | System |
+| 2025-12-27 | 3.0 | **FULL alignment with legacy implementation** | System |
 | 2025-12-27 | 3.0 | **Implemented phonetic matching (Cologne Phonetic)** | System |
 | 2025-12-27 | 3.0 | **Implemented address-assisted matching** | System |
 | 2025-12-27 | 3.0 | Added configurable fuzzy threshold parameter | System |
@@ -373,10 +373,10 @@ run_pipeline(query, db_config, "output.csv",
 
 ## Summary
 
-**Status:** ✅ **FULL Implementation Complete**  
-**Business Rules Alignment:** **100%** (all applicable rules)  
-**Match Types Supported:** **8 types** (exact, fuzzy, address-assisted, phonetic-assisted)  
-**Tests Passing:** **14/14** (7 core + 7 advanced)  
+**Status:** ✅ **FULL Implementation Complete**
+**Business Rules Alignment:** **100%** (all applicable rules)
+**Match Types Supported:** **8 types** (exact, fuzzy, address-assisted, phonetic-assisted)
+**Tests Passing:** **14/14** (7 core + 7 advanced)
 **Optional Dependencies:** cologne-phonetics (recommended for phonetic matching)
 
-🎉 **The dedupe/ module now implements ALL business rules from duplicate_checker_optimized.py!**
+🎉 **The dedupe/ module now implements ALL business rules from the legacy implementation!**

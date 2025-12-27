@@ -4,9 +4,6 @@ import sys
 import argparse
 from pathlib import Path
 
-# Add project root to path to import local dedupe_splink module
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from dedupe_splink.train import train_model_on_parquet_sample
 
 def main():
