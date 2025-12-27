@@ -38,6 +38,7 @@ def preprocess(df: pd.DataFrame) -> dict[str, object]:
     street = _norm_series(df.get("Strasse", pd.Series([""] * n)))
     plz = _norm_series(df.get("Plz", pd.Series([""] * n)))
     house = _norm_series(df.get("HausNummer", pd.Series([""] * n)))
+    ort = _norm_series(df.get("Ort", pd.Series([""] * n)))
 
     year = pd.to_datetime(df.get("Geburtstag", pd.NaT), errors="coerce").dt.year
     year = year.fillna(-1).astype("int32")
@@ -48,6 +49,7 @@ def preprocess(df: pd.DataFrame) -> dict[str, object]:
     out["street"] = street
     out["plz"] = plz
     out["house"] = house
+    out["ort"] = ort
     out["year"] = year.to_numpy(dtype=np.int32, copy=False)
 
     out["full_name"] = (first + " " + last).astype("string")

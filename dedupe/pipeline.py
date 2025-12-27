@@ -18,16 +18,23 @@ from .scoring import score_pair, MatchResult
 def process_block(idx: np.ndarray, cols: dict[str, object], params: BlockingParams,
                   fuzzy_threshold: float = 0.80, enable_address_aware: bool = True) -> list[MatchResult]:
     results: list[MatchResult] = []
+    seen_pairs = set()  # Track pairs to avoid duplicates
 
     for i, j in iter_exact_pairs(idx, cols):
-        mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
-        if mr:
-            results.append(mr)
+        pair = (min(i, j), max(i, j))  # Canonical form
+        if pair not in seen_pairs:
+            mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
+            if mr:
+                results.append(mr)
+                seen_pairs.add(pair)
 
     for i, j in iter_fuzzy_pairs(idx, cols, k=10, name_threshold=88):
-        mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
-        if mr:
-            results.append(mr)
+        pair = (min(i, j), max(i, j))  # Canonical form
+        if pair not in seen_pairs:
+            mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
+            if mr:
+                results.append(mr)
+                seen_pairs.add(pair)
 
     return results
 
