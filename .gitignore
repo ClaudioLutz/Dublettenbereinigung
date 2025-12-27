@@ -67,9 +67,10 @@ output_splink/
 # Project-specific: Generated reports
 duplicate_report.csv
 *_report.csv
-
+ 
 # Data files (uncomment if needed)
 # *.csv
 # *.parquet
 # data/
+modular_results.csv
 modular_results.csv
