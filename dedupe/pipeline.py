@@ -15,16 +15,17 @@ from .candidates import iter_exact_pairs, iter_fuzzy_pairs
 from .scoring import score_pair, MatchResult
 
 
-def process_block(idx: np.ndarray, cols: dict[str, object], params: BlockingParams) -> list[MatchResult]:
+def process_block(idx: np.ndarray, cols: dict[str, object], params: BlockingParams,
+                  fuzzy_threshold: float = 0.80, enable_address_aware: bool = True) -> list[MatchResult]:
     results: list[MatchResult] = []
 
     for i, j in iter_exact_pairs(idx, cols):
-        mr = score_pair(i, j, cols)
+        mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
         if mr:
             results.append(mr)
 
     for i, j in iter_fuzzy_pairs(idx, cols, k=10, name_threshold=88):
-        mr = score_pair(i, j, cols)
+        mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
         if mr:
             results.append(mr)
 
@@ -37,7 +38,8 @@ def _write_results(rows: Iterable[MatchResult], writer: csv.writer) -> None:
 
 
 def run_pipeline(
-    query: str, db_cfg: DbConfig, out_path: str, workers: int = 0, chunksize: int = 200_000
+    query: str, db_cfg: DbConfig, out_path: str, workers: int = 0, chunksize: int = 200_000,
+    fuzzy_threshold: float = 0.80, enable_address_aware: bool = True
 ) -> None:
     engine = create_mssql_engine(db_cfg)
     dfs = read_sql_df(engine, query, chunksize=chunksize)
@@ -63,7 +65,7 @@ def run_pipeline(
             with ThreadPoolExecutor(max_workers=max_workers) as ex:
                 futures = []
                 for idx in blocks:
-                    futures.append(ex.submit(process_block, idx, cols, params))
+                    futures.append(ex.submit(process_block, idx, cols, params, fuzzy_threshold, enable_address_aware))
                     if len(futures) >= in_flight:
                         for fut in as_completed(futures[:max_workers]):
                             _write_results(fut.result(), writer)
