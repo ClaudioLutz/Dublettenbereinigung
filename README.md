@@ -31,65 +31,44 @@ A high-performance Python tool designed to identify duplicate records in large d
     pip install -r requirements.txt
     ```
 
+##  architecture
+
+The supported CLI entrypoint for this project is `scripts/run_dedupe.py`. The supported package API is the `dedupe` package, which contains the core deduplication pipeline and its components.
+
 ## ⚙️ Configuration
 
 ### Data Source
-The project is currently configured to load data from a SQL Server database via `data.py`.
-
-To use your own data source:
-1.  **Option A**: Modify `data.py` to connect to your specific database.
-2.  **Option B**: Modify `run_optimized_analysis.py` to load your data (e.g., from a CSV file) into a Pandas DataFrame instead of calling `lade_daten`.
-
-Example for CSV loading in `run_optimized_analysis.py`:
-```python
-# Replace this:
-# df = lade_daten(engine, query)
-
-# With this:
-df = pd.read_csv('your_data.csv')
-```
+The project is configured to load data from a SQL Server database using environment variables. See the "Secrets & Environment" section for details. The `scripts/run_dedupe.py` script accepts a SQL query file as input.
 
 ## 🏃 Usage
 
-The main entry point for running the heuristic analysis is `run_optimized_analysis.py`.
+The main entry point for running the deduplication pipeline is `scripts/run_dedupe.py`.
 
 ### Basic Run
 Process the full dataset with default settings:
 ```bash
-python run_optimized_analysis.py
+python scripts/run_dedupe.py --query-file query.sql --out duplicates.csv
 ```
 
 ### Command Line Arguments
 
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `--limit <n>` | Process only the first `n` records (useful for testing). | `None` (All) |
-| `--confidence <n>` | Minimum confidence score (0-100) to consider a match. | `70.0` |
-| `--fuzzy-threshold <n>` | Threshold (0.0-1.0) for fuzzy string matching. | `0.7` |
-| `--no-parallel` | Disable parallel processing (run on a single core). | `False` |
-| `--benchmark` | Run a performance benchmark on sample sizes before full analysis. | `False` |
-| `--output <file>` | Filename for the results CSV. | `duplicates_results.csv` |
-| `--no-multipass` | Disable the multi-pass blocking strategy (runs only the primary pass). | `False` |
-| `--max-block-size <n>` | Maximum size of a block before sub-blocking is triggered. | `10000` |
-| `--no-address-aware` | Disable address-aware prefiltering. | `False` |
-| `--db-user <user>` | SQL Server username. | Env `DB_USER` |
-| `--db-password <pwd>` | SQL Server password. | Env `DB_PASSWORD` |
+| Argument | Description |
+|---|---|
+| `--query-file` | Path to the SQL query file. |
+| `--out` | Output CSV path. |
+| `--workers` | Number of worker threads (0=auto). |
+| `--prompt-password` | Prompt for DB password instead of using env var. |
 
 ### Examples
 
-**Run a benchmark to estimate processing time:**
+**Run with a specific query file and output path:**
 ```bash
-python run_optimized_analysis.py --benchmark --limit 100000
+python scripts/run_dedupe.py --query-file my_query.sql --out my_duplicates.csv
 ```
 
-**Run analysis with stricter matching criteria:**
+**Run with 4 worker threads:**
 ```bash
-python run_optimized_analysis.py --confidence 80.0 --fuzzy-threshold 0.8
-```
-
-**Run without multi-pass blocking (faster but lower recall):**
-```bash
-python run_optimized_analysis.py --no-multipass
+python scripts/run_dedupe.py --query-file query.sql --out duplicates.csv --workers 4
 ```
 
 ## 🧠 Splink Probabilistic Deduplication
