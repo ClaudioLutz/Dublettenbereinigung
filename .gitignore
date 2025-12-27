@@ -72,3 +72,4 @@ duplicate_report.csv
 # *.csv
 # *.parquet
 # data/
+modular_results.csv
