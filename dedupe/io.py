@@ -10,9 +10,16 @@ from .config import DbConfig
 
 
 def create_mssql_engine(cfg: DbConfig) -> Engine:
+<<<<<<< HEAD
+    # Support Windows Authentication if user/password are empty or "WIN_AUTH"
+    use_windows_auth = not cfg.user or not cfg.password or cfg.user.upper() == "WIN_AUTH"
+    
+    if use_windows_auth:
+=======
     # Check if Windows Authentication (empty user/password)
     if not cfg.user and not cfg.password:
         # Windows Authentication
+>>>>>>> 60fea81b9feec9ada01b362be681d2b95cad2049
         odbc = (
             f"DRIVER={{{cfg.driver}}};"
             f"SERVER={cfg.server};DATABASE={cfg.database};"
@@ -21,7 +28,10 @@ def create_mssql_engine(cfg: DbConfig) -> Engine:
             f"TrustServerCertificate={'yes' if cfg.trust_server_certificate else 'no'};"
         )
     else:
+<<<<<<< HEAD
+=======
         # SQL Server Authentication
+>>>>>>> 60fea81b9feec9ada01b362be681d2b95cad2049
         odbc = (
             f"DRIVER={{{cfg.driver}}};"
             f"SERVER={cfg.server};DATABASE={cfg.database};UID={cfg.user};PWD={cfg.password};"

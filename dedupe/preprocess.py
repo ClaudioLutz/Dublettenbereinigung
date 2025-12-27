@@ -13,6 +13,14 @@ def _norm_series(s: pd.Series) -> pd.Series:
     s = s.astype("string")
     s = s.fillna("")
     s = s.str.strip().str.lower()
+    
+    # German umlaut normalization BEFORE unidecode
+    # This ensures "Müller" and "Mueller" both normalize to "mueller"
+    s = s.str.replace('ß', 'ss', regex=False)
+    s = s.str.replace('ü', 'ue', regex=False)
+    s = s.str.replace('ä', 'ae', regex=False)
+    s = s.str.replace('ö', 'oe', regex=False)
+    
     s = s.map(unidecode)
     s = s.str.replace(_NON_ALNUM, " ", regex=True)
     s = s.str.replace(_WS, " ", regex=True).str.strip()
