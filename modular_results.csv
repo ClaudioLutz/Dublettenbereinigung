@@ -1,73 +1,83 @@
 match_id,confidence,match_type,position,index,vorname,name,name2,strasse,hausnummer,plz,ort,crefo,geburtstag,jahrgang
-408160487_423884380,62.72727272727273,fuzzy_normal,A,1366,Marc-André,Costa Gomez,,route du Jorat,73,100000,Lausanne,408160487,1960-11-19 00:00:00,1960.0
-408160487_423884380,62.72727272727273,fuzzy_normal,B,3022,Marco Andres,Costa Gomez,,route du Jorat,,100026,Lausanne 26,423884380,1960-11-19 00:00:00,1960.0
-424170238_423884380,77.5,fuzzy_normal,A,2988,Marco Andres,Costa,Gomez,route du Jorat,71a,100026,Lausanne 26,424170238,1960-11-19 00:00:00,1960.0
-424170238_423884380,77.5,fuzzy_normal,B,3022,Marco Andres,Costa Gomez,,route du Jorat,,100026,Lausanne 26,423884380,1960-11-19 00:00:00,1960.0
-423516997_423997259,63.18181818181818,fuzzy_normal,A,1416,Maksim,Petrakov,,route de Cojonnex,11a,100000,Lausanne,423516997,1993-03-17 00:00:00,1993.0
-423516997_423997259,63.18181818181818,fuzzy_normal,B,1763,Maxim,Petrakov,,route de Cojonnex,11a,100025,Lausanne 25,423997259,1993-03-17 00:00:00,1993.0
-423761053_427321218,67.22222222222223,fuzzy_normal,A,1520,Elizabeth,Baggenstos,,chemin des Milliettes,1e,100000,Lausanne,423761053,NaT,nan
-423761053_427321218,67.22222222222223,fuzzy_normal,B,3072,Elisabeth,Baggenstos,,chemin des Molliettes,1E,100026,Lausanne 26,427321218,NaT,1968.0
-404359063_427142524,76.42857142857143,fuzzy_normal,A,1880,Yann Daniel,Friedly,,Route de Berne,325,100025,Lausanne 25,404359063,1976-02-14 00:00:00,1976.0
-404359063_427142524,76.42857142857143,fuzzy_normal,B,2263,Yann Daniel,Friedli,,Route de Berne,325,100025,Lausanne 25,427142524,1976-02-14 00:00:00,1976.0
-420053083_400041399,76.42857142857143,fuzzy_normal,A,1897,Markus,Steffer,-Stettler,Route de Cojonnex,79,100025,Lausanne 25,420053083,1959-03-14 00:00:00,1959.0
-420053083_400041399,76.42857142857143,fuzzy_normal,B,2018,Markus,Steffen,-Stettler,Route de Cojonnex,79,100025,Lausanne 25,400041399,1959-03-02 00:00:00,1959.0
-427582090_427476983,77.5,fuzzy_normal,A,2157,Domenica,Bohner,-Rimathé,chemin du Praz d'Eau,7,100025,Lausanne 25,427582090,1946-02-18 00:00:00,1946.0
-427582090_427476983,77.5,fuzzy_normal,B,2283,Domenica,Bohner-Rimathé,,chemin du Praz d'Eau,7,100025,Lausanne 25,427476983,1946-02-18 00:00:00,1946.0
-427479057_427584127,77.5,fuzzy_normal,A,2285,Pierre-Alain,Matthey-Breuil,,chemin de Praz Buchilly,101,100025,Lausanne 25,427479057,1952-05-09 00:00:00,1952.0
-427479057_427584127,77.5,fuzzy_normal,B,2382,Pierre-Alain,Matthey,-Breuil,chemin de Praz Buchilly,101,100025,Lausanne 25,427584127,1952-05-09 00:00:00,1952.0
-400041111_428541909,78.52941176470588,fuzzy_normal,A,2546,Sakuntala,Soborun,,Route de Marin,6c,100026,Lausanne 26,400041111,1959-09-02 00:00:00,1959.0
-400041111_428541909,78.52941176470588,fuzzy_normal,B,3168,Sakutala,Soborun,,Route de Marin,6c,100026,Lausanne 26,428541909,1959-09-20 00:00:00,1959.0
-404529477_429507528,96.66666666666667,exact_normal,A,2698,Stéphane,Nardou,,Chemin de la Planche-aux-Oies,15gVers-chez-les-Blanc,100026,Lausanne 26,404529477,1972-03-02 00:00:00,1972.0
-404529477_429507528,96.66666666666667,exact_normal,B,3258,Stéphane,Nardou,,Chemin de la Planche-aux-Oies,15g,100026,Lausanne 26,429507528,1972-03-30 00:00:00,1972.0
-404529477_429507528,96.66666666666667,exact_normal,A,2698,Stéphane,Nardou,,Chemin de la Planche-aux-Oies,15gVers-chez-les-Blanc,100026,Lausanne 26,404529477,1972-03-02 00:00:00,1972.0
-404529477_429507528,96.66666666666667,exact_normal,B,3258,Stéphane,Nardou,,Chemin de la Planche-aux-Oies,15g,100026,Lausanne 26,429507528,1972-03-30 00:00:00,1972.0
-404529477_429507528,96.66666666666667,exact_normal,A,2698,Stéphane,Nardou,,Chemin de la Planche-aux-Oies,15gVers-chez-les-Blanc,100026,Lausanne 26,404529477,1972-03-02 00:00:00,1972.0
-404529477_429507528,96.66666666666667,exact_normal,B,3258,Stéphane,Nardou,,Chemin de la Planche-aux-Oies,15g,100026,Lausanne 26,429507528,1972-03-30 00:00:00,1972.0
-405096544_427009355,77.5,fuzzy_normal,A,2764,Isabelle Marie-Clair,Genoud Nascimento,,Route du Jorat,196p,100026,Lausanne 26,405096544,1972-06-23 00:00:00,1972.0
-405096544_427009355,77.5,fuzzy_normal,B,3699,Isabelle,Genoud Nascimento,,Route du Jorat,196p,100026,Lausanne 26,427009355,1972-06-23 00:00:00,1972.0
-422534632_400018296,75.58823529411765,fuzzy_normal,A,2936,Maryline,Voide,-Monnet,Chemin des Coumenets,2,100026,Lausanne 26,422534632,1945-06-06 00:00:00,1945.0
-422534632_400018296,75.58823529411765,fuzzy_normal,B,3219,Marceline,Voide,-Monnet,Chemin des Coumenets,2,100026,Lausanne 26,400018296,1945-06-02 00:00:00,1945.0
-402722775_428272856,75.83333333333334,fuzzy_normal,A,3991,Béatrice,Stucki,-Gaehler,Chemin de la Ratavolar,3a,100027,Lausanne 27,402722775,1960-05-02 00:00:00,1960.0
-402722775_428272856,75.83333333333334,fuzzy_normal,B,4165,Beatrice,Stucky,-Gaehler,Chemin de la Ratavolar,3a,100027,Lausanne 27,428272856,1960-09-05 00:00:00,1960.0
-427477035_427582143,77.5,fuzzy_normal,A,7492,Marie-José,Chobaz-Douville,,Avenue de la Gare,11,100300,Lausanne,427477035,NaT,1955.0
-427477035_427582143,77.5,fuzzy_normal,B,9887,Marie-José,Chobaz,-Douville,Avenue de la Gare,11,100300,Lausanne,427582143,NaT,1955.0
-424063814_400119442,62.5,fuzzy_normal,A,4596,Marc,Rochat,,Rue de L'Ale 26,,100300,Lausanne,424063814,NaT,nan
-424063814_400119442,62.5,fuzzy_normal,B,5303,Marcel,Rochat,,chemin de Mornex,11,100300,Lausanne,400119442,NaT,nan
-421156315_424001599,78.07692307692307,fuzzy_normal,A,5040,Robert,Maylath,,Gd-St-Jean,6,100300,Lausanne,421156315,NaT,1975.0
-421156315_424001599,78.07692307692307,fuzzy_normal,B,8409,Roberto,Maylath,,rue Grand-St-Jean,6,100300,Lausanne,424001599,NaT,1975.0
-422576866_428353109,78.07692307692307,fuzzy_normal,A,5378,Ioannis,Gerassimidis,,Avenue Sainte-Luce,10,100300,Lausanne,422576866,1953-08-31 00:00:00,1953.0
-422576866_428353109,78.07692307692307,fuzzy_normal,B,9986,Iannis,Gerassimidis,,Avenue Sainte-Luce,10,100300,Lausanne,428353109,1953-08-31 00:00:00,1953.0
-404215263_420054978,73.75,fuzzy_normal,A,6105,Elie,Elkaïm,,Rue du Lion-d'Or,2,100300,Lausanne,404215263,1966-03-22 00:00:00,1966.0
-404215263_420054978,73.75,fuzzy_normal,B,7026,Elle,Elkaim,,rue du Lion-d'Or,2,100300,Lausanne,420054978,1966-03-22 00:00:00,1966.0
-428518522_424416494,78.52941176470588,fuzzy_normal,A,8000,Stéphane,Saugy,,Rue Bellefontaine,6,100300,Lausanne,428518522,NaT,nan
-428518522_424416494,78.52941176470588,fuzzy_normal,B,8710,Stéphanie,Saugy,,Rue Bellefontaine,6,100300,Lausanne,424416494,NaT,nan
-420103696_422335792,79.28571428571429,fuzzy_normal,A,6998,Florence Dominique,Anglès,,rue Caroline,4,100300,Lausanne,420103696,1973-05-05 00:00:00,1973.0
-420103696_422335792,79.28571428571429,fuzzy_normal,B,9141,Florene Dominique,Angles,,Rue Caroline,4,100300,Lausanne,422335792,1973-05-05 00:00:00,1973.0
-420333875_408156320,77.5,fuzzy_normal,A,7088,Gloria,Duarte,Inacio,Rue des Terreaux,29,100300,Lausanne,420333875,1972-11-12 00:00:00,1972.0
-420333875_408156320,77.5,fuzzy_normal,B,7985,Gloria,Duarte Inacio,,Rue des Terreaux,29,100300,Lausanne,408156320,1972-11-12 00:00:00,1972.0
-427477627_427582725,77.5,fuzzy_normal,A,7494,Françoise,Mugny-Epitaux,,Rue du Midi,9,100300,Lausanne,427477627,1951-07-21 00:00:00,1951.0
-427477627_427582725,77.5,fuzzy_normal,B,7508,Françoise,Mugny,-Epitaux,Rue du Midi,9,100300,Lausanne,427582725,1951-07-21 00:00:00,1951.0
-427582518_427477420,77.5,fuzzy_normal,A,7512,Jeannine,Genet,-Jacquelin,Rue des Terreaux,19,100300,Lausanne,427582518,1946-04-02 00:00:00,1946.0
-427582518_427477420,77.5,fuzzy_normal,B,9863,Jeannine,Genet-Jacquelin,,Rue des Terreaux,19,100300,Lausanne,427477420,1946-04-02 00:00:00,1946.0
-427653662_427553116,77.5,fuzzy_normal,A,7536,Catherine,Nicod,-Schmutz,Avenue Louis-Ruchonnet,41,100300,Lausanne,427653662,NaT,1964.0
-427653662_427553116,77.5,fuzzy_normal,B,9744,Catherine,Nicod-Schmutz,,Avenue Louis-Ruchonnet,41,100300,Lausanne,427553116,NaT,1944.0
-405651546_421998920,100.0,exact_normal,A,7631,Jean,Bénédict,,place Chauderon,3,100300,Lausanne,405651546,1928-09-24 00:00:00,1928.0
-405651546_421998920,100.0,exact_normal,B,9133,Jean,Bénédict,,Place Chauderon,3,100300,Lausanne,421998920,1928-09-24 00:00:00,1928.0
-405651546_421998920,100.0,exact_normal,A,7631,Jean,Bénédict,,place Chauderon,3,100300,Lausanne,405651546,1928-09-24 00:00:00,1928.0
-405651546_421998920,100.0,exact_normal,B,9133,Jean,Bénédict,,Place Chauderon,3,100300,Lausanne,421998920,1928-09-24 00:00:00,1928.0
-405651546_421998920,100.0,exact_normal,A,7631,Jean,Bénédict,,place Chauderon,3,100300,Lausanne,405651546,1928-09-24 00:00:00,1928.0
-405651546_421998920,100.0,exact_normal,B,9133,Jean,Bénédict,,Place Chauderon,3,100300,Lausanne,421998920,1928-09-24 00:00:00,1928.0
-426778884_424178824,77.5,fuzzy_normal,A,7654,Elyas Slim Michael,Slim,,Rue du Grand-Chêne,4,100300,Lausanne,426778884,1985-08-19 00:00:00,1985.0
-426778884_424178824,77.5,fuzzy_normal,B,8293,Elyas,Slim,,Rue du Grand-Chêne,4,100300,Lausanne,424178824,1985-08-19 00:00:00,1985.0
-428417844_423939729,73.0,fuzzy_normal,A,8116,Priyanthy,Tharumaretnam,,Rue Saint-Martin,22,100300,Lausanne,428417844,NaT,nan
-428417844_423939729,73.0,fuzzy_normal,B,8815,Princy,Tharumaretnam,,Rue Saint-Martin,22,100300,Lausanne,423939729,NaT,1997.0
-424176050_428578816,79.28571428571429,fuzzy_normal,A,8618,Nermana,Arnaut Husejnovic,,Avenue Louis-Ruchonnet,37,100300,Lausanne,424176050,NaT,1985.0
-424176050_428578816,79.28571428571429,fuzzy_normal,B,9823,Nermana,Arnaut Husejinovic,,Avenue Louis-Ruchonnet,37,100300,Lausanne,428578816,NaT,1996.0
-428730191_428483129,76.42857142857143,fuzzy_normal,A,9737,Zouhoun,Chaibi,,Rue Centrale,28,100300,Lausanne,428730191,NaT,nan
-428730191_428483129,76.42857142857143,fuzzy_normal,B,9906,Zouhour,Chaibi,,Rue Centrale,28,100300,Lausanne,428483129,NaT,nan
-427582439_427477340,77.5,fuzzy_normal,A,9712,Vincent,Gaudiello,-Studer,Place de la Palud,13,100300,Lausanne,427582439,1966-07-07 00:00:00,1966.0
-427582439_427477340,77.5,fuzzy_normal,B,9740,Vincent,Gaudiello-Studer,,Place de la Palud,13,100300,Lausanne,427477340,1966-07-07 00:00:00,1966.0
-427477815_427582906,77.5,fuzzy_normal,A,9742,Pedro,Cid-Cruces,,galerie Saint-François,B,100300,Lausanne,427477815,1950-07-03 00:00:00,1950.0
-427477815_427582906,77.5,fuzzy_normal,B,9901,Pedro,Cid,-Cruces,galerie Saint-François,B,100300,Lausanne,427582906,1950-07-03 00:00:00,1950.0
-427476831_427581943,77.5,fuzzy_normal,A,9865,Pierre,Juon-Blaser,,Rue des Terreaux,5,100300,Lausanne,427476831,NaT,nan
-427476831_427581943,77.5,fuzzy_normal,B,9883,Pierre,Juon,-Blaser,Rue des Terreaux,5,100300,Lausanne,427581943,NaT,nan
+429153556_427569941,100.0,exact_normal,A,1746,Ruedi,Schneider,,Sändli,,965700,Unterwasser,429153556,NaT,nan
+429153556_427569941,100.0,exact_normal,B,2351,Ruedi,Schneider,,Sändli,,965700,Unterwasser,427569941,NaT,nan
+428962219_428947133,86.66666666666666,exact_normal,A,240,Christa,Salzmann,,Oberdorf,,965800,Oberdorf SG,428962219,NaT,nan
+428962219_428947133,86.66666666666666,exact_normal,B,1479,Christa,Salzmann,,Oberdorfstrasse,35,965800,Wildhaus,428947133,NaT,nan
+404942176_422624996,77.22222222222223,fuzzy_normal,A,557,Christian,Bättig,-Maurer,Oberdorfstrasse,4,965800,Wildhaus,404942176,NaT,nan
+404942176_422624996,77.22222222222223,fuzzy_normal,B,1296,Christine,Bättig,-Maurer,Oberdorfstrasse,4,965800,Wildhaus,422624996,NaT,nan
+427542195_429128298,100.0,exact_normal,A,1420,Elisabeth,Giger-Abderhalden,,Seewis,332,965800,Wildhaus,427542195,1945-04-09 00:00:00,1945.0
+427542195_429128298,100.0,exact_normal,B,1487,Elisabeth,Giger,-Abderhalden,Seewis,332,965800,Wildhaus,429128298,1945-04-09 00:00:00,1945.0
+427542184_429128283,100.0,exact_normal,A,1588,Rösli,Huber-Lusti,,Burst,2421,965700,Unterwasser,427542184,NaT,1959.0
+427542184_429128283,100.0,exact_normal,B,1754,Rösli,Huber,-Lusti,Burst,2421,965700,Unterwasser,429128283,NaT,1959.0
+429356097_426748951,77.5,fuzzy_normal,A,1714,Margarete,Fontanive,,Sändliweg,11,965700,Unterwasser,429356097,NaT,1983.0
+429356097_426748951,77.5,fuzzy_normal,B,2386,Margarete,Fontanive von Glenck,,Sändliweg,11,965700,Unterwasser,426748951,NaT,1983.0
+427569933_429153551,100.0,exact_normal,A,1590,Ernst,Ott-Müller,,Chüeboden,700,965700,Unterwasser,427569933,NaT,1932.0
+427569933_429153551,100.0,exact_normal,B,1738,Ernst,Ott,-Müller,Chüeboden,700,965700,Unterwasser,429153551,NaT,1932.0
+426549926_409306050,68.3041958041958,fuzzy_normal,A,1604,Michael,Habernacher,,Hauptstrasse,12,965700,Unterwasser,426549926,1985-08-05 00:00:00,1985.0
+426549926_409306050,68.3041958041958,fuzzy_normal,B,2409,Michel,Habermacher,,Hauptstrasse,12,9657,Unterwasser,409306050,1985-08-15 00:00:00,1985.0
+403639969_428219361,78.07692307692307,fuzzy_normal,A,1931,Andreas,Allmann,,Dorfstrasse,27,965700,Unterwasser,403639969,1966-05-13 00:00:00,1966.0
+403639969_428219361,78.07692307692307,fuzzy_normal,B,2297,Andrea,Allmann,,Dorfstrasse,27,965700,Unterwasser,428219361,1966-05-13 00:00:00,1966.0
+429128287_427542187,100.0,exact_normal,A,2302,Margrit,Ammann,-Wittenwiler,Nesselhaldenstrasse,18,965700,Unterwasser,429128287,1955-08-02 00:00:00,1955.0
+429128287_427542187,100.0,exact_normal,B,2370,Margrit,Ammann-Wittenwiler,,Nesselhaldenstrasse,18,965700,Unterwasser,427542187,1955-08-02 00:00:00,1955.0
+427542177_429021715,100.0,exact_normal,A,2423,Franziska,Egle-Krähemann,,Berg,540,965600,Alt St. Johann,427542177,1971-08-10 00:00:00,1971.0
+427542177_429021715,100.0,exact_normal,B,3081,Franziska,Egle,-Krähemann,Berg,540,965600,Alt St. Johann,429021715,1971-08-10 00:00:00,1971.0
+404787821_428315658,76.875,fuzzy_normal,A,2434,Elisabeth,Bollhalder,-Looser,Hauptstrasse,13,965600,Alt St. Johann,404787821,1972-02-13 00:00:00,1972.0
+404787821_428315658,76.875,fuzzy_normal,B,3027,Elsbeth,Bollhalder,-Looser,Hauptstrasse,13,965600,Alt St. Johann,428315658,1972-04-13 00:00:00,1972.0
+428560244_405588652,75.83333333333334,fuzzy_normal,A,2495,Stetan,Moor,,Tobelstrasse,23,965600,Alt St. Johann,428560244,1969-06-29 00:00:00,1969.0
+428560244_405588652,75.83333333333334,fuzzy_normal,B,2639,Stefan,Moor,,Tobelstrasse,23,965600,Alt St. Johann,405588652,1969-06-29 00:00:00,1969.0
+408699542_422813148,77.22222222222223,fuzzy_normal,A,2538,Hedi,Huser,Schmid,Burst,2302,965600,Alt St. Johann,408699542,1973-11-24 00:00:00,1973.0
+408699542_422813148,77.22222222222223,fuzzy_normal,B,2823,Heidi,Huser,-Schmid,Burst,2302,965600,Alt St. Johann,422813148,1973-11-24 00:00:00,1973.0
+427740337_429220129,100.0,exact_normal,A,2992,Beda,Murer,,Hauptstrasse,,965600,Alt St. Johann,427740337,NaT,1981.0
+427740337_429220129,100.0,exact_normal,B,3042,Beda,Murer,,Hauptstrasse,,965600,Alt St. Johann,429220129,NaT,1981.0
+427542179_429128281,100.0,exact_normal,A,2997,Margrit,Bühler-Gantenbein,,Berg,492,965600,Alt St. Johann,427542179,1972-12-11 00:00:00,1972.0
+427542179_429128281,100.0,exact_normal,B,3075,Margrit,Bühler,-Gantenbein,Berg,492,965600,Alt St. Johann,429128281,1972-12-11 00:00:00,1972.0
+429128264_427542161,100.0,exact_normal,A,3093,Ernst,Rutz,-Grob,Müli,543,965500,Stein SG,429128264,1966-07-01 00:00:00,1966.0
+429128264_427542161,100.0,exact_normal,B,3430,Ernst,Rutz-Grob,,Müli,543,965500,Stein SG,427542161,1966-07-01 00:00:00,1966.0
+425799354_404350911,78.68421052631578,fuzzy_normal,A,3147,Hans Jakob,Götte,,Fuchsboden,253,965500,Stein SG,425799354,NaT,1965.0
+425799354_404350911,78.68421052631578,fuzzy_normal,B,3337,Hansjakob,Götte,,Fuchsboden,253,965500,Stein SG,404350911,NaT,1965.0
+427542173_429128276,100.0,exact_normal,A,3183,Hans,Koller-Metzger,,Stigen,395,965500,Stein SG,427542173,1965-02-20 00:00:00,1965.0
+427542173_429128276,100.0,exact_normal,B,3388,Hans,Koller,-Metzger,Stigen,395,965500,Stein SG,429128276,1965-02-20 00:00:00,1965.0
+427542176_429128279,100.0,exact_normal,A,3181,Dorothea,Ziehler-Bösch,,Dorf,296,965500,Stein SG,427542176,NaT,nan
+427542176_429128279,100.0,exact_normal,B,3390,Dorothea,Ziehler,-Bösch,Dorf,296,965500,Stein SG,429128279,NaT,nan
+402716168_408417838,65.83333333333334,fuzzy_normal,A,3254,Agathe,Rechsteiner,,Müli,546,965500,Stein SG,402716168,1941-04-26 00:00:00,1941.0
+402716168_408417838,65.83333333333334,fuzzy_normal,B,3343,Agatha,Rechsteiner,,Dorf,,965500,Stein SG,408417838,1941-04-24 00:00:00,1941.0
+421007068_422030390,77.22222222222223,fuzzy_normal,A,3469,Christina,Bösch,-Strübi,Sonnenbühl,1658,965200,Neu St. Johann,421007068,NaT,1975.0
+421007068_422030390,77.22222222222223,fuzzy_normal,B,3489,Christian,Bösch,-Strübi,Sonnenbühl,1658,965200,Neu St. Johann,422030390,NaT,nan
+427542171_429128274,100.0,exact_normal,A,3472,Ursula,Stutz-Hächler,,Herrenmühlestrasse,11,965200,Neu St. Johann,427542171,1946-05-17 00:00:00,1946.0
+427542171_429128274,100.0,exact_normal,B,4195,Ursula,Stutz,-Hächler,Herrenmühlestrasse,11,965200,Neu St. Johann,429128274,1946-05-17 00:00:00,1946.0
+427867708_403639579,75.58823529411765,fuzzy_normal,A,3530,Hansruedi,Huser,-Wenk,Hof-Schlatt,1692,965200,Neu St. Johann,427867708,2004-12-11 00:00:00,2004.0
+427867708_403639579,75.58823529411765,fuzzy_normal,B,3907,Hansueli,Huser,-Wenk,Hof-Schlatt,1692,965200,Neu St. Johann,403639579,2004-12-11 00:00:00,2004.0
+428511285_428350034,75.58823529411765,fuzzy_normal,A,3584,Messahina,Glogg,,Johanneumstrasse,3,965200,Neu St. Johann,428511285,1993-07-28 00:00:00,1993.0
+428511285_428350034,75.58823529411765,fuzzy_normal,B,4160,Mesalina,Glogg,,Johanneumstrasse,3,965200,Neu St. Johann,428350034,1993-07-28 00:00:00,1993.0
+429353349_429128260,100.0,exact_normal,A,6341,Ulrich,Giger,-Baumann,Schneit,802,965000,Nesslau,429353349,NaT,1958.0
+429353349_429128260,100.0,exact_normal,B,6430,Ulrich,Giger,-Baumann,Schneit,802,965000,Nesslau,429128260,NaT,1990.0
+428311156_408962092,75.0,fuzzy_normal,A,4282,Hanny,Ackermann,-Kobler,Gublen,2043,965100,Ennetbühl,428311156,1961-06-24 00:00:00,1961.0
+428311156_408962092,75.0,fuzzy_normal,B,4449,Hanni,Ackermann,-Kobler,Gublen,2043,965100,Ennetbühl,408962092,1961-06-24 00:00:00,1961.0
+428250859_402715619,73.18181818181819,fuzzy_normal,A,4284,Vreni,Hüberli,-Wickli,Obern,311,965100,Ennetbühl,428250859,1970-06-05 00:00:00,1970.0
+428250859_402715619,73.18181818181819,fuzzy_normal,B,4331,Verena,Hueberli,-Wickli,Obern,311,965100,Ennetbühl,402715619,1970-05-06 00:00:00,1970.0
+429297659_405829271,100.0,exact_normal,A,4308,Jolanda,Stauffacher,-Lieberherr,Evabrunnen,1863,965100,Ennetbühl,429297659,NaT,1942.0
+429297659_405829271,100.0,exact_normal,B,4489,Jolanda,Stauffacher,-Lieberherr,Evabrunnen,1863,965100,Ennetbühl,405829271,NaT,1962.0
+429153541_427569920,100.0,exact_normal,A,4322,Hans-Ulrich,Meier,-Rüegg,Gublenstrasse,1370,965100,Ennetbühl,429153541,NaT,nan
+429153541_427569920,100.0,exact_normal,B,4653,Hans-Ulrich,Meier-Rüegg,,Gublenstrasse,1370,965100,Ennetbühl,427569920,NaT,nan
+429128278_427542175,100.0,exact_normal,A,4730,Margrith,Rutz,-Arn,Schneit,821,965000,Nesslau,429128278,1975-03-29 00:00:00,1975.0
+429128278_427542175,100.0,exact_normal,B,5030,Margrith,Rutz-Arn,,Schneit,821,965000,Nesslau,427542175,1975-03-29 00:00:00,1975.0
+429035268_429280085,75.0,fuzzy_normal,A,4748,Gizim,Isenegger,,Austrasse,9,965000,Nesslau,429035268,NaT,1989.0
+429035268_429280085,75.0,fuzzy_normal,B,6321,Gizem,Isenegger,,Austrasse,9,965000,Nesslau,429280085,NaT,1989.0
+421942430_429298084,100.0,exact_normal,A,4813,Martin,Vock,,Schneit,2647,965000,Nesslau,421942430,NaT,1990.0
+421942430_429298084,100.0,exact_normal,B,6335,Martin,Vock,,Schneit,2647,965000,Nesslau,429298084,NaT,1979.0
+424816050_424397203,75.83333333333334,fuzzy_normal,A,4956,Damian,Schmid,,Zelg-Bühl,178,965000,Nesslau,424816050,1999-05-22 00:00:00,1999.0
+424816050_424397203,75.83333333333334,fuzzy_normal,B,5101,Damina,Schmid,,Bühl,178,965000,Nesslau,424397203,1999-05-22 00:00:00,1999.0
+424532665_428242165,100.0,exact_normal,A,5132,Daniel,Wittenwiler,,Rain-Lutenwil,1548,965000,Nesslau,424532665,NaT,1988.0
+424532665_428242165,100.0,exact_normal,B,6348,Daniel,Wittenwiler,,Rain-Lutenwil,1548,965000,Nesslau,428242165,NaT,1979.0
+427542154_429128257,100.0,exact_normal,A,6228,Hilde,Haller-Bensel,,Kammern,432,965000,Nesslau,427542154,NaT,nan
+427542154_429128257,100.0,exact_normal,B,6389,Hilde,Haller,-Bensel,Kammern,432,965000,Nesslau,429128257,NaT,nan
+427542148_429128252,100.0,exact_normal,A,6463,Annelies,Rutz-Daepp,,Sack-Hinterbühl,8,964300,Krummenau,427542148,1977-02-19 00:00:00,1977.0
+427542148_429128252,100.0,exact_normal,B,6892,Annelies,Rutz,-Daepp,Sack-Hinterbühl,8,964300,Krummenau,429128252,1977-02-19 00:00:00,1977.0
+427642834_427542147,100.0,exact_normal,A,6964,Niklaus,Lieberherr,-Schlumpf,Hummelbühl,30,964300,Krummenau,427642834,1942-08-03 00:00:00,1942.0
+427642834_427542147,100.0,exact_normal,B,6972,Niklaus,Lieberherr-Schlumpf,,Hummelbühl,30,964300,Krummenau,427542147,1942-08-03 00:00:00,1942.0
+427642817_427542130,100.0,exact_normal,A,7351,Hans,Lüthi,-Künzli,Wiesenweg,17,964200,Ebnat-Kappel,427642817,1932-02-03 00:00:00,1932.0
+427642817_427542130,100.0,exact_normal,B,7837,Hans,Lüthi-Künzli,,Wiesenweg,17,964200,Ebnat-Kappel,427542130,1932-02-03 00:00:00,1932.0
+428529158_402713980,74.04761904761904,fuzzy_normal,A,7575,Franceschina,Giampietro,,Kapplerstrasse,46,964200,Ebnat-Kappel,428529158,NaT,nan
+428529158_402713980,74.04761904761904,fuzzy_normal,B,7956,Francesco,Giampietro,,Kapplerstrasse,46,964200,Ebnat-Kappel,402713980,NaT,1957.0
+428397613_404842129,100.0,exact_normal,A,7551,Monika,Rau,,Hüsliberg,549,964200,Ebnat-Kappel,428397613,NaT,nan
+428397613_404842129,100.0,exact_normal,B,9332,Monika,Rau,,Hüsliberg,,964200,Ebnat-Kappel,404842129,NaT,nan

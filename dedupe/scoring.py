@@ -171,11 +171,26 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     first_i = cols["first"].iloc[i]
     first_j = cols["first"].iloc[j]
     
-    # Check for exact match (Stage 1)
-    is_exact_normal = (first_i == first_j and last_i == last_j and 
-                       first_i and last_i and first_j and last_j)
-    is_exact_swapped = (first_i == last_j and last_i == first_j and 
-                        first_i and last_i and first_j and last_j)
+    # CRITICAL FIX: When name2 is present in one record but not the other,
+    # combine name+name2 for fair comparison
+    # Example: "Haller" + "Bensel" vs "Haller Bensel" should match 100%
+    last_i_for_comparison = last_i
+    last_j_for_comparison = last_j
+    
+    if name2_i and not name2_j:
+        # Combine last_i with name2_i if name2_i is a suffix of last_j
+        if last_j.endswith(name2_i):
+            last_i_for_comparison = (last_i + " " + name2_i).strip()
+    elif name2_j and not name2_i:
+        # Combine last_j with name2_j if name2_j is a suffix of last_i
+        if last_i.endswith(name2_j):
+            last_j_for_comparison = (last_j + " " + name2_j).strip()
+    
+    # Check for exact match (Stage 1) - use the combined names for comparison
+    is_exact_normal = (first_i == first_j and last_i_for_comparison == last_j_for_comparison and 
+                       first_i and last_i_for_comparison and first_j and last_j_for_comparison)
+    is_exact_swapped = (first_i == last_j_for_comparison and last_i_for_comparison == first_j and 
+                        first_i and last_i_for_comparison and first_j and last_j_for_comparison)
     
     # Get address components
     plz_i = cols["plz"].iloc[i]
@@ -184,12 +199,15 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     house_j = cols["house"].iloc[j]
     street_i = cols["street"].iloc[i]
     street_j = cols["street"].iloc[j]
+    ort_i = cols["ort"].iloc[i]
+    ort_j = cols["ort"].iloc[j]
 
     plz_score = 100.0 if (plz_i != "" and plz_i == plz_j) else 0.0
     house_score = 100.0 if (house_i != "" and house_i == house_j) else 0.0
     street_score = float(fuzz.WRatio(street_i, street_j)) if street_i and street_j else 0.0
+    ort_score = float(fuzz.WRatio(ort_i, ort_j)) if ort_i and ort_j else 0.0
 
-    addr_score = 0.5 * plz_score + 0.25 * house_score + 0.25 * street_score
+    addr_score = 0.4 * plz_score + 0.2 * house_score + 0.2 * street_score + 0.2 * ort_score
     
     # Calculate address ratio for confidence
     address_matches = 0
@@ -206,25 +224,28 @@ def score_pair(i: int, j: int, cols: dict[str, object],
         total_address_fields += 1
         if street_score >= 80:  # Consider 80%+ as match
             address_matches += 1
+    if ort_i and ort_j:
+        total_address_fields += 1
+        if ort_score >= 80:  # Consider 80%+ as match
+            address_matches += 1
     
     address_ratio = address_matches / max(total_address_fields, 1)
 
     # Stage 1: Exact matches
-    # VERY STRICT RULE: Even with exact name match, addresses must match VERY closely
+    # Names match exactly, but confidence depends on address similarity
     if is_exact_normal or is_exact_swapped:
-        # CRITICAL: Require same PLZ (if both have PLZ data)
+        # CRITICAL: Different PLZ = very likely different people, reject
         if plz_i and plz_j and plz_i != plz_j:
             # Different PLZ = different people, reject immediately
             return None
         
-        # CRITICAL: Require high street similarity (>70%)
-        # This filters out completely different streets like "Avenue de la Gare" vs "chemin du Chaugand"
+        # CRITICAL: Require high street similarity (>70%) when both have street data
+        # This filters out completely different streets like "Plattenholz" vs "Halden"
         if street_i and street_j and street_score < 70.0:
             # Very different streets = likely different people
             return None
         
-        # CRITICAL: Require matching house numbers (if both have house number data)
-        # Different house numbers on same street = different people!
+        # CRITICAL: Very different house numbers on same street = different people!
         if house_i and house_j and house_i != house_j:
             # Allow minor variations like "17" vs "17b" or "17a" vs "17"
             # Strip letters and compare numeric part
@@ -235,10 +256,25 @@ def score_pair(i: int, j: int, cols: dict[str, object],
             if house_i_num and house_j_num and house_i_num != house_j_num:
                 return None
         
-        # If we get here, addresses match closely enough
+        # Calculate confidence based on address match quality
+        # address_ratio already includes ort_score, street_score, house_score, and plz_score
+        # So mismatched cities will naturally reduce the score
+        
         if is_exact_normal:
-            # Exact normal: 90-100% based on address
-            confidence = 90.0 + (address_ratio * 10.0)
+            # Exact normal: Base score depends on address quality
+            # Perfect address match: 100%
+            # Partial address match: 70-99%
+            # Poor address match: 50-70%
+            if address_ratio >= 0.9:
+                # Very strong address match
+                confidence = 95.0 + (address_ratio * 5.0)  # 95-100%
+            elif address_ratio >= 0.5:
+                # Moderate address match
+                confidence = 70.0 + (address_ratio * 25.0)  # 70-95%
+            else:
+                # Weak address match - names match but addresses very different
+                confidence = 50.0 + (address_ratio * 20.0)  # 50-70%
+            
             return MatchResult(
                 i=i, j=j, 
                 score=confidence, 
@@ -249,8 +285,14 @@ def score_pair(i: int, j: int, cols: dict[str, object],
             )
         
         if is_exact_swapped:
-            # Exact swapped: 85-95% based on address
-            confidence = 85.0 + (address_ratio * 10.0)
+            # Exact swapped: penalize by 5% for name swapping
+            if address_ratio >= 0.9:
+                confidence = 90.0 + (address_ratio * 5.0)  # 90-95%
+            elif address_ratio >= 0.5:
+                confidence = 65.0 + (address_ratio * 25.0)  # 65-90%
+            else:
+                confidence = 45.0 + (address_ratio * 20.0)  # 45-65%
+            
             return MatchResult(
                 i=i, j=j, 
                 score=confidence, 
@@ -260,8 +302,8 @@ def score_pair(i: int, j: int, cols: dict[str, object],
                 is_swapped=True
             )
     
-    # Stage 2: Fuzzy matching with swap detection
-    name_comparison = compare_names_with_swap(first_i, last_i, first_j, last_j)
+    # Stage 2: Fuzzy matching with swap detection - use combined names
+    name_comparison = compare_names_with_swap(first_i, last_i_for_comparison, first_j, last_j_for_comparison)
     best_score = name_comparison['best_score']
     is_swapped = name_comparison['is_swapped']
     
@@ -294,11 +336,11 @@ def score_pair(i: int, j: int, cols: dict[str, object],
             
             # If address is not strong enough, check phonetic fallback
             if COLOGNE_PHONETICS_AVAILABLE:
-                # Get phonetic codes (compute if not in cols, or use precomputed if available)
+                # Get phonetic codes - use combined names for comparison
                 v_i_phon = get_cologne_phonetic(first_i)
-                n_i_phon = get_cologne_phonetic(last_i)
+                n_i_phon = get_cologne_phonetic(last_i_for_comparison)
                 v_j_phon = get_cologne_phonetic(first_j)
-                n_j_phon = get_cologne_phonetic(last_j)
+                n_j_phon = get_cologne_phonetic(last_j_for_comparison)
                 
                 # Check phonetic match (normal and swapped)
                 phonetic_match_normal = (v_i_phon and n_i_phon and v_j_phon and n_j_phon and
