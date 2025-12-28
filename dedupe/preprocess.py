@@ -8,7 +8,7 @@ from unidecode import unidecode
 _WS = re.compile(r"\s+")
 _NON_ALNUM = re.compile(r"[^0-9a-z]+")
 
-# Swiss multilingual street type tokens to normalize/remove
+# Swiss multilingual street type tokens to normalize/remove (for blocking only)
 _STREET_TYPES = {
     # German
     'str', 'strasse', 'strasse', 'gasse', 'weg', 'platz', 'allee', 'ring', 'hof',
@@ -18,6 +18,41 @@ _STREET_TYPES = {
     'via', 'viale', 'piazza', 'corso', 'largo',
     # Common abbreviations
     'st', 'ave', 'rd', 'pl', 'blvd'
+}
+
+# Canonical type token mapping: abbreviation → canonical form
+# This preserves type distinction while normalizing abbreviations
+_STREET_TYPE_CANONICALIZATION = {
+    # German
+    'str': 'strasse',
+    'strasse': 'strasse',
+    'gasse': 'gasse',
+    'weg': 'weg',
+    'platz': 'platz',
+    'allee': 'allee',
+    'ring': 'ring',
+    'hof': 'hof',
+    # French
+    'rue': 'rue',
+    'av': 'avenue',
+    'avenue': 'avenue',
+    'ch': 'chemin',
+    'chemin': 'chemin',
+    'rte': 'route',
+    'route': 'route',
+    'pl': 'place',
+    'place': 'place',
+    'cours': 'cours',
+    'bd': 'boulevard',
+    'blvd': 'boulevard',
+    'boulevard': 'boulevard',
+    # Italian
+    'v': 'via',
+    'via': 'via',
+    'viale': 'viale',
+    'piazza': 'piazza',
+    'corso': 'corso',
+    'largo': 'largo',
 }
 
 # Street type suffixes for splitting concatenated street names (e.g., "Hofstattstrasse" -> "hofstatt" + "strasse")
@@ -144,6 +179,105 @@ def street_signature(street: pd.Series) -> pd.Series:
         # Join with "-"
         return "-".join(prefixed)
 
+    return street.map(_process_street).astype("string")
+
+
+def normalize_street_full(street: pd.Series) -> pd.Series:
+    """
+    Normalize street names for type-preserving swisstopo joins (multilingual safe).
+    
+    This function preserves street type tokens (Gasse vs Hof, Rue vs Route, Via vs Viale)
+    while canonicalizing abbreviations within each language.
+    
+    Strategy:
+    - Split concatenated street names (e.g., "hofstattstrasse" -> ["hofstatt", "strasse"])
+    - Canonicalize type tokens (e.g., "str" → "strasse", "av" → "avenue", "v" → "via")
+    - Keep all tokens (including canonicalized type tokens)
+    - Join tokens back
+    
+    This prevents collisions like:
+    - "Augustinergasse" ≠ "Augustinerhof"
+    - "Zähringer Platz" ≠ "Zähringer Strasse"
+    - "Rue ..." ≠ "Route ..."
+    
+    Args:
+        street: Already normalized street series
+        
+    Returns:
+        Type-preserving street key with canonicalized type tokens
+    """
+    def _process_street(s: str) -> str:
+        if not s:
+            return ""
+        
+        # Split into tokens
+        tokens = s.split()
+        
+        # Split concatenated street names (e.g., "hofstattstrasse" -> ["hofstatt", "strasse"])
+        expanded_tokens = []
+        for token in tokens:
+            expanded_tokens.extend(_split_street_suffix(token))
+        
+        # Canonicalize type tokens (but keep them!)
+        canonicalized = []
+        for token in expanded_tokens:
+            canonical = _STREET_TYPE_CANONICALIZATION.get(token, token)
+            canonicalized.append(canonical)
+        
+        # Join all tokens (including type tokens)
+        return " ".join(canonicalized)
+    
+    return street.map(_process_street).astype("string")
+
+
+def street_signature_full(street: pd.Series) -> pd.Series:
+    """
+    Create a type-preserving street signature for typo recovery (multilingual safe).
+    
+    Similar to street_signature() but preserves type tokens after canonicalization.
+    This allows fuzzy matching while preventing cross-type collisions.
+    
+    Strategy:
+    - Split concatenated street names (e.g., "hofstattstrasse" -> ["hofstatt", "strasse"])
+    - Canonicalize type tokens (e.g., "str" → "strasse", "av" → "avenue")
+    - Keep all tokens (including canonicalized type tokens)
+    - Keep first 4 characters of each token
+    - Sort tokens alphabetically
+    - Join with "-"
+    
+    Args:
+        street: Already normalized street series
+        
+    Returns:
+        Type-preserving street signature
+    """
+    def _process_street(s: str) -> str:
+        if not s:
+            return ""
+        
+        # Split into tokens
+        tokens = s.split()
+        
+        # Split concatenated street names (e.g., "hofstattstrasse" -> ["hofstatt", "strasse"])
+        expanded_tokens = []
+        for token in tokens:
+            expanded_tokens.extend(_split_street_suffix(token))
+        
+        # Canonicalize type tokens (but keep them!)
+        canonicalized = []
+        for token in expanded_tokens:
+            canonical = _STREET_TYPE_CANONICALIZATION.get(token, token)
+            canonicalized.append(canonical)
+        
+        # Keep first 4 chars of each token
+        prefixed = [t[:4] for t in canonicalized if t]
+        
+        # Sort tokens
+        prefixed.sort()
+        
+        # Join with "-"
+        return "-".join(prefixed)
+    
     return street.map(_process_street).astype("string")
 
 
@@ -332,13 +466,19 @@ def preprocess(df: pd.DataFrame, *, address_normalizer=None) -> dict[str, object
 
     # Swisstopo-based address normalization (if enabled)
     if address_normalizer is not None:
+        # Compute type-preserving keys for swisstopo joins (multilingual safe)
+        street_full = normalize_street_full(street)
+        street_sig_full = street_signature_full(street)
+        
         # Build keys DataFrame for normalizer
         # We pass range(n) as row_id to the normalizer to get 0-based indices back
         keys_df = pd.DataFrame({
             'row_id': range(n),
             'plz4': plz4_used.values,  # Use values to ignore index mismatch
-            'street_key': street_key.values,
-            'street_sig': street_sig.values,
+            'street_key': street_key.values,  # For blocking (legacy)
+            'street_sig': street_sig.values,  # For blocking (legacy)
+            'street_full': street_full.values,  # Type-preserving strict key
+            'street_sig_full': street_sig_full.values,  # Type-preserving fuzzy key
             'house_num': house_num.values,
         })
 
@@ -353,7 +493,7 @@ def preprocess(df: pd.DataFrame, *, address_normalizer=None) -> dict[str, object
             # Create a dataframe with the target index for easier assignment
             ref_indexed = ref_matches.set_index(target_indices)
 
-            # Fill metadata fields
+            # Fill metadata fields (always fill these for observability)
             swis_match_type.loc[ref_indexed.index] = ref_indexed["match_type"].astype("string")
             swis_adr_egaid_ref.loc[ref_indexed.index] = ref_indexed["adr_egaid_ref"].astype("string")
             swis_bdg_egid_ref.loc[ref_indexed.index] = ref_indexed["bdg_egid_ref"].astype("string")
@@ -369,7 +509,13 @@ def preprocess(df: pd.DataFrame, *, address_normalizer=None) -> dict[str, object
             ref_ort = _norm_series(swis_ort_ref)
             ref_plz4 = swis_plz4_ref.copy()
 
-            mask = swis_match_type != ""
+            # AMBIGUITY GUARD: Only overwrite when we have a unique match (candidate_count == 1)
+            # This prevents "Augustinergasse 8" from being overwritten to "Augustinerhof 8"
+            candidate_count = pd.Series(0, index=idx_all, dtype="int32")
+            candidate_count.loc[ref_indexed.index] = ref_indexed["candidate_count"].astype("int32")
+            
+            # Create mask: has match AND unique (not ambiguous)
+            mask = (swis_match_type != "") & (candidate_count == 1)
 
             # Store values before change to detect changes
             street_before = street.copy()

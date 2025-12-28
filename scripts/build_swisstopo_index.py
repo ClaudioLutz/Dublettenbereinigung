@@ -24,7 +24,14 @@ from unidecode import unidecode
 # Add parent directory to path to import dedupe modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from dedupe.preprocess import normalize_street_key, street_signature, parse_house_number, _norm_series
+from dedupe.preprocess import (
+    normalize_street_key, 
+    street_signature, 
+    normalize_street_full,
+    street_signature_full,
+    parse_house_number, 
+    _norm_series
+)
 
 
 def extract_plz4(zip_label: str) -> str:
@@ -70,17 +77,25 @@ def normalize_swisstopo_data(df: pd.DataFrame) -> pd.DataFrame:
     df['street_key'] = normalize_street_key(street_series)
     df['street_sig'] = street_signature(street_series)
     
+    # Type-preserving keys (multilingual safe)
+    df['street_full'] = normalize_street_full(street_series)
+    df['street_sig_full'] = street_signature_full(street_series)
+    
     house_num, house_sfx = parse_house_number(house_series)
     df['house_num'] = house_num
     df['house_sfx'] = house_sfx
     
     # Keep relevant columns
     result_df = pd.DataFrame({
-        # Keys for joining
+        # Keys for joining (legacy - type tokens removed)
         'plz4': df['plz4'],
         'street_key': df['street_key'],
         'street_sig': df['street_sig'],
         'house_num': df['house_num'],
+        
+        # Type-preserving keys (multilingual safe)
+        'street_full': df['street_full'],
+        'street_sig_full': df['street_sig_full'],
         
         # Reference values to use for normalization
         'street_label': df['STN_LABEL'],
@@ -154,8 +169,13 @@ def build_index(input_csv: Path, output_db: Path, filter_status: bool = True) ->
     
     # Create indexes on join keys for fast lookups
     print("Creating indexes...")
+    # Legacy indexes (type tokens removed - for blocking)
     con.execute("CREATE INDEX idx_plz4_street_key_house ON addresses(plz4, street_key, house_num)")
     con.execute("CREATE INDEX idx_plz4_street_sig_house ON addresses(plz4, street_sig, house_num)")
+    # Type-preserving indexes (multilingual safe - for swisstopo joins)
+    con.execute("CREATE INDEX idx_plz4_street_full_house ON addresses(plz4, street_full, house_num)")
+    con.execute("CREATE INDEX idx_plz4_street_sig_full_house ON addresses(plz4, street_sig_full, house_num)")
+    # General PLZ index
     con.execute("CREATE INDEX idx_plz4 ON addresses(plz4)")
     
     # Get statistics
