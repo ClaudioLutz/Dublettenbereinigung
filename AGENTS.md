@@ -33,5 +33,3 @@ What could go wrong, and how to revert/mitigate.
 ### When a story is NOT required
 - Pure formatting (whitespace), typo fixes in comments/docs, or non-functional refactors that do not change behavior.
   - If in doubt, create a story.
-
-## Update README (if required)
