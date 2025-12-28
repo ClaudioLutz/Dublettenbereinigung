@@ -8,6 +8,7 @@ import threading
 from typing import Iterable
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from .config import DbConfig
 from .io import create_mssql_engine, read_sql_df
@@ -254,27 +255,39 @@ def run_pipeline(
             global_seen: set[tuple[int, int]] = set()
             global_lock = threading.Lock()
 
+            # Convert generator to list to know total tasks for progress bar
+            # This triggers the blocking computation (sort/split) which is fast
+            blocks_list = list(blocks)
+            total_blocks = len(blocks_list)
+
             with ThreadPoolExecutor(max_workers=max_workers) as ex:
                 futures = []
-                for idx in blocks:
-                    futures.append(
-                        ex.submit(
-                            process_block,
-                            idx,
-                            cols,
-                            params,
-                            fuzzy_threshold,
-                            enable_address_aware,
-                            use_windowed,
-                            window_size,
-                            global_seen=global_seen,
-                            global_lock=global_lock,
+                with tqdm(total=total_blocks, desc="Processing blocks", unit="block") as pbar:
+                    for idx in blocks_list:
+                        futures.append(
+                            ex.submit(
+                                process_block,
+                                idx,
+                                cols,
+                                params,
+                                fuzzy_threshold,
+                                enable_address_aware,
+                                use_windowed,
+                                window_size,
+                                global_seen=global_seen,
+                                global_lock=global_lock,
+                            )
                         )
-                    )
-                    if len(futures) >= in_flight:
-                        for fut in as_completed(futures[:max_workers]):
-                            _write_results(fut.result(), writer, df_chunk)
-                            futures.remove(fut)
+                        if len(futures) >= in_flight:
+                            # Wait for some futures to complete to keep memory usage in check
+                            # Only wait for a subset (e.g., half of in_flight) to free up slots
+                            subset = futures[:max_workers]
+                            for fut in as_completed(subset):
+                                _write_results(fut.result(), writer, df_chunk)
+                                futures.remove(fut)
+                                pbar.update(1)
 
-                for fut in as_completed(futures):
-                    _write_results(fut.result(), writer, df_chunk)
+                    # Drain remaining futures
+                    for fut in as_completed(futures):
+                        _write_results(fut.result(), writer, df_chunk)
+                        pbar.update(1)
