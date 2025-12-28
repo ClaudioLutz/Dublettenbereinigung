@@ -18,6 +18,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out", required=True, help="Output CSV path")
     parser.add_argument("--workers", type=int, default=0, help="Number of worker threads (0=auto)")
     parser.add_argument("--prompt-password", action="store_true", help="Prompt for DB password instead of env var")
+    
+    # Blocking strategy options
+    parser.add_argument(
+        "--blocking-mode",
+        choices=["address", "name"],
+        default="address",
+        help="Blocking strategy: 'address' (new, address-based) or 'name' (legacy, name-based). Default: address"
+    )
+    parser.add_argument("--fuzzy-threshold", type=float, default=0.80, help="Fuzzy name similarity threshold (default: 0.80)")
+    parser.add_argument("--window-size", type=int, default=10, help="Window size for sorted neighborhood (default: 10)")
+    parser.add_argument("--no-address-aware", action="store_true", help="Disable address-assisted matching")
+    
     return parser.parse_args()
 
 
@@ -39,7 +51,30 @@ def main() -> int:
             encrypt=cfg.encrypt,
         )
 
-    run_pipeline(query=query, db_cfg=cfg, out_path=args.out, workers=args.workers)
+    use_address_blocking = (args.blocking_mode == "address")
+    enable_address_aware = not args.no_address_aware
+    
+    print(f"Running deduplication pipeline:")
+    print(f"  Blocking mode: {args.blocking_mode}")
+    print(f"  Fuzzy threshold: {args.fuzzy_threshold}")
+    print(f"  Window size: {args.window_size}")
+    print(f"  Address-aware matching: {enable_address_aware}")
+    print(f"  Workers: {args.workers if args.workers > 0 else 'auto'}")
+    print(f"  Output: {args.out}")
+    print()
+    
+    run_pipeline(
+        query=query,
+        db_cfg=cfg,
+        out_path=args.out,
+        workers=args.workers,
+        fuzzy_threshold=args.fuzzy_threshold,
+        enable_address_aware=enable_address_aware,
+        use_address_blocking=use_address_blocking,
+        window_size=args.window_size
+    )
+    
+    print(f"\nDeduplication complete. Results written to: {args.out}")
     return 0
 
 

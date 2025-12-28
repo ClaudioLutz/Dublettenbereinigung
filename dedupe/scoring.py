@@ -139,12 +139,13 @@ def score_pair(i: int, j: int, cols: dict[str, object],
                enable_address_aware: bool = True) -> MatchResult | None:
     """
     Score a pair with business rules:
-    1. Date rule (year equality)
+    1. DOB/YOB hard gate (exact date mismatch rejection)
     2. Name2/Zweitname rule
     3. Name swapping detection
     4. Two-stage: exact matching, then fuzzy matching
     5. Address-assisted matching (borderline names + strong address)
     6. Phonetic fallback (borderline names + phonetic match)
+    7. Stricter threshold when DOB/YOB missing
     
     Args:
         i, j: Indices of records to compare
@@ -152,11 +153,25 @@ def score_pair(i: int, j: int, cols: dict[str, object],
         fuzzy_threshold: Minimum name similarity for fuzzy match (default: 0.80)
         enable_address_aware: Enable address-assisted matching (default: True)
     """
-    # Business Rule 1: Date rule
-    yi = int(cols["year"][i])
-    yj = int(cols["year"][j])
-    if yi != -1 and yj != -1 and yi != yj:
+    # Business Rule 1: DOB hard gate (exact date of birth mismatch)
+    dob_i = int(cols["dob_ymd"][i])
+    dob_j = int(cols["dob_ymd"][j])
+    
+    # If both have exact DOB and they differ, reject immediately
+    if dob_i != -1 and dob_j != -1 and dob_i != dob_j:
         return None
+    
+    # Year of birth gate (uses Jahrgang or DOB year)
+    yob_i = int(cols["yob"][i])
+    yob_j = int(cols["yob"][j])
+    
+    # If both have YOB and they differ, reject
+    if yob_i != -1 and yob_j != -1 and yob_i != yob_j:
+        return None
+    
+    # Track if both DOB/YOB are missing (will require stronger name evidence)
+    both_dob_missing = (dob_i == -1 and dob_j == -1)
+    both_yob_missing = (yob_i == -1 and yob_j == -1)
 
     # Business Rule 2: Zweitname rule (swap-aware)
     name2_i = cols["name2"].iloc[i]
@@ -165,6 +180,13 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     last_j = cols["last"].iloc[j]
     first_i = cols["first"].iloc[i]
     first_j = cols["first"].iloc[j]
+    
+    # Adjust effective fuzzy threshold when both DOB and YOB are missing
+    # This protects against merging family members with same surname at same address
+    effective_fuzzy_threshold = fuzzy_threshold
+    if both_dob_missing and both_yob_missing:
+        # Require 90% name similarity minimum when no DOB/YOB available
+        effective_fuzzy_threshold = max(fuzzy_threshold, 0.90)
     
     if not check_zweitname(name2_i, last_i, name2_j, last_j):
         # Swapped placement fallback: surname(+name2) might be in Vorname field
@@ -192,11 +214,15 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     is_exact_swapped = (first_i == last_j_for_comparison and last_i_for_comparison == first_j and 
                         first_i and last_i_for_comparison and first_j and last_j_for_comparison)
     
-    # Get address components
+    # Get address components (including parsed house number)
     plz_i = cols["plz"].iloc[i]
     plz_j = cols["plz"].iloc[j]
     house_i = cols["house"].iloc[i]
     house_j = cols["house"].iloc[j]
+    house_num_i = cols["house_num"].iloc[i]
+    house_num_j = cols["house_num"].iloc[j]
+    house_sfx_i = cols["house_sfx"].iloc[i]
+    house_sfx_j = cols["house_sfx"].iloc[j]
     street_i = cols["street"].iloc[i]
     street_j = cols["street"].iloc[j]
     ort_i = cols["ort"].iloc[i]
@@ -246,15 +272,10 @@ def score_pair(i: int, j: int, cols: dict[str, object],
             return None
         
         # CRITICAL: Very different house numbers on same street = different people!
-        if house_i and house_j and house_i != house_j:
-            # Allow minor variations like "17" vs "17b" or "17a" vs "17"
-            # Strip letters and compare numeric part
-            house_i_num = ''.join(filter(str.isdigit, house_i))
-            house_j_num = ''.join(filter(str.isdigit, house_j))
-            
-            # If both have numeric parts and they differ, reject
-            if house_i_num and house_j_num and house_i_num != house_j_num:
-                return None
+        # Use parsed house_num for cleaner comparison
+        if house_num_i and house_num_j and house_num_i != house_num_j:
+            # Numeric parts differ = different buildings
+            return None
         
         # Calculate confidence based on address match quality
         # address_ratio already includes ort_score, street_score, house_score, and plz_score
@@ -286,16 +307,12 @@ def score_pair(i: int, j: int, cols: dict[str, object],
         
         if is_exact_swapped:
             # NEW: Score=100 when everything else matches perfectly
-            def _house_equivalent(h1: str, h2: str) -> bool:
-                """Check if house numbers are equivalent (e.g., 10 == 10A)"""
-                if (not h1) and (not h2):
+            def _house_equivalent(num1: str, num2: str) -> bool:
+                """Check if house numbers are equivalent (same numeric part)"""
+                if (not num1) and (not num2):
                     return True
-                if h1 and h2:
-                    if h1 == h2:
-                        return True
-                    n1 = ''.join(filter(str.isdigit, h1))
-                    n2 = ''.join(filter(str.isdigit, h2))
-                    return bool(n1 and n2 and n1 == n2)
+                if num1 and num2:
+                    return num1 == num2
                 return False
             
             def _strong_text_match(a: str, b: str, score: float) -> bool:
@@ -309,7 +326,7 @@ def score_pair(i: int, j: int, cols: dict[str, object],
             # Check if everything else matches perfectly
             strict_other_match = (
                 (plz_i and plz_j and plz_i == plz_j) and
-                _house_equivalent(house_i, house_j) and
+                _house_equivalent(house_num_i, house_num_j) and
                 _strong_text_match(street_i, street_j, street_score) and
                 _strong_text_match(ort_i, ort_j, ort_score)
             )
@@ -340,10 +357,10 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     best_score = name_comparison['best_score']
     is_swapped = name_comparison['is_swapped']
     
-    # Check if name similarity meets threshold
-    if best_score < fuzzy_threshold:
-        # NEW: Address-aware gate for borderline name scores (60-80% range)
-        if 0.60 <= best_score < fuzzy_threshold:
+    # Check if name similarity meets threshold (use effective threshold)
+    if best_score < effective_fuzzy_threshold:
+        # NEW: Address-aware gate for borderline name scores (60-threshold range)
+        if 0.60 <= best_score < effective_fuzzy_threshold:
             # Check for address-assisted match first (if enabled)
             if enable_address_aware:
                 # Compute normalized address ratio
@@ -422,15 +439,9 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     
     # CRITICAL: Require matching house numbers for fuzzy matches (if both have house number data)
     # Different house numbers on same street = different people!
-    if house_i and house_j and house_i != house_j:
-        # Allow minor variations like "17" vs "17b" or "17a" vs "17"
-        # Strip letters and compare numeric part
-        house_i_num = ''.join(filter(str.isdigit, house_i))
-        house_j_num = ''.join(filter(str.isdigit, house_j))
-        
-        # If both have numeric parts and they differ, reject
-        if house_i_num and house_j_num and house_i_num != house_j_num:
-            return None
+    if house_num_i and house_num_j and house_num_i != house_num_j:
+        # Numeric parts differ = different buildings
+        return None
     
     # Base: name similarity * 50 (max 50 points from names)
     # Address bonus: address_ratio * 30 (max 30 points from address)

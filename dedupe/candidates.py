@@ -77,3 +77,112 @@ def iter_fuzzy_pairs(
             if j <= i:
                 continue
             yield (int(pos_to_row[i]), int(pos_to_row[j]))
+
+
+def iter_windowed_fuzzy_pairs(
+    idx: np.ndarray, 
+    cols: dict[str, object], 
+    *, 
+    window: int = 10, 
+    name_threshold: int = 88,
+    sort_keys: list[str] | None = None
+) -> Iterator[Tuple[int, int]]:
+    """
+    Generate candidate pairs using sorted neighborhood method with sliding window.
+    
+    This method is efficient for large address blocks where we want to compare
+    records with similar names without doing all-pairs comparison.
+    
+    Args:
+        idx: Block indices
+        cols: Preprocessed columns
+        window: Window size for comparisons (default: 10)
+        name_threshold: Minimum name similarity score (default: 88)
+        sort_keys: List of sort key types to use for multi-pass windowing.
+                   Options: 'last_first', 'first_last', 'last_only'
+                   Default: ['last_first', 'first_last']
+    
+    Yields:
+        Tuples of (i, j) where i < j
+    """
+    if len(idx) <= 400:
+        # For small blocks, use all-pairs (already efficient)
+        for i in range(len(idx)):
+            for j in range(i + 1, len(idx)):
+                yield (int(idx[i]), int(idx[j]))
+        return
+    
+    # Default sort keys: multi-pass with last+first and first+last
+    if sort_keys is None:
+        sort_keys = ['last_first', 'first_last']
+    
+    # Track seen pairs to avoid duplicates across passes
+    seen_pairs: set[tuple[int, int]] = set()
+    
+    for sort_key_type in sort_keys:
+        # Build sort key based on type
+        sort_key = _build_sort_key(idx, cols, sort_key_type)
+        
+        # Sort indices by sort key
+        sort_order = np.argsort(sort_key, kind='mergesort')
+        sorted_idx = idx[sort_order]
+        
+        # Sliding window comparison
+        n = len(sorted_idx)
+        for i in range(n):
+            # Compare with next 'window' records
+            for j in range(i + 1, min(i + 1 + window, n)):
+                row_i = int(sorted_idx[i])
+                row_j = int(sorted_idx[j])
+                
+                # Ensure i < j for consistent pair representation
+                pair = (min(row_i, row_j), max(row_i, row_j))
+                
+                if pair in seen_pairs:
+                    continue
+                seen_pairs.add(pair)
+                
+                # Apply name threshold prefilter
+                name_i = cols["full_name"].iloc[row_i]
+                name_j = cols["full_name"].iloc[row_j]
+                
+                if name_i and name_j:
+                    score = fuzz.WRatio(name_i, name_j)
+                    if score >= name_threshold:
+                        yield pair
+
+
+def _build_sort_key(idx: np.ndarray, cols: dict[str, object], sort_key_type: str) -> np.ndarray:
+    """
+    Build sort key for sorted neighborhood windowing.
+    
+    Args:
+        idx: Block indices
+        cols: Preprocessed columns
+        sort_key_type: Type of sort key ('last_first', 'first_last', 'last_only')
+    
+    Returns:
+        Array of sort keys (strings)
+    """
+    first = cols["first"].iloc[idx].reset_index(drop=True).astype("string")
+    last = cols["last"].iloc[idx].reset_index(drop=True).astype("string")
+    name2 = cols["name2"].iloc[idx].reset_index(drop=True).astype("string")
+    
+    # Combine last + name2 for full surname
+    last_full = (last + " " + name2).str.strip().astype("string")
+    
+    if sort_key_type == 'last_first':
+        # Sort by: last_full | first
+        return (last_full + "|" + first).to_numpy(dtype=object)
+    
+    elif sort_key_type == 'first_last':
+        # Sort by: first | last_full (swap-friendly)
+        return (first + "|" + last_full).to_numpy(dtype=object)
+    
+    elif sort_key_type == 'last_only':
+        # Sort by: last | first (without name2)
+        return (last + "|" + first).to_numpy(dtype=object)
+    
+    else:
+        # Default: last_first
+        return (last_full + "|" + first).to_numpy(dtype=object)
