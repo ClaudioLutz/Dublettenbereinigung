@@ -1,9 +1,0 @@
-match_id,confidence,match_type,position,index,vorname,name,name2,strasse,hausnummer,plz,ort,crefo,geburtstag,jahrgang
-408503222_429183420,82.0,phonetic_assisted_normal,A,531,Hans-Peter,Leuzinger,,Zinnengasse,9,800100,Zürich,408503222,1939-01-10 00:00:00,1939.0
-408503222_429183420,82.0,phonetic_assisted_normal,B,553,Hans Rudolf,Leuzinger,,Zinnengasse,9,800100,Zürich,429183420,NaT,nan
-428672847_424833954,82.0,phonetic_assisted_normal,A,619,Maim,Aden,,Zähringerstrasse,38,800100,Zürich,428672847,NaT,nan
-428672847_424833954,82.0,phonetic_assisted_normal,B,625,Naim,Aden,,Zähringerstrasse,38,800100,Zürich,424833954,1965-06-17 00:00:00,1965.0
-428401613_423446127,68.07692307692307,fuzzy_normal,A,793,Büshra,Ayaz,,Wettingerwies,2,800100,Zürich,428401613,NaT,1982.0
-428401613_423446127,68.07692307692307,fuzzy_normal,B,810,Büsra,Ayaz,,Wettingerwies,2,800100,Zürich,423446127,NaT,1982.0
-409235105_423409863,100.0,exact_normal,A,822,Carlos Alberto,Ruiz Preciado,,Weitere Gasse,3,800100,Zürich,409235105,NaT,nan
-409235105_423409863,100.0,exact_normal,B,832,Carlos Alberto,Ruiz Preciado,,Weite Gasse,3,800100,Zürich,423409863,NaT,1982.0
