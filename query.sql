@@ -1,4 +1,5 @@
-SELECT TOP (100000) [Name]
+SELECT Top 1000
+       [Name]
       ,[Vorname]
       ,[Name2]
       ,[Strasse]
@@ -11,5 +12,5 @@ SELECT TOP (100000) [Name]
       ,[Erfasst]
       ,[Quelle_95]
   FROM [CAG_Analyse].[dbo].[vAdresse_Quelle95]
-  Where Erfasst < dateadd(day,-7,getdate())
-    ORDER BY PLZ desc
+  where Plz = '900000'
+  ORDER BY PLZ,Strasse desc

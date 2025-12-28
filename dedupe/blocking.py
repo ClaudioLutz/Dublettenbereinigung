@@ -91,6 +91,27 @@ def compute_swap_fallback_for_secondary_split(cols: dict[str, object]) -> pd.Ser
     return pd.Series(out, index=first.index).astype("string")
 
 
+def compute_address_building_key(cols: dict[str, object]) -> pd.Series:
+    """
+    Pass A: address-based blocking at building level.
+    Key: PLZ | street_key | house_num
+    
+    This creates blocks of people at the same building (same address, same house number).
+    """
+    return cols["addr_key_building"].astype("string")
+
+
+def compute_address_typo_key(cols: dict[str, object]) -> pd.Series:
+    """
+    Pass B: typo recovery blocking.
+    Key: PLZ | house_num | street_sig
+    
+    This recovers cases where street name has minor typos/variants.
+    street_sig is robust to small differences (first 4 chars, sorted).
+    """
+    return cols["addr_key_typo"].astype("string")
+
+
 def iter_blocks(
     primary_key: pd.Series, *, params: BlockingParams, cols: Optional[dict[str, object]] = None
 ) -> Iterator[np.ndarray]:
@@ -118,30 +139,46 @@ def iter_blocks(
 def split_oversized_block(
     idx: np.ndarray, *, params: BlockingParams, cols: Optional[dict[str, object]] = None
 ) -> Iterator[np.ndarray]:
+    """
+    Split oversized address blocks using name-based sub-splitting.
+    
+    Strategy for address-based blocking:
+    - Address is constant within the block (same building)
+    - Split by name prefixes to keep similar names together
+    - Use deterministic hash bucketing as fallback
+    """
     if cols is None or not params.secondary_split_enabled:
         step = params.max_block_size
         for s in range(0, len(idx), step):
             yield idx[s : s + step]
         return
 
-    street = cols["street"].to_numpy()
-    house = cols["house"].to_numpy()
+    # Extract name fields for sub-splitting
     last = cols["last"].to_numpy()
+    first = cols["first"].to_numpy()
 
-    # Use pandas for safe slicing (NumPy has no simple char.substr)
-    street_s = pd.Series(street[idx], copy=False).astype("string")
-    house_s = pd.Series(house[idx], copy=False).astype("string")
+    # Use pandas for safe slicing
     last_s = pd.Series(last[idx], copy=False).astype("string")
+    first_s = pd.Series(first[idx], copy=False).astype("string")
 
-    street_prefix4 = street_s.str.slice(0, 4).fillna("").to_numpy()
-    last_prefix6 = last_s.str.slice(0, 6).fillna("").to_numpy()
-
-    k2 = np.char.add(np.char.add(street_prefix4, "|"), house_s.fillna("").to_numpy())
-
-    missing = (street_s.to_numpy() == "") | (house_s.to_numpy() == "")
-    k2 = k2.astype(object)
-    if missing.any():
-        k2[missing] = last_prefix6[missing]
+    # Primary split: last name prefix (2-3 chars)
+    last_prefix2 = last_s.str.slice(0, 2).fillna("").to_numpy()
+    last_prefix3 = last_s.str.slice(0, 3).fillna("").to_numpy()
+    
+    # Secondary split: first name prefix (1-2 chars)
+    first_prefix1 = first_s.str.slice(0, 1).fillna("").to_numpy()
+    first_prefix2 = first_s.str.slice(0, 2).fillna("").to_numpy()
+    
+    # Build split key: last_prefix3 | first_prefix1
+    k2 = np.char.add(np.char.add(last_prefix3, "|"), first_prefix1)
+    
+    # For empty names, use hash bucket
+    empty_mask = (last_s.to_numpy() == "") | (first_s.to_numpy() == "")
+    if empty_mask.any():
+        # Use stable hash bucket for empty names
+        hash_bucket = pd.Series(idx).mod(10).astype(str).to_numpy()
+        k2 = k2.astype(object)
+        k2[empty_mask] = hash_bucket[empty_mask]
 
     codes, _ = pd.factorize(pd.Series(k2), sort=False)
     secondary_order = np.argsort(codes, kind="mergesort")
@@ -160,7 +197,48 @@ def split_oversized_block(
         if len(sub) <= params.max_block_size:
             yield sub
         else:
-            step = params.max_block_size
-            for s in range(0, len(sub), step):
-                yield sub[s : s + step]
+            # Still too large, try finer split with last_prefix2 | first_prefix2
+            yield from _split_by_finer_name_prefix(sub, cols, params.max_block_size)
+        start = end
+
+
+def _split_by_finer_name_prefix(
+    idx: np.ndarray, cols: dict[str, object], max_size: int
+) -> Iterator[np.ndarray]:
+    """
+    Finer-grained split using shorter name prefixes.
+    Used when initial split still produces oversized blocks.
+    """
+    last = cols["last"].to_numpy()
+    first = cols["first"].to_numpy()
+    
+    last_s = pd.Series(last[idx], copy=False).astype("string")
+    first_s = pd.Series(first[idx], copy=False).astype("string")
+    
+    # Finer split: last_prefix2 | first_prefix2
+    last_prefix2 = last_s.str.slice(0, 2).fillna("").to_numpy()
+    first_prefix2 = first_s.str.slice(0, 2).fillna("").to_numpy()
+    
+    k3 = np.char.add(np.char.add(last_prefix2, "|"), first_prefix2)
+    
+    codes, _ = pd.factorize(pd.Series(k3), sort=False)
+    order3 = np.argsort(codes, kind="mergesort")
+    order_final = idx[order3]
+    codes_sorted = codes[order3]
+    
+    start = 0
+    n = len(order_final)
+    while start < n:
+        code = codes_sorted[start]
+        end = start + 1
+        while end < n and codes_sorted[end] == code:
+            end += 1
+        
+        sub = order_final[start:end]
+        if len(sub) <= max_size:
+            yield sub
+        else:
+            # Last resort: chunk deterministically
+            for s in range(0, len(sub), max_size):
+                yield sub[s : s + max_size]
         start = end
