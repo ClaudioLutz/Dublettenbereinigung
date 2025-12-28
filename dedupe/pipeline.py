@@ -194,20 +194,19 @@ def _write_results(rows: Iterable[MatchResult], writer: csv.writer, df: pd.DataF
 
 def _write_audit_log(path: str, df: pd.DataFrame, cols: dict[str, object]) -> None:
     """
-    Write separate audit log for all rows that matched swisstopo or changed.
+    Write separate audit log for rows where swis_changed is True.
     """
     # Check if we should append header (file doesn't exist)
     file_exists = os.path.exists(path)
 
-    # Identify rows to log: matched or changed
-    if "swis_match_type" not in cols:
+    # Identify rows to log: only changed addresses
+    if "swis_changed" not in cols:
         return
 
     # Values in cols are typically Series or ndarrays aligned with df
-    match_types = cols["swis_match_type"]
     changed = cols["swis_changed"]
 
-    mask = (match_types != "") | (changed == True)
+    mask = (changed == True)
     if not mask.any():
         return
 
