@@ -200,7 +200,10 @@ def run_pipeline(
     
     # First pass: count total rows to estimate chunks
     print("Counting total rows...")
-    count_query = f"SELECT COUNT(*) as total FROM ({query}) as subq"
+    # Remove ORDER BY clause for counting (SQL Server doesn't allow it in subqueries)
+    import re
+    query_no_order = re.sub(r'\s+ORDER\s+BY\s+.*?(?=\s*$)', '', query, flags=re.IGNORECASE | re.DOTALL)
+    count_query = f"SELECT COUNT(*) as total FROM ({query_no_order}) as subq"
     try:
         total_rows = pd.read_sql(count_query, engine).iloc[0]['total']
         estimated_chunks = (total_rows + chunksize - 1) // chunksize
