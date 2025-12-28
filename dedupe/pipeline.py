@@ -197,6 +197,20 @@ def run_pipeline(
         window_size: Window size for sorted neighborhood
     """
     engine = create_mssql_engine(db_cfg)
+    
+    # First pass: count total rows to estimate chunks
+    print("Counting total rows...")
+    count_query = f"SELECT COUNT(*) as total FROM ({query}) as subq"
+    try:
+        total_rows = pd.read_sql(count_query, engine).iloc[0]['total']
+        estimated_chunks = (total_rows + chunksize - 1) // chunksize
+        print(f"Total rows: {total_rows:,} → Estimated chunks: {estimated_chunks}")
+        print()
+    except Exception as e:
+        print(f"Could not count rows (non-critical): {e}")
+        total_rows = None
+        estimated_chunks = None
+    
     dfs = read_sql_df(engine, query, chunksize=chunksize)
     if isinstance(dfs, pd.DataFrame):
         dfs = [dfs]
@@ -217,7 +231,9 @@ def run_pipeline(
             "crefo", "geburtstag", "jahrgang"
         ])
 
+        chunk_num = 0
         for df_chunk in dfs:
+            chunk_num += 1
             cols = preprocess(df_chunk)
             params = BlockingParams()
 
@@ -259,10 +275,17 @@ def run_pipeline(
             # This triggers the blocking computation (sort/split) which is fast
             blocks_list = list(blocks)
             total_blocks = len(blocks_list)
+            
+            # Build progress bar description with chunk info
+            if estimated_chunks:
+                chunk_info = f"Chunk {chunk_num}/{estimated_chunks}"
+            else:
+                chunk_info = f"Chunk {chunk_num}"
+            pbar_desc = f"{chunk_info} - Processing blocks"
 
             with ThreadPoolExecutor(max_workers=max_workers) as ex:
                 futures = []
-                with tqdm(total=total_blocks, desc="Processing blocks", unit="block") as pbar:
+                with tqdm(total=total_blocks, desc=pbar_desc, unit="block") as pbar:
                     for idx in blocks_list:
                         futures.append(
                             ex.submit(
