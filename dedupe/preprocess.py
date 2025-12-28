@@ -147,6 +147,35 @@ def street_signature(street: pd.Series) -> pd.Series:
     return street.map(_process_street).astype("string")
 
 
+def extract_plz4(plz: pd.Series) -> pd.Series:
+    """
+    Extract 4-digit PLZ from potentially 6-digit postcode.
+    
+    Swiss postcodes are 4 digits, but some systems use 6-digit codes (PLZ6).
+    This function extracts the first 4 digits for matching with swisstopo data.
+    
+    Examples:
+    - "965800" -> "9658"
+    - "900000" -> "9000"
+    - "8000" -> "8000"
+    - "" -> ""
+    
+    Args:
+        plz: Postcode series (already normalized)
+        
+    Returns:
+        4-digit postcode series
+    """
+    def _extract(p: str) -> str:
+        if not p:
+            return ""
+        # Extract first 4 digits
+        digits = "".join(c for c in p if c.isdigit())
+        return digits[:4] if len(digits) >= 4 else digits
+    
+    return plz.map(_extract).astype("string")
+
+
 def parse_house_number(house: pd.Series) -> tuple[pd.Series, pd.Series]:
     """
     Parse house number into numeric core and suffix.
@@ -285,10 +314,13 @@ def preprocess(df: pd.DataFrame, *, address_normalizer=None) -> dict[str, object
     
     # Swisstopo-based address normalization (if enabled)
     if address_normalizer is not None:
+        # Extract 4-digit PLZ for matching with swisstopo (which uses 4-digit postcodes)
+        plz4 = extract_plz4(plz)
+        
         # Build keys DataFrame for normalizer
         keys_df = pd.DataFrame({
             'row_id': range(n),
-            'plz4': plz,
+            'plz4': plz4,
             'street_key': street_key,
             'street_sig': street_sig,
             'house_num': house_num,
