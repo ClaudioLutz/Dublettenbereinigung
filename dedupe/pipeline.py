@@ -13,6 +13,7 @@ from tqdm import tqdm
 from .config import DbConfig
 from .io import create_mssql_engine, read_sql_df
 from .preprocess import preprocess
+from .swisstopo import SwisstopoAddressNormalizer
 from .blocking import (
     BlockingParams,
     compute_primary_key,
@@ -180,7 +181,8 @@ def run_pipeline(
     fuzzy_threshold: float = 0.80, 
     enable_address_aware: bool = True,
     use_address_blocking: bool = True,
-    window_size: int = 10
+    window_size: int = 10,
+    swisstopo_db: str | None = None
 ) -> None:
     """
     Run the deduplication pipeline with configurable blocking strategy.
@@ -195,8 +197,23 @@ def run_pipeline(
         enable_address_aware: Enable address-assisted matching
         use_address_blocking: Use address-based blocking (True) or name-based (False)
         window_size: Window size for sorted neighborhood
+        swisstopo_db: Optional path to swisstopo DuckDB file for address normalization
     """
     engine = create_mssql_engine(db_cfg)
+    
+    # Initialize swisstopo address normalizer if provided
+    address_normalizer = None
+    if swisstopo_db:
+        from pathlib import Path
+        if Path(swisstopo_db).exists():
+            print(f"Loading swisstopo address index from {swisstopo_db}...")
+            address_normalizer = SwisstopoAddressNormalizer(swisstopo_db)
+            stats = address_normalizer.get_stats()
+            print(f"  Loaded {stats['total_records']:,} addresses from {stats['unique_plz']:,} postal codes")
+            print()
+        else:
+            print(f"Warning: Swisstopo database not found at {swisstopo_db}, skipping address normalization")
+            print()
     
     # First pass: count total rows to estimate chunks
     print("Counting total rows...")
@@ -237,7 +254,7 @@ def run_pipeline(
         chunk_num = 0
         for df_chunk in dfs:
             chunk_num += 1
-            cols = preprocess(df_chunk)
+            cols = preprocess(df_chunk, address_normalizer=address_normalizer)
             params = BlockingParams()
 
             if use_address_blocking:

@@ -20,6 +20,37 @@ _STREET_TYPES = {
     'st', 'ave', 'rd', 'pl', 'blvd'
 }
 
+# Street type suffixes for splitting concatenated street names (e.g., "Hofstattstrasse" -> "hofstatt" + "strasse")
+_STREET_SUFFIXES = [
+    'strasse', 'gasse', 'weg', 'platz', 'allee', 'ring', 'hof',
+    'avenue', 'chemin', 'route', 'place', 'cours', 'boulevard',
+    'viale', 'piazza', 'corso', 'largo'
+]
+
+
+def _split_street_suffix(token: str) -> list[str]:
+    """
+    Split concatenated street names like 'hofstattstrasse' into ['hofstatt', 'strasse'].
+    
+    Args:
+        token: A single normalized street token
+        
+    Returns:
+        List of split tokens (may be just [token] if no suffix found)
+    """
+    if len(token) <= 4:
+        return [token]
+    
+    # Try each suffix (sorted by length descending to match longest first)
+    for suffix in sorted(_STREET_SUFFIXES, key=len, reverse=True):
+        if token.endswith(suffix) and len(token) > len(suffix):
+            # Split into root + suffix
+            root = token[:-len(suffix)]
+            if len(root) >= 2:  # Ensure root is meaningful
+                return [root, suffix]
+    
+    return [token]
+
 
 def _norm_series(s: pd.Series) -> pd.Series:
     s = s.astype("string")
@@ -42,6 +73,7 @@ def _norm_series(s: pd.Series) -> pd.Series:
 def normalize_street_key(street: pd.Series) -> pd.Series:
     """
     Normalize street names for strict blocking by removing street type tokens.
+    Handles concatenated street names like "Hofstattstrasse" by splitting them first.
     
     Args:
         street: Already normalized street series
@@ -56,8 +88,13 @@ def normalize_street_key(street: pd.Series) -> pd.Series:
         # Split into tokens
         tokens = s.split()
         
+        # Split concatenated street names (e.g., "hofstattstrasse" -> ["hofstatt", "strasse"])
+        expanded_tokens = []
+        for token in tokens:
+            expanded_tokens.extend(_split_street_suffix(token))
+        
         # Remove street type tokens
-        filtered = [t for t in tokens if t not in _STREET_TYPES]
+        filtered = [t for t in expanded_tokens if t not in _STREET_TYPES]
         
         # Join remaining tokens
         return " ".join(filtered)
@@ -68,8 +105,10 @@ def normalize_street_key(street: pd.Series) -> pd.Series:
 def street_signature(street: pd.Series) -> pd.Series:
     """
     Create a street signature robust to minor typos for typo recovery.
+    Handles concatenated street names like "Hofstattstrasse" by splitting them first.
     
     Strategy:
+    - Split concatenated street names (e.g., "hofstattstrasse" -> ["hofstatt", "strasse"])
     - Remove street type tokens
     - Keep first 4 characters of each remaining token
     - Sort tokens alphabetically
@@ -88,8 +127,13 @@ def street_signature(street: pd.Series) -> pd.Series:
         # Split into tokens
         tokens = s.split()
         
+        # Split concatenated street names (e.g., "hofstattstrasse" -> ["hofstatt", "strasse"])
+        expanded_tokens = []
+        for token in tokens:
+            expanded_tokens.extend(_split_street_suffix(token))
+        
         # Remove street type tokens
-        filtered = [t for t in tokens if t not in _STREET_TYPES]
+        filtered = [t for t in expanded_tokens if t not in _STREET_TYPES]
         
         # Keep first 4 chars of each token
         prefixed = [t[:4] for t in filtered if t]
@@ -206,9 +250,13 @@ def extract_yob(dob_ymd: pd.Series, jahrgang: pd.Series) -> pd.Series:
     return yob
 
 
-def preprocess(df: pd.DataFrame) -> dict[str, object]:
+def preprocess(df: pd.DataFrame, *, address_normalizer=None) -> dict[str, object]:
     """
     Preprocess dataframe with address-based blocking support.
+    
+    Args:
+        df: Input dataframe with raw address fields
+        address_normalizer: Optional SwisstopoAddressNormalizer for reference-based normalization
     
     Returns dict with:
     - Original fields: first, last, name2, street, plz, house, ort, full_name
@@ -230,10 +278,52 @@ def preprocess(df: pd.DataFrame) -> dict[str, object]:
     house = _norm_series(df.get("HausNummer", pd.Series([""] * n)))
     ort = _norm_series(df.get("Ort", pd.Series([""] * n)))
 
-    # Address-specific fields for blocking
+    # Address-specific fields for blocking (initial computation)
     street_key = normalize_street_key(street)
     street_sig = street_signature(street)
     house_num, house_sfx = parse_house_number(house)
+    
+    # Swisstopo-based address normalization (if enabled)
+    if address_normalizer is not None:
+        # Build keys DataFrame for normalizer
+        keys_df = pd.DataFrame({
+            'row_id': range(n),
+            'plz4': plz,
+            'street_key': street_key,
+            'street_sig': street_sig,
+            'house_num': house_num,
+        })
+        
+        # Get reference matches from swisstopo
+        ref_matches = address_normalizer.normalize_chunk(keys_df)
+        
+        # Replace address fields for matched rows
+        if not ref_matches.empty:
+            # Create Series for reference values (indexed by row_id)
+            ref_street = pd.Series(index=range(n), dtype="string").fillna("")
+            ref_plz = pd.Series(index=range(n), dtype="string").fillna("")
+            ref_ort = pd.Series(index=range(n), dtype="string").fillna("")
+            ref_house = pd.Series(index=range(n), dtype="string").fillna("")
+            
+            # Fill in reference values for matched rows
+            for _, row in ref_matches.iterrows():
+                row_id = int(row['row_id'])
+                ref_street.iloc[row_id] = _norm_series(pd.Series([row['street_label_ref']])).iloc[0]
+                ref_plz.iloc[row_id] = str(row['plz4_ref'])
+                ref_ort.iloc[row_id] = _norm_series(pd.Series([row['ort_ref']])).iloc[0]
+                ref_house.iloc[row_id] = _norm_series(pd.Series([row['adr_number_ref']])).iloc[0]
+            
+            # Replace original fields where we have reference data
+            mask = ref_street != ""
+            street = street.where(~mask, ref_street)
+            plz = plz.where(~mask, ref_plz)
+            ort = ort.where(~mask, ref_ort)
+            house = house.where(~mask, ref_house)
+            
+            # Recompute address keys with updated fields
+            street_key = normalize_street_key(street)
+            street_sig = street_signature(street)
+            house_num, house_sfx = parse_house_number(house)
     
     # Date of birth fields
     dob_ymd = parse_dob_ymd(df.get("Geburtstag", pd.NaT))
