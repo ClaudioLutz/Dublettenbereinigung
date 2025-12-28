@@ -75,6 +75,8 @@ def test_first_word_bonus_integration():
     
     # Create test data: "Joao Manuel" vs "Joao" with same last name and address
     # This should score ~74% without bonus, but ~79-84% with bonus
+    # IMPORTANT: Need exact DOB match to allow first-word bonus to work
+    # (without birth data, strict rules require 97%+ similarity)
     data = pd.DataFrame({
         'vorname': ['joao manuel', 'joao'],
         'name': ['pulquerio calado', 'pulquerio calado'],
@@ -83,8 +85,8 @@ def test_first_word_bonus_integration():
         'hausnummer': ['25', '25'],
         'plz': ['900000', '900000'],
         'ort': ['st. gallen', 'st. gallen'],
-        'geburtstag': [pd.NaT, pd.NaT],
-        'jahrgang': [-1, -1]
+        'geburtstag': [pd.Timestamp('1980-05-15'), pd.Timestamp('1980-05-15')],
+        'jahrgang': [1980, 1980]
     })
     
     # Preprocess columns (simplified for test)
@@ -98,8 +100,8 @@ def test_first_word_bonus_integration():
         'house_sfx': pd.Series(['', ''], dtype=str),
         'plz': data['plz'],
         'ort': data['ort'],
-        'dob_ymd': pd.Series([-1, -1], dtype=int),
-        'yob': pd.Series([-1, -1], dtype=int)
+        'dob_ymd': pd.Series([19800515, 19800515], dtype=int),
+        'yob': pd.Series([1980, 1980], dtype=int)
     }
     
     # Score the pair

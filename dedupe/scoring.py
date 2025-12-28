@@ -237,6 +237,7 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     both_dob_missing = (dob_i == -1 and dob_j == -1)
     both_yob_missing = (yob_i == -1 and yob_j == -1)
     one_dob_missing = (dob_i == -1 or dob_j == -1) and not both_dob_missing
+    one_yob_missing = (yob_i == -1 or yob_j == -1) and not both_yob_missing
     both_have_exact_dob = (dob_i != -1 and dob_j != -1 and dob_i == dob_j)
     yob_only_match = (yob_i != -1 and yob_j != -1 and yob_i == yob_j and not both_have_exact_dob)
 
@@ -256,9 +257,10 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     if both_dob_missing and both_yob_missing:
         effective_fuzzy_threshold = max(fuzzy_threshold, 0.95)
     
-    # Case 2: One DOB missing -> require 90% name similarity (strict)
+    # Case 2: One DOB missing OR one YOB missing (mismatched birth data quality) -> require 90% name similarity (strict)
     # Example: Michaela Asri (has DOB) vs Michaela Rabbani Mughal (no DOB)
-    elif one_dob_missing:
+    # Example: Rolf (no YOB) vs Rolf (has YOB 1951)
+    elif one_dob_missing or one_yob_missing:
         effective_fuzzy_threshold = max(fuzzy_threshold, 0.90)
     
     # Case 3: Both have YOB but no exact DOB -> require 88% name similarity
@@ -439,10 +441,30 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     # Check if name similarity meets threshold (use effective threshold)
     if best_score < effective_fuzzy_threshold:
         # NEW: Address-aware gate for borderline name scores (60-threshold range)
-        if 0.60 <= best_score < effective_fuzzy_threshold:
+        # CRITICAL: When birth data is missing or poor quality, require much tighter match
+        # Don't allow phonetic or address-assisted matching to bypass strict thresholds
+        
+        # Calculate minimum required score based on birth data quality
+        min_score_for_assist = 0.60  # Default minimum
+        
+        # Case 1: Both DOB and YOB missing -> require 95%+ for any assistance (extremely strict)
+        # Address-assisted and phonetic should NOT be used without birth data
+        if both_dob_missing and both_yob_missing:
+            min_score_for_assist = 0.95
+        # Case 2: One DOB missing OR one YOB missing -> require 90%+ for any assistance
+        elif one_dob_missing or one_yob_missing:
+            min_score_for_assist = 0.90
+        # Case 3: YOB-only match (no exact DOB) -> require 85%+ for any assistance
+        elif yob_only_match:
+            min_score_for_assist = 0.85
+        # Case 4: Exact DOB match -> allow normal behavior (60%+)
+        else:
+            min_score_for_assist = 0.60
+        
+        if min_score_for_assist <= best_score < effective_fuzzy_threshold:
             # Check for address-assisted match first (if enabled)
             if enable_address_aware:
-                # STRICT: Address-assisted matching also requires exact DOB or both missing
+                # STRICT: Address-assisted matching requires exact DOB or both birth fields missing
                 # Cannot use address-assisted when DOB data quality is poor
                 if not both_have_exact_dob and not (both_dob_missing and both_yob_missing):
                     # One DOB missing or YOB-only match -> reject address-assisted path
@@ -514,44 +536,80 @@ def score_pair(i: int, j: int, cols: dict[str, object],
                     )
             
             # If address is not strong enough, check phonetic fallback
+            # CRITICAL: Only allow phonetic matching when birth data quality is acceptable
             if COLOGNE_PHONETICS_AVAILABLE:
-                # Get phonetic codes - use combined names for comparison
-                v_i_phon = get_cologne_phonetic(first_i)
-                n_i_phon = get_cologne_phonetic(last_i_for_comparison)
-                v_j_phon = get_cologne_phonetic(first_j)
-                n_j_phon = get_cologne_phonetic(last_j_for_comparison)
+                # Phonetic matching requires better name similarity when birth data is poor
+                # Case 1: Both DOB and YOB missing -> require 92%+ for phonetic
+                # Case 2: One DOB missing -> require 87%+ for phonetic
+                # Case 3: YOB-only match -> require 85%+ for phonetic
+                # Case 4: Exact DOB match -> allow normal phonetic (60%+)
                 
-                # Check phonetic match (normal and swapped)
-                phonetic_match_normal = (v_i_phon and n_i_phon and v_j_phon and n_j_phon and
-                                        v_i_phon == v_j_phon and n_i_phon == n_j_phon)
-                phonetic_match_swapped = (v_i_phon and n_i_phon and v_j_phon and n_j_phon and
-                                         v_i_phon == n_j_phon and n_i_phon == v_j_phon)
+                can_use_phonetic = False
+                if both_have_exact_dob:
+                    # Have exact DOB - allow phonetic for 60%+ matches
+                    can_use_phonetic = (best_score >= 0.60)
+                elif yob_only_match:
+                    # YOB-only match - require 85%+ for phonetic
+                    can_use_phonetic = (best_score >= 0.85)
+                elif one_dob_missing or one_yob_missing:
+                    # One DOB or YOB missing - require 90%+ for phonetic
+                    can_use_phonetic = (best_score >= 0.90)
+                elif both_dob_missing and both_yob_missing:
+                    # Both missing - require 95%+ for phonetic (extremely strict)
+                    can_use_phonetic = (best_score >= 0.95)
                 
-                if phonetic_match_normal or phonetic_match_swapped:
-                    # Phonetic-assisted match
-                    is_swapped = phonetic_match_swapped
+                if can_use_phonetic:
+                    # Get phonetic codes - use combined names for comparison
+                    v_i_phon = get_cologne_phonetic(first_i)
+                    n_i_phon = get_cologne_phonetic(last_i_for_comparison)
+                    v_j_phon = get_cologne_phonetic(first_j)
+                    n_j_phon = get_cologne_phonetic(last_j_for_comparison)
                     
-                    if is_swapped:
-                        reason = 'phonetic_assisted_swapped'
-                        confidence = 70.0 + (address_ratio * 10.0)  # 70-80%
-                    else:
-                        reason = 'phonetic_assisted_normal'
-                        confidence = 72.0 + (address_ratio * 10.0)  # 72-82%
+                    # Check phonetic match (normal and swapped)
+                    phonetic_match_normal = (v_i_phon and n_i_phon and v_j_phon and n_j_phon and
+                                            v_i_phon == v_j_phon and n_i_phon == n_j_phon)
+                    phonetic_match_swapped = (v_i_phon and n_i_phon and v_j_phon and n_j_phon and
+                                             v_i_phon == n_j_phon and n_i_phon == v_j_phon)
                     
-                    return MatchResult(
-                        i=i, j=j,
-                        score=confidence,
-                        name_score=best_score * 100.0,
-                        addr_score=addr_score,
-                        reason=reason,
-                        is_swapped=is_swapped
-                    )
+                    if phonetic_match_normal or phonetic_match_swapped:
+                        # Phonetic-assisted match
+                        is_swapped = phonetic_match_swapped
+                        
+                        if is_swapped:
+                            reason = 'phonetic_assisted_swapped'
+                            confidence = 70.0 + (address_ratio * 10.0)  # 70-80%
+                        else:
+                            reason = 'phonetic_assisted_normal'
+                            confidence = 72.0 + (address_ratio * 10.0)  # 72-82%
+                        
+                        return MatchResult(
+                            i=i, j=j,
+                            score=confidence,
+                            name_score=best_score * 100.0,
+                            addr_score=addr_score,
+                            reason=reason,
+                            is_swapped=is_swapped
+                        )
         
         # No phonetic match and weak address - reject
         return None
     
     # STRICT FUZZY MATCHING RULES
     # For fuzzy matches, require MUCH stricter address matching
+    
+    # Rule 0: CRITICAL - When both DOB and YOB are missing, only allow near-exact matches
+    # Even with perfect address, reject fuzzy matches below 97% when no birth data exists
+    if both_dob_missing and both_yob_missing:
+        if best_score < 0.97:
+            # Name similarity too low without any birth data - reject
+            return None
+    
+    # Rule 0b: When one DOB or YOB is missing, require very high similarity (>92%)
+    # Even with perfect address, names must be very similar when birth data quality is poor
+    elif one_dob_missing or one_yob_missing:
+        if best_score < 0.92:
+            # Name similarity insufficient when one DOB/YOB is missing
+            return None
     
     # Rule 1: REQUIRE exact address match (PLZ, house number, street) for fuzzy matches
     # when DOB is not an exact match
