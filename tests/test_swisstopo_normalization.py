@@ -164,5 +164,159 @@ class TestAddressNormalizerBasics:
         assert 'address_normalizer' in sig.parameters
 
 
+class TestFullIntegration:
+    """Test full integration of swisstopo normalization in preprocess()."""
+
+    @pytest.fixture
+    def temp_duckdb(self, tmp_path):
+        """Create a temporary DuckDB with swisstopo schema."""
+        import duckdb
+        db_path = tmp_path / "swisstopo_test.duckdb"
+        con = duckdb.connect(str(db_path))
+
+        # Create schema matching what build_swisstopo_index.py creates
+        con.execute("""
+            CREATE TABLE addresses (
+                street_label VARCHAR,
+                adr_number VARCHAR,
+                plz4 VARCHAR,
+                ort VARCHAR,
+                adr_egaid VARCHAR,
+                bdg_egid VARCHAR,
+                adr_official VARCHAR,
+                adr_status VARCHAR,
+                street_key VARCHAR,
+                street_sig VARCHAR,
+                house_num VARCHAR
+            )
+        """)
+
+        # Insert a sample record: "Hofstattstrasse 12, 6377 Seelisberg"
+        # Normalized: street_key="hofstatt", street_sig="hofs", house_num="12"
+        con.execute("""
+            INSERT INTO addresses VALUES (
+                'Hofstattstrasse', '12', '6377', 'Seelisberg',
+                '1001', '2001', 'true', 'existing',
+                'hofstatt', 'hofs', '12'
+            )
+        """)
+
+        # Insert another record for typo testing: "Bahnhofstrasse 1, 8001 Zurich"
+        con.execute("""
+            INSERT INTO addresses VALUES (
+                'Bahnhofstrasse', '1', '8001', 'Zürich',
+                '1002', '2002', 'true', 'existing',
+                'bahnhof', 'bahn', '1'
+            )
+        """)
+
+        con.close()
+        return db_path
+
+    def test_preprocess_with_swisstopo(self, temp_duckdb):
+        """Test that preprocess uses swisstopo for normalization."""
+        from dedupe.preprocess import preprocess
+        from dedupe.swisstopo import SwisstopoAddressNormalizer
+
+        normalizer = SwisstopoAddressNormalizer(temp_duckdb)
+
+        # Input: slight variation of the address in DB
+        # "Hofstattstrasse" vs "Hofstattstrasse" (match)
+        # PLZ "637700" (should become "6377")
+        df = pd.DataFrame({
+            "Vorname": ["Hans"],
+            "Name": ["Müller"],
+            "Strasse": ["Hofstattstrasse"],
+            "HausNummer": ["12"],
+            "Plz": ["637700"],  # PLZ6
+            "Ort": ["Seelisberg"]
+        })
+
+        out = preprocess(df, address_normalizer=normalizer)
+
+        # Check swisstopo output fields
+        assert out["swis_match_type"][0] == "strict"
+        assert out["swis_adr_egaid_ref"][0] == "1001"
+        assert out["swis_plz4_ref"][0] == "6377"
+
+        # Check blocking keys use PLZ4 and normalized values
+        # The db record has 'hofstatt' as street key.
+        # Our input 'Hofstattstrasse' normalizes to 'hofstatt' via normalize_street_key too.
+
+        # Let's try a case where it changes.
+        # DB: "Bahnhofstrasse", Input: "Bahnhofstr."
+        df2 = pd.DataFrame({
+            "Vorname": ["Fritz"],
+            "Name": ["Meier"],
+            "Strasse": ["Bahnhofstr."],
+            "HausNummer": ["1"],
+            "Plz": ["8001"],
+            "Ort": ["Zurich"]
+        })
+
+        out2 = preprocess(df2, address_normalizer=normalizer)
+
+        assert out2["swis_match_type"][0] == "sig"
+        # Input "Bahnhofstr." -> normalized basic "bahnhofstr" -> key "bahnhofstr" (strict mismatch)
+        # DB "Bahnhofstrasse" -> key "bahnhof"
+        # Match!
+
+        # Does it overwrite the street?
+        # preprocess logic: street = street.where(~mask, ref_street)
+        # ref_street comes from ref['street_label_ref'] which is "Bahnhofstrasse"
+        # So "Bahnhofstr." should become "bahnhofstrasse" (normalized)
+
+        assert "bahnhofstrasse" in out2["street"][0]
+        assert out2["swis_changed"][0] == True
+
+    def test_plz6_handling_in_keys(self, temp_duckdb):
+        """Test that PLZ6 is handled correctly in blocking keys."""
+        from dedupe.preprocess import preprocess
+
+        # Case where no normalizer is used, but PLZ6 is present
+        df = pd.DataFrame({
+            "Vorname": ["Hans"],
+            "Name": ["Müller"],
+            "Strasse": ["Hauptstr"],
+            "HausNummer": ["10"],
+            "Plz": ["900000"],
+            "Ort": ["St. Gallen"]
+        })
+
+        out = preprocess(df, address_normalizer=None)
+
+        # Check that blocking keys use 4 digits
+        # addr_key_building = plz4 + "|" + street_key + "|" + house_num
+        key = out["addr_key_building"][0]
+        assert key.startswith("9000|")
+        assert "900000" not in key
+
+        # Check plz4_used is stored
+        assert out["plz4_used"][0] == "9000"
+
+    def test_preprocess_with_custom_index(self, temp_duckdb):
+        """Test preprocess with a custom index DataFrame."""
+        from dedupe.preprocess import preprocess
+        from dedupe.swisstopo import SwisstopoAddressNormalizer
+
+        normalizer = SwisstopoAddressNormalizer(temp_duckdb)
+
+        df = pd.DataFrame({
+            "Vorname": ["Hans"],
+            "Name": ["Müller"],
+            "Strasse": ["Hofstattstrasse"],
+            "HausNummer": ["12"],
+            "Plz": ["637700"],
+            "Ort": ["Seelisberg"]
+        }, index=[100])
+
+        out = preprocess(df, address_normalizer=normalizer)
+
+        # Check alignment
+        assert out["swis_match_type"].index[0] == 100
+        assert out["swis_match_type"].loc[100] == "strict"
+        assert out["plz4_used"].loc[100] == "6377"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

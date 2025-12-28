@@ -37,6 +37,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Path to swisstopo DuckDB file for reference-based address normalization (optional)"
     )
+    parser.add_argument(
+        "--norm-audit-out",
+        type=str,
+        default=None,
+        help="Path to write normalization audit CSV (for matched/changed addresses)"
+    )
     
     return parser.parse_args()
 
@@ -81,7 +87,8 @@ def main() -> int:
         enable_address_aware=enable_address_aware,
         use_address_blocking=use_address_blocking,
         window_size=args.window_size,
-        swisstopo_db=args.swisstopo_db
+        swisstopo_db=args.swisstopo_db,
+        norm_audit_out=args.norm_audit_out
     )
     
     print(f"\nDeduplication complete. Results written to: {args.out}")
