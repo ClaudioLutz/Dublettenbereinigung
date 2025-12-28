@@ -81,10 +81,18 @@ def check_zweitname(name2_a: str, name_a: str, name2_b: str, name_b: str) -> boo
 def compare_names_with_swap(first_a: str, last_a: str, first_b: str, last_b: str) -> dict:
     """
     Compare names with swapping detection
-    Returns dict with normal_score, swapped_score, best_score, is_swapped
+    Returns dict with normal_score, swapped_score, best_score, is_swapped, 
+                 first_similarity, last_similarity
     """
     if not first_a or not last_a or not first_b or not last_b:
-        return {'best_score': 0.0, 'is_swapped': False, 'normal_score': 0.0, 'swapped_score': 0.0}
+        return {
+            'best_score': 0.0, 
+            'is_swapped': False, 
+            'normal_score': 0.0, 
+            'swapped_score': 0.0,
+            'first_similarity': 0.0,
+            'last_similarity': 0.0
+        }
     
     # Normal comparison
     normal_first = fuzz.WRatio(first_a, first_b) / 100.0
@@ -96,12 +104,67 @@ def compare_names_with_swap(first_a: str, last_a: str, first_b: str, last_b: str
     swapped_last = fuzz.WRatio(last_a, first_b) / 100.0
     swapped_score = (swapped_first + swapped_last) / 2
     
+    # Return individual similarities for gating
+    is_swapped = swapped_score > normal_score
+    if is_swapped:
+        first_similarity = swapped_first
+        last_similarity = swapped_last
+    else:
+        first_similarity = normal_first
+        last_similarity = normal_last
+    
     return {
         'normal_score': normal_score,
         'swapped_score': swapped_score,
         'best_score': max(normal_score, swapped_score),
-        'is_swapped': swapped_score > normal_score
+        'is_swapped': is_swapped,
+        'first_similarity': first_similarity,
+        'last_similarity': last_similarity
     }
+
+
+def get_first_word_bonus(first_a: str, first_b: str, plz_i: str, plz_j: str, 
+                         house_num_i: str, house_num_j: str, street_i: str, 
+                         street_j: str, ort_i: str, ort_j: str) -> float:
+    """
+    Calculate bonus for matching first word/token of vorname.
+    
+    When first word matches exactly, this is strong evidence (e.g., "Joao Manuel" vs "Joao").
+    Bonus is higher when other fields also match perfectly.
+    
+    Args:
+        first_a, first_b: First name strings (already normalized)
+        plz_i, plz_j, house_num_i, house_num_j, street_i, street_j, ort_i, ort_j: Address fields
+        
+    Returns:
+        Bonus value: 0.10 if everything else matches, 0.05 otherwise, 0.0 if no match
+    """
+    if not first_a or not first_b:
+        return 0.0
+    
+    # Extract first word/token
+    first_word_a = first_a.split()[0] if first_a.split() else ""
+    first_word_b = first_b.split()[0] if first_b.split() else ""
+    
+    if not first_word_a or not first_word_b or first_word_a != first_word_b:
+        return 0.0
+    
+    # First words match! Now check if everything else matches perfectly
+    plz_match = (plz_i and plz_j and plz_i == plz_j)
+    house_match = (house_num_i and house_num_j and house_num_i == house_num_j)
+    
+    # Street and ort need fuzzy comparison
+    street_score = fuzz.ratio(street_i, street_j) if street_i and street_j else 0.0
+    ort_score = fuzz.ratio(ort_i, ort_j) if ort_i and ort_j else 0.0
+    
+    street_match = street_score >= 95.0
+    ort_match = ort_score >= 95.0
+    
+    # If everything else matches perfectly, give 10% bonus, otherwise 5%
+    if plz_match and house_match and street_match and ort_match:
+        return 0.10
+    else:
+        return 0.05
 
 
 def compute_normalized_address_ratio(plz_i: str, plz_j: str, street_i: str, street_j: str) -> float:
@@ -363,22 +426,66 @@ def score_pair(i: int, j: int, cols: dict[str, object],
         if 0.60 <= best_score < effective_fuzzy_threshold:
             # Check for address-assisted match first (if enabled)
             if enable_address_aware:
-                # Compute normalized address ratio
-                norm_address_ratio = compute_normalized_address_ratio(plz_i, plz_j, street_i, street_j)
+                # NEW: Name similarity gates to prevent family member false positives
+                # Get individual first name and last name similarities
+                first_similarity = name_comparison['first_similarity']
+                last_similarity = name_comparison['last_similarity']
                 
-                if norm_address_ratio >= 0.75:
-                    # Strong address match -> create "address_assisted" match
+                # Require minimum first name (75%) and last name (80%) similarity
+                # This rejects: "Hermann" vs "Andreas" (first ~40%), "Meier" vs "Bacher" (last ~20%)
+                if first_similarity < 0.75 or last_similarity < 0.80:
+                    # Names too different - reject even with strong address
+                    pass  # Fall through to phonetic check
+                else:
+                    # Compute normalized address ratio
+                    norm_address_ratio = compute_normalized_address_ratio(plz_i, plz_j, street_i, street_j)
+                    
+                    if norm_address_ratio >= 0.75:
+                        # Strong address match + sufficient name similarity -> "address_assisted" match
+                        if is_swapped:
+                            reason = 'address_assisted_swapped'
+                            confidence = 68.0 + (norm_address_ratio * 10.0)  # 68-78%
+                        else:
+                            reason = 'address_assisted_normal'
+                            confidence = 70.0 + (norm_address_ratio * 10.0)  # 70-80%
+                        
+                        return MatchResult(
+                            i=i, j=j,
+                            score=confidence,
+                            name_score=best_score * 100.0,
+                            addr_score=addr_score,
+                            reason=reason,
+                            is_swapped=is_swapped
+                        )
+            
+            # NEW: Apply first-word matching bonus for borderline cases
+            # If first word of vorname matches exactly, this is strong evidence
+            first_word_bonus = get_first_word_bonus(
+                first_i, first_j, plz_i, plz_j, 
+                house_num_i, house_num_j, street_i, street_j, 
+                ort_i, ort_j
+            )
+            
+            if first_word_bonus > 0:
+                # Boost name score with first-word bonus
+                boosted_name_score = min(best_score + first_word_bonus, 1.0)
+                
+                # Check if boosted score now meets threshold
+                if boosted_name_score >= effective_fuzzy_threshold:
+                    # Now qualifies as fuzzy match with bonus
                     if is_swapped:
-                        reason = 'address_assisted_swapped'
-                        confidence = 68.0 + (norm_address_ratio * 10.0)  # 68-78%
+                        reason = 'fuzzy_swapped'
+                        confidence = boosted_name_score * 50.0 + address_ratio * 30.0 - 5.0
+                        confidence = min(confidence, 95.0)
                     else:
-                        reason = 'address_assisted_normal'
-                        confidence = 70.0 + (norm_address_ratio * 10.0)  # 70-80%
+                        reason = 'fuzzy_normal'
+                        confidence = boosted_name_score * 50.0 + address_ratio * 30.0
+                        confidence = min(confidence, 95.0)
                     
                     return MatchResult(
                         i=i, j=j,
                         score=confidence,
-                        name_score=best_score * 100.0,
+                        name_score=boosted_name_score * 100.0,
                         addr_score=addr_score,
                         reason=reason,
                         is_swapped=is_swapped
