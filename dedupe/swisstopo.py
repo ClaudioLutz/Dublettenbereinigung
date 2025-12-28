@@ -62,12 +62,17 @@ class SwisstopoAddressNormalizer:
         """
         Normalize a chunk of addresses using swisstopo reference data.
         
+        Uses a multilingual-safe, type-preserving matching strategy to avoid
+        collisions like Augustinergasse ↔ Augustinerhof.
+        
         Args:
             keys_df: DataFrame with columns:
                 - row_id (int): Row index for joining back
                 - plz4 (str): 4-digit postal code
-                - street_key (str): Normalized street key (no type tokens)
-                - street_sig (str): Street signature for fuzzy matching
+                - street_key (str): Normalized street key (no type tokens) - legacy
+                - street_sig (str): Street signature for fuzzy matching - legacy
+                - street_full (str): Type-preserving street key (multilingual safe)
+                - street_sig_full (str): Type-preserving signature (multilingual safe)
                 - house_num (str): House number (numeric part only)
                 
         Returns:
@@ -79,7 +84,8 @@ class SwisstopoAddressNormalizer:
                 - ort_ref (str): Canonical locality name from swisstopo
                 - adr_egaid_ref (str): Address ID from swisstopo
                 - bdg_egid_ref (str): Building ID from swisstopo
-                - match_type (str): 'strict', 'sig', or 'none'
+                - match_type (str): 'strict', 'sig_full', or 'none'
+                - candidate_count (int): Number of candidate matches (for ambiguity detection)
                 
             Only rows with matches are returned (inner join semantics).
         """
@@ -89,9 +95,10 @@ class SwisstopoAddressNormalizer:
         # Register the DataFrame with DuckDB
         self.con.register('input_keys', keys_df)
         
-        # Pass A: Strict match on (plz4, street_key, house_num)
+        # Pass A: Strict match on (plz4, street_full, house_num) - TYPE-PRESERVING
+        # This prevents Augustinergasse ↔ Augustinerhof collisions
         strict_query = """
-        WITH ranked AS (
+        WITH candidates AS (
             SELECT 
                 i.row_id,
                 a.street_label,
@@ -101,6 +108,8 @@ class SwisstopoAddressNormalizer:
                 a.adr_egaid,
                 a.bdg_egid,
                 'strict' as match_type,
+                -- Count candidates for ambiguity detection
+                COUNT(*) OVER (PARTITION BY i.row_id) AS candidate_count,
                 -- Prefer official addresses
                 ROW_NUMBER() OVER (
                     PARTITION BY i.row_id 
@@ -111,10 +120,10 @@ class SwisstopoAddressNormalizer:
             FROM input_keys i
             INNER JOIN addresses a
                 ON i.plz4 = a.plz4
-                AND i.street_key = a.street_key
+                AND i.street_full = a.street_full
                 AND i.house_num = a.house_num
             WHERE a.plz4 != ''
-                AND a.street_key != ''
+                AND a.street_full != ''
                 AND a.house_num != ''
         )
         SELECT 
@@ -125,8 +134,9 @@ class SwisstopoAddressNormalizer:
             ort as ort_ref,
             adr_egaid as adr_egaid_ref,
             bdg_egid as bdg_egid_ref,
-            match_type
-        FROM ranked
+            match_type,
+            candidate_count
+        FROM candidates
         WHERE rn = 1
         """
         
@@ -137,11 +147,12 @@ class SwisstopoAddressNormalizer:
             self.con.unregister('input_keys')
             return strict_matches
         
-        # Pass B: Signature match on (plz4, street_sig, house_num) for rows without strict match
+        # Pass B: Signature match on (plz4, street_sig_full, house_num) - TYPE-PRESERVING FUZZY
+        # This allows typo recovery while still preventing cross-type collisions
         matched_row_ids = set(strict_matches['row_id'].tolist()) if not strict_matches.empty else set()
         
         sig_query = """
-        WITH ranked AS (
+        WITH candidates AS (
             SELECT 
                 i.row_id,
                 a.street_label,
@@ -150,7 +161,9 @@ class SwisstopoAddressNormalizer:
                 a.ort,
                 a.adr_egaid,
                 a.bdg_egid,
-                'sig' as match_type,
+                'sig_full' as match_type,
+                -- Count candidates for ambiguity detection
+                COUNT(*) OVER (PARTITION BY i.row_id) AS candidate_count,
                 -- Prefer official addresses
                 ROW_NUMBER() OVER (
                     PARTITION BY i.row_id 
@@ -161,10 +174,10 @@ class SwisstopoAddressNormalizer:
             FROM input_keys i
             INNER JOIN addresses a
                 ON i.plz4 = a.plz4
-                AND i.street_sig = a.street_sig
+                AND i.street_sig_full = a.street_sig_full
                 AND i.house_num = a.house_num
             WHERE a.plz4 != ''
-                AND a.street_sig != ''
+                AND a.street_sig_full != ''
                 AND a.house_num != ''
         )
         SELECT 
@@ -175,8 +188,9 @@ class SwisstopoAddressNormalizer:
             ort as ort_ref,
             adr_egaid as adr_egaid_ref,
             bdg_egid as bdg_egid_ref,
-            match_type
-        FROM ranked
+            match_type,
+            candidate_count
+        FROM candidates
         WHERE rn = 1
         """
         

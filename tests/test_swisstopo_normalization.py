@@ -318,5 +318,276 @@ class TestFullIntegration:
         assert out["plz4_used"].loc[100] == "6377"
 
 
+class TestMultilingualTypePreservation:
+    """Test type-preserving normalization for German/French/Italian."""
+    
+    def test_german_gasse_vs_hof_collision(self):
+        """Test that Augustinergasse and Augustinerhof don't collide."""
+        from dedupe.preprocess import normalize_street_full, street_signature_full
+        
+        # These should produce DIFFERENT keys (type-preserving)
+        gasse = pd.Series(["augustiner gasse"])
+        hof = pd.Series(["augustiner hof"])
+        
+        gasse_full = normalize_street_full(gasse).iloc[0]
+        hof_full = normalize_street_full(hof).iloc[0]
+        
+        assert gasse_full != hof_full, "Gasse and Hof should not collide"
+        assert "gasse" in gasse_full
+        assert "hof" in hof_full
+        
+        # Signatures should also differ
+        gasse_sig = street_signature_full(gasse).iloc[0]
+        hof_sig = street_signature_full(hof).iloc[0]
+        
+        assert gasse_sig != hof_sig, "Gasse and Hof signatures should not collide"
+    
+    def test_german_platz_vs_strasse_collision(self):
+        """Test that Zähringer Platz and Zähringer Strasse don't collide."""
+        from dedupe.preprocess import normalize_street_full, street_signature_full
+        
+        platz = pd.Series(["zaehringer platz"])
+        strasse = pd.Series(["zaehringer strasse"])
+        
+        platz_full = normalize_street_full(platz).iloc[0]
+        strasse_full = normalize_street_full(strasse).iloc[0]
+        
+        assert platz_full != strasse_full
+        assert "platz" in platz_full
+        assert "strasse" in strasse_full
+    
+    def test_french_rue_vs_route_collision(self):
+        """Test that Rue and Route don't collide."""
+        from dedupe.preprocess import normalize_street_full, street_signature_full
+        
+        rue = pd.Series(["rue de la gare"])
+        route = pd.Series(["route de la gare"])
+        
+        rue_full = normalize_street_full(rue).iloc[0]
+        route_full = normalize_street_full(route).iloc[0]
+        
+        assert rue_full != route_full
+        assert "rue" in rue_full
+        assert "route" in route_full
+    
+    def test_french_abbreviation_canonicalization(self):
+        """Test that French abbreviations are canonicalized correctly."""
+        from dedupe.preprocess import normalize_street_full
+        
+        # "av" should become "avenue"
+        av = pd.Series(["av de la gare"])
+        avenue = pd.Series(["avenue de la gare"])
+        
+        av_full = normalize_street_full(av).iloc[0]
+        avenue_full = normalize_street_full(avenue).iloc[0]
+        
+        # Both should normalize to same canonical form
+        assert av_full == avenue_full
+        assert "avenue" in av_full
+    
+    def test_italian_via_vs_viale_collision(self):
+        """Test that Via and Viale don't collide."""
+        from dedupe.preprocess import normalize_street_full, street_signature_full
+        
+        via = pd.Series(["via roma"])
+        viale = pd.Series(["viale roma"])
+        
+        via_full = normalize_street_full(via).iloc[0]
+        viale_full = normalize_street_full(viale).iloc[0]
+        
+        assert via_full != viale_full
+        assert "via" in via_full
+        assert "viale" in viale_full
+
+
+class TestAmbiguityGuard:
+    """Test ambiguity guard that prevents overwriting on non-unique matches."""
+    
+    @pytest.fixture
+    def ambiguous_db(self, tmp_path):
+        """Create a DB with ambiguous addresses (same PLZ/key/house, different streets)."""
+        import duckdb
+        db_path = tmp_path / "ambiguous_test.duckdb"
+        con = duckdb.connect(str(db_path))
+        
+        # Create schema with type-preserving keys
+        con.execute("""
+            CREATE TABLE addresses (
+                street_label VARCHAR,
+                adr_number VARCHAR,
+                plz4 VARCHAR,
+                ort VARCHAR,
+                adr_egaid VARCHAR,
+                bdg_egid VARCHAR,
+                adr_official VARCHAR,
+                adr_status VARCHAR,
+                street_key VARCHAR,
+                street_sig VARCHAR,
+                street_full VARCHAR,
+                street_sig_full VARCHAR,
+                house_num VARCHAR
+            )
+        """)
+        
+        # Insert TWO addresses that would collide with old logic:
+        # "Augustinergasse 8" and "Augustinerhof 8" in same PLZ
+        # With old street_key (type-less), both become "augustiner"
+        # With new street_full (type-preserving), they stay distinct
+        con.execute("""
+            INSERT INTO addresses VALUES (
+                'Augustinergasse', '8', '8001', 'Zürich',
+                '1001', '2001', 'true', 'existing',
+                'augustiner', 'augu', 'augustiner gasse', 'augu-gass', '8'
+            )
+        """)
+        
+        con.execute("""
+            INSERT INTO addresses VALUES (
+                'Augustinerhof', '8', '8001', 'Zürich',
+                '1002', '2002', 'true', 'existing',
+                'augustiner', 'augu', 'augustiner hof', 'augu-hof', '8'
+            )
+        """)
+        
+        # Add indexes
+        con.execute("CREATE INDEX idx_full ON addresses(plz4, street_full, house_num)")
+        con.execute("CREATE INDEX idx_sig_full ON addresses(plz4, street_sig_full, house_num)")
+        
+        con.close()
+        return db_path
+    
+    def test_augustinergasse_no_collision(self, ambiguous_db):
+        """Test that Augustinergasse 8 matches correctly (not Augustinerhof)."""
+        from dedupe.preprocess import preprocess
+        from dedupe.swisstopo import SwisstopoAddressNormalizer
+        
+        normalizer = SwisstopoAddressNormalizer(ambiguous_db)
+        
+        # Input: "Augustinergasse 8"
+        df = pd.DataFrame({
+            "Vorname": ["Hans"],
+            "Name": ["Müller"],
+            "Strasse": ["Augustinergasse"],
+            "HausNummer": ["8"],
+            "Plz": ["8001"],
+            "Ort": ["Zürich"]
+        })
+        
+        out = preprocess(df, address_normalizer=normalizer)
+        
+        # Should match with type-preserving key
+        assert out["swis_match_type"][0] == "strict"
+        assert out["swis_adr_egaid_ref"][0] == "1001"  # Gasse, not Hof
+        assert "gasse" in out["swis_street_label_ref"][0].lower()
+        assert "hof" not in out["swis_street_label_ref"][0].lower()
+    
+    def test_augustinerhof_no_collision(self, ambiguous_db):
+        """Test that Augustinerhof 8 matches correctly (not Augustinergasse)."""
+        from dedupe.preprocess import preprocess
+        from dedupe.swisstopo import SwisstopoAddressNormalizer
+        
+        normalizer = SwisstopoAddressNormalizer(ambiguous_db)
+        
+        # Input: "Augustinerhof 8"
+        df = pd.DataFrame({
+            "Vorname": ["Fritz"],
+            "Name": ["Meier"],
+            "Strasse": ["Augustinerhof"],
+            "HausNummer": ["8"],
+            "Plz": ["8001"],
+            "Ort": ["Zürich"]
+        })
+        
+        out = preprocess(df, address_normalizer=normalizer)
+        
+        # Should match with type-preserving key
+        assert out["swis_match_type"][0] == "strict"
+        assert out["swis_adr_egaid_ref"][0] == "1002"  # Hof, not Gasse
+        assert "hof" in out["swis_street_label_ref"][0].lower()
+        assert "gasse" not in out["swis_street_label_ref"][0].lower()
+    
+    def test_candidate_count_in_output(self, ambiguous_db):
+        """Test that candidate_count is computed correctly."""
+        from dedupe.swisstopo import SwisstopoAddressNormalizer
+        
+        normalizer = SwisstopoAddressNormalizer(ambiguous_db)
+        
+        # Build keys for a query
+        keys_df = pd.DataFrame({
+            'row_id': [0],
+            'plz4': ['8001'],
+            'street_key': ['augustiner'],  # Legacy - would match both
+            'street_sig': ['augu'],  # Legacy - would match both
+            'street_full': ['augustiner gasse'],  # Type-preserving - unique
+            'street_sig_full': ['augu-gass'],  # Type-preserving - unique
+            'house_num': ['8']
+        })
+        
+        result = normalizer.normalize_chunk(keys_df)
+        
+        # Should have unique match with type-preserving key
+        assert len(result) == 1
+        assert result['candidate_count'].iloc[0] == 1
+        assert result['adr_egaid_ref'].iloc[0] == '1001'  # Gasse
+
+
+class TestStreetTypeCanonicalization:
+    """Test street type canonicalization mappings."""
+    
+    def test_german_str_to_strasse(self):
+        """Test that 'str' canonicalizes to 'strasse'."""
+        from dedupe.preprocess import normalize_street_full
+        
+        # Use separate tokens for canonicalization test
+        str_form = pd.Series(["haupt str"])
+        strasse_form = pd.Series(["haupt strasse"])
+        
+        str_full = normalize_street_full(str_form).iloc[0]
+        strasse_full = normalize_street_full(strasse_form).iloc[0]
+        
+        # Both should normalize to same form
+        assert str_full == strasse_full
+        assert "strasse" in str_full
+    
+    def test_french_av_to_avenue(self):
+        """Test that 'av' canonicalizes to 'avenue'."""
+        from dedupe.preprocess import normalize_street_full
+        
+        av = pd.Series(["av de lausanne"])
+        avenue = pd.Series(["avenue de lausanne"])
+        
+        av_full = normalize_street_full(av).iloc[0]
+        avenue_full = normalize_street_full(avenue).iloc[0]
+        
+        assert av_full == avenue_full
+        assert "avenue" in av_full
+    
+    def test_french_bd_to_boulevard(self):
+        """Test that 'bd' canonicalizes to 'boulevard'."""
+        from dedupe.preprocess import normalize_street_full
+        
+        bd = pd.Series(["bd de grancy"])
+        boulevard = pd.Series(["boulevard de grancy"])
+        
+        bd_full = normalize_street_full(bd).iloc[0]
+        boulevard_full = normalize_street_full(boulevard).iloc[0]
+        
+        assert bd_full == boulevard_full
+        assert "boulevard" in bd_full
+    
+    def test_italian_v_to_via(self):
+        """Test that 'v' canonicalizes to 'via'."""
+        from dedupe.preprocess import normalize_street_full
+        
+        v = pd.Series(["v manzoni"])
+        via = pd.Series(["via manzoni"])
+        
+        v_full = normalize_street_full(v).iloc[0]
+        via_full = normalize_street_full(via).iloc[0]
+        
+        assert v_full == via_full
+        assert "via" in v_full
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
