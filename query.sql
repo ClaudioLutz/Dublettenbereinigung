@@ -1,4 +1,4 @@
-SELECT top 10000
+SELECT top 100000
        [Name]
       ,[Vorname]
       ,[Name2]
