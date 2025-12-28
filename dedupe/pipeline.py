@@ -109,11 +109,31 @@ def process_block(
     return results
 
 
-def _write_results(rows: Iterable[MatchResult], writer: csv.writer, df: pd.DataFrame) -> None:
+def _write_results(rows: Iterable[MatchResult], writer: csv.writer, df: pd.DataFrame, cols: dict[str, object]) -> None:
     """
     Write results in the same format as duplicate_checker_optimized.py
     Creates 2 rows per match (one for record A, one for record B)
     """
+    # Helper to get value from cols (which might be Series or numpy array)
+    def get_col(key, idx):
+        if key not in cols:
+            return ""
+        val = cols[key]
+        if isinstance(val, pd.Series):
+            return val.iloc[idx]
+        if isinstance(val, np.ndarray):
+            return val[idx]
+        return val
+
+    # Fields to append from normalization
+    norm_keys = [
+        'street', 'house', 'plz4_used', 'ort',
+        'addr_key_building', 'addr_key_typo',
+        'swis_match_type', 'swis_changed',
+        'swis_adr_egaid_ref', 'swis_bdg_egid_ref',
+        'swis_street_label_ref', 'swis_adr_number_ref', 'swis_plz4_ref', 'swis_ort_ref'
+    ]
+
     for mr in rows:
         record_a = df.iloc[mr.i]
         record_b = df.iloc[mr.j]
@@ -147,7 +167,7 @@ def _write_results(rows: Iterable[MatchResult], writer: csv.writer, df: pd.DataF
             crefo_a,
             record_a.get('Geburtstag', ''),
             record_a.get('Jahrgang', ''),
-        ]
+        ] + [get_col(k, mr.i) for k in norm_keys]
         
         # Record B
         row_b = [
@@ -166,10 +186,70 @@ def _write_results(rows: Iterable[MatchResult], writer: csv.writer, df: pd.DataF
             crefo_b,
             record_b.get('Geburtstag', ''),
             record_b.get('Jahrgang', ''),
-        ]
+        ] + [get_col(k, mr.j) for k in norm_keys]
         
         writer.writerow(row_a)
         writer.writerow(row_b)
+
+
+def _write_audit_log(path: str, df: pd.DataFrame, cols: dict[str, object]) -> None:
+    """
+    Write separate audit log for all rows that matched swisstopo or changed.
+    """
+    # Check if we should append header (file doesn't exist)
+    file_exists = os.path.exists(path)
+
+    # Identify rows to log: matched or changed
+    if "swis_match_type" not in cols:
+        return
+
+    # Values in cols are typically Series or ndarrays aligned with df
+    match_types = cols["swis_match_type"]
+    changed = cols["swis_changed"]
+
+    mask = (match_types != "") | (changed == True)
+    if not mask.any():
+        return
+
+    # Helper to safely get from cols
+    def get_series(key):
+        val = cols.get(key)
+        if isinstance(val, (pd.Series, np.ndarray)):
+            # If it's a series, align it with the mask
+            return val[mask]
+        # Scalar fallback
+        return pd.Series([val] * mask.sum())
+
+    # Build audit dataframe
+    # We use df.get() with fallback to handle missing columns gracefully
+    len_df = len(df)
+    empty_col = pd.Series([''] * len_df)
+
+    audit_df = pd.DataFrame({
+        'index': df.index[mask] if hasattr(df, 'index') else np.arange(len_df)[mask],
+        'Crefo': df.get('Crefo', empty_col)[mask],
+        'Strasse_raw': df.get('Strasse', empty_col)[mask],
+        'HausNummer_raw': df.get('HausNummer', empty_col)[mask],
+        'Plz_raw': df.get('Plz', empty_col)[mask],
+        'Ort_raw': df.get('Ort', empty_col)[mask],
+
+        'street_norm': get_series('street'),
+        'house_norm': get_series('house'),
+        'plz4_used': get_series('plz4_used'),
+        'ort_norm': get_series('ort'),
+
+        'swis_match_type': get_series('swis_match_type'),
+        'swis_changed': get_series('swis_changed'),
+        'swis_adr_egaid': get_series('swis_adr_egaid_ref'),
+        'swis_bdg_egid': get_series('swis_bdg_egid_ref'),
+        'swis_street_ref': get_series('swis_street_label_ref'),
+        'swis_house_ref': get_series('swis_adr_number_ref'),
+        'swis_plz4_ref': get_series('swis_plz4_ref'),
+        'swis_ort_ref': get_series('swis_ort_ref'),
+    })
+
+    # Write to CSV
+    audit_df.to_csv(path, mode='a', header=not file_exists, index=False)
 
 
 def run_pipeline(
@@ -182,7 +262,8 @@ def run_pipeline(
     enable_address_aware: bool = True,
     use_address_blocking: bool = True,
     window_size: int = 10,
-    swisstopo_db: str | None = None
+    swisstopo_db: str | None = None,
+    norm_audit_out: str | None = None,
 ) -> None:
     """
     Run the deduplication pipeline with configurable blocking strategy.
@@ -198,6 +279,7 @@ def run_pipeline(
         use_address_blocking: Use address-based blocking (True) or name-based (False)
         window_size: Window size for sorted neighborhood
         swisstopo_db: Optional path to swisstopo DuckDB file for address normalization
+        norm_audit_out: Optional path to write normalization audit CSV
     """
     engine = create_mssql_engine(db_cfg)
     
@@ -214,6 +296,10 @@ def run_pipeline(
         else:
             print(f"Warning: Swisstopo database not found at {swisstopo_db}, skipping address normalization")
             print()
+
+    # Remove existing audit log if it exists and we're starting fresh
+    if norm_audit_out and os.path.exists(norm_audit_out):
+        os.remove(norm_audit_out)
     
     # First pass: count total rows to estimate chunks
     print("Counting total rows...")
@@ -245,16 +331,40 @@ def run_pipeline(
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         # Write header matching duplicate_checker_optimized.py format
-        writer.writerow([
+        header = [
             "match_id", "confidence", "match_type", "position", "index",
             "vorname", "name", "name2", "strasse", "hausnummer", "plz", "ort",
             "crefo", "geburtstag", "jahrgang"
-        ])
+        ]
+        # Append normalization fields
+        header += [
+            "street_norm", "house_norm", "plz4_used", "ort_norm",
+            "addr_key_building", "addr_key_typo",
+            "swis_match_type", "swis_changed",
+            "swis_adr_egaid", "swis_bdg_egid",
+            "swis_street_ref", "swis_house_ref", "swis_plz4_ref", "swis_ort_ref"
+        ]
+        writer.writerow(header)
 
         chunk_num = 0
         for df_chunk in dfs:
             chunk_num += 1
             cols = preprocess(df_chunk, address_normalizer=address_normalizer)
+
+            # Print normalization stats
+            if "swis_match_type" in cols:
+                match_types = cols["swis_match_type"]
+                n_strict = (match_types == "strict").sum()
+                n_sig = (match_types == "sig").sum()
+                n_matched = n_strict + n_sig
+                n_changed = cols["swis_changed"].sum()
+
+                print(f"Chunk {chunk_num}: Normalization matched {n_matched} ({n_strict} strict, {n_sig} sig), {n_changed} keys changed")
+
+            # Write audit log if requested
+            if norm_audit_out:
+                _write_audit_log(norm_audit_out, df_chunk, cols)
+
             params = BlockingParams()
 
             if use_address_blocking:
@@ -326,11 +436,11 @@ def run_pipeline(
                             # Only wait for a subset (e.g., half of in_flight) to free up slots
                             subset = futures[:max_workers]
                             for fut in as_completed(subset):
-                                _write_results(fut.result(), writer, df_chunk)
+                                _write_results(fut.result(), writer, df_chunk, cols)
                                 futures.remove(fut)
                                 pbar.update(1)
 
                     # Drain remaining futures
                     for fut in as_completed(futures):
-                        _write_results(fut.result(), writer, df_chunk)
+                        _write_results(fut.result(), writer, df_chunk, cols)
                         pbar.update(1)
