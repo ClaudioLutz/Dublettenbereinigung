@@ -30,6 +30,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--window-size", type=int, default=10, help="Window size for sorted neighborhood (default: 10)")
     parser.add_argument("--no-address-aware", action="store_true", help="Disable address-assisted matching")
     
+    # Address normalization options
+    parser.add_argument(
+        "--swisstopo-db",
+        type=str,
+        default=None,
+        help="Path to swisstopo DuckDB file for reference-based address normalization (optional)"
+    )
+    
     return parser.parse_args()
 
 
@@ -59,6 +67,7 @@ def main() -> int:
     print(f"  Fuzzy threshold: {args.fuzzy_threshold}")
     print(f"  Window size: {args.window_size}")
     print(f"  Address-aware matching: {enable_address_aware}")
+    print(f"  Swisstopo normalization: {'enabled' if args.swisstopo_db else 'disabled'}")
     print(f"  Workers: {args.workers if args.workers > 0 else 'auto'}")
     print(f"  Output: {args.out}")
     print()
@@ -71,7 +80,8 @@ def main() -> int:
         fuzzy_threshold=args.fuzzy_threshold,
         enable_address_aware=enable_address_aware,
         use_address_blocking=use_address_blocking,
-        window_size=args.window_size
+        window_size=args.window_size,
+        swisstopo_db=args.swisstopo_db
     )
     
     print(f"\nDeduplication complete. Results written to: {args.out}")
