@@ -82,3 +82,5 @@ amtliches-gebaeudeadressverzeichnis_ch_2056.csv/amtliches-gebaeudeadressverzeich
 *.duckdb.wal
 swisstopo*.duckdb
 results.csv
+normalization_audit.csv
+normalization_audit_filter.csv
