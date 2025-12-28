@@ -208,7 +208,8 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     4. Two-stage: exact matching, then fuzzy matching
     5. Address-assisted matching (borderline names + strong address)
     6. Phonetic fallback (borderline names + phonetic match)
-    7. Stricter threshold when DOB/YOB missing
+    7. Stricter threshold when DOB/YOB missing or not exactly matched
+    8. STRICT: Require exact DOB AND exact address for fuzzy matches
     
     Args:
         i, j: Indices of records to compare
@@ -232,9 +233,12 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     if yob_i != -1 and yob_j != -1 and yob_i != yob_j:
         return None
     
-    # Track if both DOB/YOB are missing (will require stronger name evidence)
+    # Track DOB/YOB match quality
     both_dob_missing = (dob_i == -1 and dob_j == -1)
     both_yob_missing = (yob_i == -1 and yob_j == -1)
+    one_dob_missing = (dob_i == -1 or dob_j == -1) and not both_dob_missing
+    both_have_exact_dob = (dob_i != -1 and dob_j != -1 and dob_i == dob_j)
+    yob_only_match = (yob_i != -1 and yob_j != -1 and yob_i == yob_j and not both_have_exact_dob)
 
     # Business Rule 2: Zweitname rule (swap-aware)
     name2_i = cols["name2"].iloc[i]
@@ -244,12 +248,24 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     first_i = cols["first"].iloc[i]
     first_j = cols["first"].iloc[j]
     
-    # Adjust effective fuzzy threshold when both DOB and YOB are missing
-    # This protects against merging family members with same surname at same address
+    # STRICT: Adjust effective fuzzy threshold based on DOB/address match quality
+    # Birth year alone is NOT a strong enough indication - require exact DOB
     effective_fuzzy_threshold = fuzzy_threshold
+    
+    # Case 1: Both DOB and YOB missing -> require 95% name similarity (very strict)
     if both_dob_missing and both_yob_missing:
-        # Require 90% name similarity minimum when no DOB/YOB available
+        effective_fuzzy_threshold = max(fuzzy_threshold, 0.95)
+    
+    # Case 2: One DOB missing -> require 90% name similarity (strict)
+    # Example: Michaela Asri (has DOB) vs Michaela Rabbani Mughal (no DOB)
+    elif one_dob_missing:
         effective_fuzzy_threshold = max(fuzzy_threshold, 0.90)
+    
+    # Case 3: Both have YOB but no exact DOB -> require 88% name similarity
+    # Example: Dominique Tschannen vs Doris Tschannen (both have YOB 1976, no DOB)
+    # Birth year alone is insufficient!
+    elif yob_only_match:
+        effective_fuzzy_threshold = max(fuzzy_threshold, 0.88)
     
     if not check_zweitname(name2_i, last_i, name2_j, last_j):
         # Swapped placement fallback: surname(+name2) might be in Vorname field
@@ -426,37 +442,43 @@ def score_pair(i: int, j: int, cols: dict[str, object],
         if 0.60 <= best_score < effective_fuzzy_threshold:
             # Check for address-assisted match first (if enabled)
             if enable_address_aware:
-                # NEW: Name similarity gates to prevent family member false positives
-                # Get individual first name and last name similarities
-                first_similarity = name_comparison['first_similarity']
-                last_similarity = name_comparison['last_similarity']
-                
-                # Require minimum first name (75%) and last name (80%) similarity
-                # This rejects: "Hermann" vs "Andreas" (first ~40%), "Meier" vs "Bacher" (last ~20%)
-                if first_similarity < 0.75 or last_similarity < 0.80:
-                    # Names too different - reject even with strong address
-                    pass  # Fall through to phonetic check
+                # STRICT: Address-assisted matching also requires exact DOB or both missing
+                # Cannot use address-assisted when DOB data quality is poor
+                if not both_have_exact_dob and not (both_dob_missing and both_yob_missing):
+                    # One DOB missing or YOB-only match -> reject address-assisted path
+                    pass  # Fall through to phonetic check or rejection
                 else:
-                    # Compute normalized address ratio
-                    norm_address_ratio = compute_normalized_address_ratio(plz_i, plz_j, street_i, street_j)
+                    # NEW: Name similarity gates to prevent family member false positives
+                    # Get individual first name and last name similarities
+                    first_similarity = name_comparison['first_similarity']
+                    last_similarity = name_comparison['last_similarity']
                     
-                    if norm_address_ratio >= 0.75:
-                        # Strong address match + sufficient name similarity -> "address_assisted" match
-                        if is_swapped:
-                            reason = 'address_assisted_swapped'
-                            confidence = 68.0 + (norm_address_ratio * 10.0)  # 68-78%
-                        else:
-                            reason = 'address_assisted_normal'
-                            confidence = 70.0 + (norm_address_ratio * 10.0)  # 70-80%
+                    # Require minimum first name (75%) and last name (80%) similarity
+                    # This rejects: "Hermann" vs "Andreas" (first ~40%), "Meier" vs "Bacher" (last ~20%)
+                    if first_similarity < 0.75 or last_similarity < 0.80:
+                        # Names too different - reject even with strong address
+                        pass  # Fall through to phonetic check
+                    else:
+                        # Compute normalized address ratio
+                        norm_address_ratio = compute_normalized_address_ratio(plz_i, plz_j, street_i, street_j)
                         
-                        return MatchResult(
-                            i=i, j=j,
-                            score=confidence,
-                            name_score=best_score * 100.0,
-                            addr_score=addr_score,
-                            reason=reason,
-                            is_swapped=is_swapped
-                        )
+                        if norm_address_ratio >= 0.75:
+                            # Strong address match + sufficient name similarity -> "address_assisted" match
+                            if is_swapped:
+                                reason = 'address_assisted_swapped'
+                                confidence = 68.0 + (norm_address_ratio * 10.0)  # 68-78%
+                            else:
+                                reason = 'address_assisted_normal'
+                                confidence = 70.0 + (norm_address_ratio * 10.0)  # 70-80%
+                            
+                            return MatchResult(
+                                i=i, j=j,
+                                score=confidence,
+                                name_score=best_score * 100.0,
+                                addr_score=addr_score,
+                                reason=reason,
+                                is_swapped=is_swapped
+                            )
             
             # NEW: Apply first-word matching bonus for borderline cases
             # If first word of vorname matches exactly, this is strong evidence
@@ -528,42 +550,80 @@ def score_pair(i: int, j: int, cols: dict[str, object],
         # No phonetic match and weak address - reject
         return None
     
-    # Calculate confidence based on fuzzy match
-    # NEW RULE: For fuzzy matches, require better address similarity
-    # If names are not exactly matching, addresses should be very similar
+    # STRICT FUZZY MATCHING RULES
+    # For fuzzy matches, require MUCH stricter address matching
     
-    # Reject fuzzy matches with poor address similarity
-    if address_ratio < 0.30:
-        # If addresses are very different, reject unless names are very close (>95%)
-        if best_score < 0.95:
+    # Rule 1: REQUIRE exact address match (PLZ, house number, street) for fuzzy matches
+    # when DOB is not an exact match
+    if not both_have_exact_dob:
+        # No exact DOB match -> addresses must match perfectly
+        
+        # Require matching PLZ
+        if not (plz_i and plz_j and plz_i == plz_j):
+            # PLZ missing or different -> reject fuzzy match
+            return None
+        
+        # Require matching house numbers
+        if not (house_num_i and house_num_j and house_num_i == house_num_j):
+            # House number missing or different -> reject fuzzy match
+            return None
+        
+        # Require very high street similarity (>90%)
+        if not (street_i and street_j and street_score >= 90.0):
+            # Street missing or too different -> reject fuzzy match
             return None
     
-    # Strict PLZ mismatch rule for fuzzy matches
-    if plz_i and plz_j and plz_i != plz_j:
-        # Different PLZ with fuzzy name match? Reject unless street is very similar (>85%)
-        if street_score < 85.0:
+    # Rule 2: Even with exact DOB, require good address similarity
+    else:
+        # Have exact DOB match -> allow some address flexibility but still strict
+        
+        # Reject fuzzy matches with poor address similarity
+        if address_ratio < 0.50:
+            # If addresses are very different, reject unless names are very close (>95%)
+            if best_score < 0.95:
+                return None
+        
+        # Strict PLZ mismatch rule
+        if plz_i and plz_j and plz_i != plz_j:
+            # Different PLZ with fuzzy name match? Reject unless street is very similar (>90%)
+            if street_score < 90.0:
+                return None
+        
+        # CRITICAL: Require matching house numbers (if both have house number data)
+        if house_num_i and house_num_j and house_num_i != house_num_j:
+            # Numeric parts differ = different buildings
             return None
     
-    # CRITICAL: Require matching house numbers for fuzzy matches (if both have house number data)
-    # Different house numbers on same street = different people!
-    if house_num_i and house_num_j and house_num_i != house_num_j:
-        # Numeric parts differ = different buildings
-        return None
-    
+    # Calculate confidence score with STRICT penalties for missing DOB
     # Base: name similarity * 50 (max 50 points from names)
     # Address bonus: address_ratio * 30 (max 30 points from address)
     base_confidence = best_score * 50.0
     address_bonus = address_ratio * 30.0
     
+    # Apply DOB quality penalties
+    dob_penalty = 0.0
+    if one_dob_missing:
+        # One DOB missing: -15 point penalty
+        dob_penalty = 15.0
+    elif yob_only_match:
+        # YOB-only match (no exact DOB): -10 point penalty
+        # Birth year alone is insufficient!
+        dob_penalty = 10.0
+    elif both_dob_missing and both_yob_missing:
+        # Both DOB and YOB missing: -20 point penalty
+        dob_penalty = 20.0
+    
     if is_swapped:
         # Fuzzy swapped: apply -5 penalty
-        confidence = base_confidence + address_bonus - 5.0
-        confidence = min(confidence, 95.0)  # Cap at 95%
+        confidence = base_confidence + address_bonus - dob_penalty - 5.0
+        confidence = max(confidence, 40.0)  # Floor at 40%
+        confidence = min(confidence, 85.0)  # Cap at 85% for fuzzy with DOB issues
         reason = "fuzzy_swapped"
     else:
         # Fuzzy normal
-        confidence = base_confidence + address_bonus
-        confidence = min(confidence, 95.0)  # Cap at 95%
+        confidence = base_confidence + address_bonus - dob_penalty
+        confidence = max(confidence, 40.0)  # Floor at 40%
+        confidence = min(confidence, 85.0)  # Cap at 85% for fuzzy with DOB issues
         reason = "fuzzy_normal"
 
     return MatchResult(
