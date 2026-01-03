@@ -38,6 +38,7 @@ def process_block(
     *,
     global_seen: set[tuple[int, int]],
     global_lock: threading.Lock,
+    ml_scorer=None,
 ) -> list[MatchResult]:
     """
     Process a single block with global deduplication across passes.
@@ -68,7 +69,11 @@ def process_block(
                 continue
             global_seen.add(pair)
 
-        mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
+        # Use ML scorer if provided, otherwise use rule-based
+        if ml_scorer:
+            mr = ml_scorer.score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold)
+        else:
+            mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
         if mr:
             results.append(mr)
 
@@ -86,7 +91,11 @@ def process_block(
                     continue
                 global_seen.add(pair)
 
-            mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
+            # Use ML scorer if provided, otherwise use rule-based
+            if ml_scorer:
+                mr = ml_scorer.score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold)
+            else:
+                mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
             if mr:
                 results.append(mr)
     else:
@@ -102,7 +111,11 @@ def process_block(
                     continue
                 global_seen.add(pair)
 
-            mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
+            # Use ML scorer if provided, otherwise use rule-based
+            if ml_scorer:
+                mr = ml_scorer.score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold)
+            else:
+                mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
             if mr:
                 results.append(mr)
 
@@ -252,21 +265,23 @@ def _write_audit_log(path: str, df: pd.DataFrame, cols: dict[str, object]) -> No
 
 
 def run_pipeline(
-    query: str, 
-    db_cfg: DbConfig, 
-    out_path: str, 
-    workers: int = 0, 
+    query: str,
+    db_cfg: DbConfig,
+    out_path: str,
+    workers: int = 0,
     chunksize: int = 200_000,
-    fuzzy_threshold: float = 0.80, 
+    fuzzy_threshold: float = 0.80,
     enable_address_aware: bool = True,
     use_address_blocking: bool = True,
     window_size: int = 10,
     swisstopo_db: str | None = None,
     norm_audit_out: str | None = None,
+    ml_scorer=None,
+    embedding_store=None,
 ) -> None:
     """
     Run the deduplication pipeline with configurable blocking strategy.
-    
+
     Args:
         query: SQL query to fetch data
         db_cfg: Database configuration
@@ -279,6 +294,8 @@ def run_pipeline(
         window_size: Window size for sorted neighborhood
         swisstopo_db: Optional path to swisstopo DuckDB file for address normalization
         norm_audit_out: Optional path to write normalization audit CSV
+        ml_scorer: Optional ML scorer for ML-based matching
+        embedding_store: Optional embedding store (used by ML scorer)
     """
     engine = create_mssql_engine(db_cfg)
     
@@ -428,6 +445,7 @@ def run_pipeline(
                                 window_size,
                                 global_seen=global_seen,
                                 global_lock=global_lock,
+                                ml_scorer=ml_scorer,
                             )
                         )
                         if len(futures) >= in_flight:

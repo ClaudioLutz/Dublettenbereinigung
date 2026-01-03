@@ -9,6 +9,31 @@ from urllib.parse import quote_plus
 from .config import DbConfig
 
 
+def get_engine(server: str, database: str, user: str = "", password: str = "") -> Engine:
+    """
+    Helper function to create a database engine from connection parameters.
+    
+    Args:
+        server: SQL Server hostname
+        database: Database name
+        user: Username (optional, will use Windows Auth if empty)
+        password: Password (optional, will use Windows Auth if empty)
+    
+    Returns:
+        SQLAlchemy Engine
+    """
+    cfg = DbConfig(
+        server=server,
+        database=database,
+        user=user or "WIN_AUTH",
+        password=password or "",
+        driver="ODBC Driver 17 for SQL Server",
+        encrypt=False,
+        trust_server_certificate=True,
+    )
+    return create_mssql_engine(cfg)
+
+
 def create_mssql_engine(cfg: DbConfig) -> Engine:
     # Support Windows Authentication if user/password are empty or "WIN_AUTH"
     use_windows_auth = not cfg.user or not cfg.password or cfg.user.upper() == "WIN_AUTH"

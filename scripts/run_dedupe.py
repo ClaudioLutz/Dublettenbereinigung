@@ -5,6 +5,11 @@ import argparse
 import getpass
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 # Add project root to path to import local dedupe module
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -43,7 +48,32 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Path to write normalization audit CSV (for matched/changed addresses)"
     )
-    
+
+    # ML scoring options (Phase 4)
+    parser.add_argument(
+        "--use-ml-scoring",
+        action="store_true",
+        help="Use ML-based scoring instead of rule-based fuzzy matching"
+    )
+    parser.add_argument(
+        "--ml-model-dir",
+        type=str,
+        default="models",
+        help="Directory containing ML model artifacts (default: models)"
+    )
+    parser.add_argument(
+        "--ml-version",
+        type=str,
+        default="v1",
+        help="ML model version to load (default: v1)"
+    )
+    parser.add_argument(
+        "--embeddings-dir",
+        type=str,
+        default=None,
+        help="Directory containing pre-computed embeddings (optional, improves ML quality)"
+    )
+
     return parser.parse_args()
 
 
@@ -67,8 +97,35 @@ def main() -> int:
 
     use_address_blocking = (args.blocking_mode == "address")
     enable_address_aware = not args.no_address_aware
-    
-    print(f"Running deduplication pipeline:")
+
+    # Load ML scorer if requested
+    ml_scorer = None
+    embedding_store = None
+
+    if args.use_ml_scoring:
+        print("Loading ML scorer...")
+        try:
+            # Load embeddings if provided
+            if args.embeddings_dir:
+                from dedupe.ml.embeddings import EmbeddingStore
+                embedding_store = EmbeddingStore.load(args.embeddings_dir)
+                print(f"  Loaded embeddings from {args.embeddings_dir}")
+
+            # Load ML scorer
+            from dedupe.ml.scoring_ml import MLScorer
+            ml_scorer = MLScorer.load_from_directory(
+                model_dir=args.ml_model_dir,
+                version=args.ml_version,
+                embedding_store=embedding_store,
+            )
+            print(f"  Loaded ML model version {args.ml_version} from {args.ml_model_dir}")
+        except Exception as e:
+            print(f"  Warning: Failed to load ML scorer: {e}")
+            print(f"  Falling back to rule-based scoring...")
+            ml_scorer = None
+
+    print(f"\nRunning deduplication pipeline:")
+    print(f"  Scoring method: {'ML-based' if ml_scorer else 'Rule-based'}")
     print(f"  Blocking mode: {args.blocking_mode}")
     print(f"  Fuzzy threshold: {args.fuzzy_threshold}")
     print(f"  Window size: {args.window_size}")
@@ -77,7 +134,7 @@ def main() -> int:
     print(f"  Workers: {args.workers if args.workers > 0 else 'auto'}")
     print(f"  Output: {args.out}")
     print()
-    
+
     run_pipeline(
         query=query,
         db_cfg=cfg,
@@ -88,7 +145,9 @@ def main() -> int:
         use_address_blocking=use_address_blocking,
         window_size=args.window_size,
         swisstopo_db=args.swisstopo_db,
-        norm_audit_out=args.norm_audit_out
+        norm_audit_out=args.norm_audit_out,
+        ml_scorer=ml_scorer,
+        embedding_store=embedding_store,
     )
     
     print(f"\nDeduplication complete. Results written to: {args.out}")

@@ -86,3 +86,9 @@ normalization_audit.csv
 normalization_audit_filter.csv
 Sichere Dubletten Kandidaten für auto-merge.xlsx
 modular_results.xlsx
+
+# ML models and embeddings (large files)
+models/
+*.dat
+*.bin
+*.npz
