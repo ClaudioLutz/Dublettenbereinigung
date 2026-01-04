@@ -50,6 +50,36 @@ class SilverLabelGenerator:
         self.negative_ratio = negative_ratio
         self.hard_negative_strategy = hard_negative_strategy
 
+    def _read_csv_with_encoding(self, file_path: str) -> pd.DataFrame:
+        """
+        Read CSV file trying multiple encodings for Windows compatibility.
+
+        Args:
+            file_path: Path to CSV file
+
+        Returns:
+            DataFrame with CSV contents
+        """
+        encodings_to_try = ['utf-8', 'latin-1', 'cp1252']
+
+        for encoding in encodings_to_try:
+            try:
+                df = pd.read_csv(file_path, sep=';', encoding=encoding)
+                logger.debug(f"Successfully read CSV with encoding: {encoding}")
+                return df
+            except UnicodeDecodeError:
+                continue
+            except Exception:
+                # Try comma-separated with same encoding
+                try:
+                    df = pd.read_csv(file_path, encoding=encoding)
+                    logger.debug(f"Successfully read CSV (comma-sep) with encoding: {encoding}")
+                    return df
+                except:
+                    continue
+
+        raise ValueError(f"Could not read {file_path} with any supported encoding")
+
     def extract_positives_from_results(
         self,
         results_path: str,
@@ -65,12 +95,8 @@ class SilverLabelGenerator:
         """
         logger.info(f"Loading results from {results_path}")
 
-        # Read CSV (semicolon-separated based on the sample we saw)
-        try:
-            df = pd.read_csv(results_path, sep=';')
-        except:
-            # Fallback to comma-separated
-            df = pd.read_csv(results_path)
+        # Read CSV with encoding detection for Windows compatibility
+        df = self._read_csv_with_encoding(results_path)
 
         logger.info(f"Loaded {len(df)} result rows")
 
@@ -145,10 +171,8 @@ class SilverLabelGenerator:
         logger.info("Generating hard negatives from blocking partitions")
 
         # Read full results to get all candidates (including non-matches)
-        try:
-            df = pd.read_csv(results_path, sep=';')
-        except:
-            df = pd.read_csv(results_path)
+        # Try multiple encodings for Windows-generated CSVs
+        df = self._read_csv_with_encoding(results_path)
 
         # Get all unique indices
         all_indices_a = set(df['index'].unique())
@@ -244,10 +268,8 @@ class SilverLabelGenerator:
         """
         logger.info("Generating negatives from low-confidence matches")
 
-        try:
-            df = pd.read_csv(results_path, sep=';')
-        except:
-            df = pd.read_csv(results_path)
+        # Read CSV with encoding detection for Windows compatibility
+        df = self._read_csv_with_encoding(results_path)
 
         # Filter low-confidence matches
         low_conf_mask = df['confidence'] < max_confidence

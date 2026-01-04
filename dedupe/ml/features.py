@@ -191,12 +191,12 @@ class FeatureExtractor:
             cologne_last_a = cologne_encode(last_a) if last_a else ''
             cologne_last_b = cologne_encode(last_b) if last_b else ''
 
-            features['cologne_first_match'] = float(
+            features['cologne_first_match'] = 1.0 if (
                 cologne_first_a and cologne_first_b and cologne_first_a == cologne_first_b
-            )
-            features['cologne_last_match'] = float(
+            ) else 0.0
+            features['cologne_last_match'] = 1.0 if (
                 cologne_last_a and cologne_last_b and cologne_last_a == cologne_last_b
-            )
+            ) else 0.0
         except ImportError:
             features['cologne_first_match'] = 0.0
             features['cologne_last_match'] = 0.0
@@ -375,18 +375,21 @@ class FeatureExtractor:
         # First word bonus (from existing logic)
         first_a = cols['first'][idx_a]
         first_b = cols['first'][idx_b]
-        last_a = cols['last'][idx_a]
-        last_b = cols['last'][idx_b]
         street_a = cols['street'][idx_a]
         street_b = cols['street'][idx_b]
+        house_a = cols['house'][idx_a]
+        house_b = cols['house'][idx_b]
         plz_a = cols['plz4_used'][idx_a]
         plz_b = cols['plz4_used'][idx_b]
+        ort_a = cols['ort'][idx_a]
+        ort_b = cols['ort'][idx_b]
 
         bonus = get_first_word_bonus(
             first_a, first_b,
-            last_a, last_b,
-            street_a, street_b,
             plz_a, plz_b,
+            house_a, house_b,
+            street_a, street_b,
+            ort_a, ort_b,
         )
         features['first_word_bonus'] = bonus / 100.0  # Normalize to [0, 1]
 

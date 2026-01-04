@@ -293,6 +293,9 @@ class EmbeddingGenerator:
             if self.device == 'cuda':
                 torch.cuda.empty_cache()
 
+        # Explicitly close memmap to release Windows file lock
+        del embeddings
+
         logger.info(f"Embeddings saved to {output_path}")
 
 
@@ -530,6 +533,11 @@ class EmbeddingStore:
         embeddings_path = output_dir / f"embeddings_{MODEL_VERSION}.dat"
         if skip_embeddings:
             logger.info(f"Skipping embeddings save (already exists at {embeddings_path})")
+            # On Windows, release memmap file lock before saving other files
+            if hasattr(self.embeddings, '_mmap'):
+                import gc
+                del self.embeddings
+                gc.collect()
         elif USE_MEMORY_MAPPING:
             # Create memory-mapped file
             mmap_embeddings = np.memmap(

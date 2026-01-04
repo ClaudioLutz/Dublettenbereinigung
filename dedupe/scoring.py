@@ -80,18 +80,25 @@ def check_zweitname(name2_a: str, name_a: str, name2_b: str, name_b: str) -> boo
 
 def compare_names_with_swap(first_a: str, last_a: str, first_b: str, last_b: str) -> dict:
     """
-    Compare names with swapping detection
-    Returns dict with normal_score, swapped_score, best_score, is_swapped, 
-                 first_similarity, last_similarity
+    Compare names with swapping detection.
+
+    Returns dict with:
+        - normal_score, swapped_score, best_score, is_swapped
+        - first_similarity, last_similarity (from best orientation)
+        - normal_first, normal_last, swapped_first, swapped_last (individual scores)
     """
     if not first_a or not last_a or not first_b or not last_b:
         return {
-            'best_score': 0.0, 
-            'is_swapped': False, 
-            'normal_score': 0.0, 
+            'best_score': 0.0,
+            'is_swapped': False,
+            'normal_score': 0.0,
             'swapped_score': 0.0,
             'first_similarity': 0.0,
-            'last_similarity': 0.0
+            'last_similarity': 0.0,
+            'normal_first': 0.0,
+            'normal_last': 0.0,
+            'swapped_first': 0.0,
+            'swapped_last': 0.0,
         }
     
     # Normal comparison
@@ -119,7 +126,12 @@ def compare_names_with_swap(first_a: str, last_a: str, first_b: str, last_b: str
         'best_score': max(normal_score, swapped_score),
         'is_swapped': is_swapped,
         'first_similarity': first_similarity,
-        'last_similarity': last_similarity
+        'last_similarity': last_similarity,
+        # Individual scores for ML feature extraction
+        'normal_first': normal_first,
+        'normal_last': normal_last,
+        'swapped_first': swapped_first,
+        'swapped_last': swapped_last,
     }
 
 
