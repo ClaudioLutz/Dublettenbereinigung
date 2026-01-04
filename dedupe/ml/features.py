@@ -225,7 +225,7 @@ class FeatureExtractor:
 
         features['plz_exact_match'] = float(plz_a == plz_b)
         features['plz_region_match'] = float(
-            plz_a and plz_b and plz_a[:2] == plz_b[:2]
+            bool(plz_a) and bool(plz_b) and plz_a[:2] == plz_b[:2]
         )
 
         # House number comparison
@@ -255,7 +255,7 @@ class FeatureExtractor:
         street_sig_a = cols.get('street_sig', [None] * len(cols['street']))[idx_a]
         street_sig_b = cols.get('street_sig', [None] * len(cols['street']))[idx_b]
         features['street_sig_match'] = float(
-            street_sig_a and street_sig_b and street_sig_a == street_sig_b
+            bool(street_sig_a) and bool(street_sig_b) and street_sig_a == street_sig_b
         )
 
         # Composite address score (similar to existing scoring.py logic)
