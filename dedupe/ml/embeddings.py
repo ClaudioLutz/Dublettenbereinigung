@@ -514,19 +514,23 @@ class EmbeddingStore:
 
         logger.info("FAISS index built successfully")
 
-    def save(self, output_dir: Union[str, Path]):
+    def save(self, output_dir: Union[str, Path], skip_embeddings: bool = False):
         """
         Save embedding store to disk.
 
         Args:
             output_dir: Directory to save embeddings and metadata
+            skip_embeddings: If True, skip saving embeddings (useful when they
+                were already saved by encode_large_dataset and are memory-mapped)
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Save embeddings
+        # Save embeddings (unless already saved externally)
         embeddings_path = output_dir / f"embeddings_{MODEL_VERSION}.dat"
-        if USE_MEMORY_MAPPING:
+        if skip_embeddings:
+            logger.info(f"Skipping embeddings save (already exists at {embeddings_path})")
+        elif USE_MEMORY_MAPPING:
             # Create memory-mapped file
             mmap_embeddings = np.memmap(
                 embeddings_path,

@@ -240,12 +240,14 @@ def main():
     embeddings_path = output_dir / f"embeddings_{MODEL_VERSION}.dat"
 
     # Use memory-efficient encoding for large datasets
+    embeddings_already_saved = False
     if total_records > 100_000:
         generator.encode_large_dataset(
             all_texts,
             embeddings_path,
             chunk_size=args.batch_size * 10,  # Process in larger chunks
         )
+        embeddings_already_saved = True
         # Load back for EmbeddingStore
         embeddings = np.memmap(
             embeddings_path,
@@ -280,7 +282,7 @@ def main():
 
     # Save everything
     logger.info("Saving embedding store...")
-    store.save(output_dir)
+    store.save(output_dir, skip_embeddings=embeddings_already_saved)
 
     # Calculate statistics
     elapsed_time = time.time() - start_time

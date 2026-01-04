@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(dir \"c:\\\\Lokal_Code\\\\dubletten\\\\models\\\\embeddings\")",
+      "Bash(powershell:*)",
+      "Bash(venv\\\\Scripts\\\\python:*)"
     ]
   }
 }
