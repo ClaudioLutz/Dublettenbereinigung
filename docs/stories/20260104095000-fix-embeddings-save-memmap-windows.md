@@ -2,12 +2,13 @@
 
 ## Summary
 
-Fixed issues preventing ML training pipeline Phase 3 from running:
+Fixed issues preventing ML training pipeline Phase 3 and Phase 4 from running:
 1. Missing `embeddings_v1_meta.npz` file due to Windows memmap file locking
 2. CSV parsing failure in `silver_labels.py` due to non-UTF8 encoding
 3. Missing return keys in `compare_names_with_swap()` for ML feature extraction
 4. Incorrect arguments in `get_first_word_bonus()` call in features.py
 5. Boolean-to-float conversion error for cologne phonetics matching
+6. GPU inference deadlock due to cuML thread-safety issues
 
 ## Context / Problem
 
@@ -44,6 +45,9 @@ Root causes:
 - **dedupe/ml/features.py**:
   - Fixed `_extract_interaction_features()` call to `get_first_word_bonus()` with correct argument order and added missing `house` and `ort` parameters
   - Fixed cologne phonetics boolean-to-float conversion that failed on empty strings
+
+- **dedupe/ml/model.py**:
+  - Added thread lock for GPU inference to prevent deadlock (cuML/cupy is not thread-safe with multiple threads)
 
 ## How to Test
 

@@ -38,15 +38,22 @@ TOKEN_NAME = "[NAME]"
 TOKEN_ADDR = "[ADDR]"
 TOKEN_DOB = "[DOB]"
 
-# Text concatenation template
+# Text concatenation template (FULL - includes both name and address)
 # Fields are normalized (lowercase, umlauts converted, etc.) before embedding
 TEXT_TEMPLATE = "{token_name} {first} {last} {name2} {token_addr} {street} {house} {plz} {ort}"
+# Example output: "[NAME] hans mueller [ADDR] hauptstrasse 12 8000 zuerich"
 
-# Example output:
-# "[NAME] hans mueller [ADDR] hauptstrasse 12 8000 zuerich"
+# NAME-ONLY template (for name similarity comparison without address contamination)
+# This is critical for proper entity matching - address should not affect name similarity
+TEXT_TEMPLATE_NAME_ONLY = "{token_name} {first} {last} {name2}"
+# Example output: "[NAME] hans mueller"
 
 # Include DOB in text (optional, can improve precision but reduces recall for typos)
 INCLUDE_DOB_IN_TEXT = False  # Set to True to add "[DOB] {dob_ymd}" to template
+
+# Default embedding mode for new embeddings
+# Options: 'full' (name + address), 'name_only' (recommended for better matching)
+DEFAULT_EMBEDDING_MODE = 'name_only'
 
 # ==============================================================================
 # FAISS Index Configuration
@@ -114,6 +121,9 @@ LOW_SIMILARITY_THRESHOLD = 0.60   # Cosine similarity for likely non-matches
 
 # Model version for tracking
 MODEL_VERSION = "v1"
+
+# Name-only embedding version suffix
+NAME_ONLY_VERSION_SUFFIX = "_name"
 
 # Metadata keys for embedding storage
 METADATA_KEYS = [

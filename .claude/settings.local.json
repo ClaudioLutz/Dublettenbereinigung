@@ -4,7 +4,9 @@
       "Bash(python:*)",
       "Bash(dir \"c:\\\\Lokal_Code\\\\dubletten\\\\models\\\\embeddings\")",
       "Bash(powershell:*)",
-      "Bash(venv\\\\Scripts\\\\python:*)"
+      "Bash(venv\\\\Scripts\\\\python:*)",
+      "Bash(Select-String -Pattern \"train|dedupe|script\")",
+      "Bash(dir /b \"c:\\\\Lokal_Code\\\\dubletten\\\\models\")"
     ]
   }
 }

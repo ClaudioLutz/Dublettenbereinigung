@@ -45,7 +45,7 @@ load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dedupe.io import get_engine, read_sql_df
-from dedupe.ml.config import BATCH_SIZE, CHUNK_SIZE, DEVICE, MODEL_VERSION
+from dedupe.ml.config import BATCH_SIZE, CHUNK_SIZE, DEVICE, MODEL_VERSION, NAME_ONLY_VERSION_SUFFIX
 from dedupe.ml.embeddings import EmbeddingGenerator, EmbeddingStore
 from dedupe.preprocess import preprocess
 
@@ -125,6 +125,14 @@ def parse_args():
         help='Skip FAISS index building (faster for testing)',
     )
 
+    # Name-only embeddings (for improved entity matching)
+    parser.add_argument(
+        '--name-only',
+        action='store_true',
+        help='Generate name-only embeddings (recommended for entity matching). '
+             'These embeddings exclude address fields to avoid address contamination.',
+    )
+
     return parser.parse_args()
 
 
@@ -171,7 +179,12 @@ def main():
     logger.info(f"Device: {args.device}")
     logger.info(f"Batch size: {args.batch_size}")
     logger.info(f"Chunk size: {args.chunk_size}")
+    logger.info(f"Name-only mode: {args.name_only}")
     logger.info("=" * 80)
+
+    if args.name_only:
+        logger.info("NOTE: Generating name-only embeddings (no address fields)")
+        logger.info("      These are recommended for proper entity matching")
 
     start_time = time.time()
 
@@ -216,6 +229,7 @@ def main():
                 house=cols['house'][i] if i < len(cols['house']) else '',
                 plz=cols['plz4_used'][i] if i < len(cols['plz4_used']) else '',
                 ort=cols['ort'][i] if i < len(cols['ort']) else '',
+                name_only=args.name_only,  # Use name-only mode if specified
             )
             chunk_texts.append(text)
 
@@ -237,7 +251,8 @@ def main():
 
     # Generate embeddings
     logger.info("Generating embeddings...")
-    embeddings_path = output_dir / f"embeddings_{MODEL_VERSION}.dat"
+    version_suffix = NAME_ONLY_VERSION_SUFFIX if args.name_only else ""
+    embeddings_path = output_dir / f"embeddings_{MODEL_VERSION}{version_suffix}.dat"
 
     # Use memory-efficient encoding for large datasets
     embeddings_already_saved = False
@@ -282,7 +297,7 @@ def main():
 
     # Save everything
     logger.info("Saving embedding store...")
-    store.save(output_dir, skip_embeddings=embeddings_already_saved)
+    store.save(output_dir, skip_embeddings=embeddings_already_saved, version_suffix=version_suffix)
 
     # Calculate statistics
     elapsed_time = time.time() - start_time

@@ -30,7 +30,7 @@ class SilverLabelGenerator:
         positive_confidence_threshold: float = 95.0,
         positive_match_types: Optional[List[str]] = None,
         negative_ratio: float = 2.5,
-        hard_negative_strategy: str = 'blocking',
+        hard_negative_strategy: str = 'diverse',
     ):
         """
         Initialize silver label generator.
@@ -40,7 +40,11 @@ class SilverLabelGenerator:
             positive_match_types: Match types to include (default: exact matches only)
             negative_ratio: Ratio of negatives to positives (e.g., 2.5 = 2.5:1)
             hard_negative_strategy: Strategy for generating negatives
-                                   ('blocking', 'random', 'mixed')
+                                   - 'blocking': Same address block, not matched (OLD - causes poor training)
+                                   - 'random': Random pairs (easy negatives)
+                                   - 'mixed': 50% blocking, 50% low confidence
+                                   - 'diverse' (RECOMMENDED): Mix of easy, medium, and hard negatives
+                                     This provides the best training data diversity for model learning.
         """
         self.positive_confidence_threshold = positive_confidence_threshold
         self.positive_match_types = positive_match_types or [
@@ -320,6 +324,213 @@ class SilverLabelGenerator:
 
         return negatives_df
 
+    def generate_diverse_negatives(
+        self,
+        positives_df: pd.DataFrame,
+        results_path: str,
+        target_count: int,
+    ) -> pd.DataFrame:
+        """
+        Generate diverse negative examples with multiple difficulty levels.
+
+        This strategy creates a balanced mix of:
+        1. Easy negatives (40%): Random pairs - different address, different name
+        2. Medium negatives (30%): Same last name OR same PLZ, but not both
+        3. Hard negatives (30%): Same address block but clearly different names
+
+        This diversity is critical for training a model that can distinguish:
+        - True duplicates (same person, variations in name/address)
+        - Same-address different-person (roommates, family, etc.)
+        - Similar names at different addresses
+
+        Args:
+            positives_df: DataFrame of positive pairs
+            results_path: Path to results CSV
+            target_count: Number of negative pairs to generate
+
+        Returns:
+            DataFrame with diverse negative pairs
+        """
+        logger.info("Generating diverse negatives (easy/medium/hard mix)")
+
+        # Read results data
+        df = self._read_csv_with_encoding(results_path)
+
+        # Get all unique indices and their properties
+        all_indices = df['index'].unique()
+        n_records = len(all_indices)
+
+        # Build lookup structures for efficient sampling
+        index_to_row = {}
+        last_name_groups = {}  # last_name -> list of indices
+        plz_groups = {}  # plz -> list of indices
+
+        for _, row in df.drop_duplicates(subset=['index']).iterrows():
+            idx = int(row['index'])
+            index_to_row[idx] = row
+
+            # Group by last name
+            last = str(row.get('name', '')).lower().strip()
+            if last:
+                if last not in last_name_groups:
+                    last_name_groups[last] = []
+                last_name_groups[last].append(idx)
+
+            # Group by PLZ
+            plz = str(row.get('plz', ''))[:4]  # First 4 digits
+            if plz and len(plz) >= 4:
+                if plz not in plz_groups:
+                    plz_groups[plz] = []
+                plz_groups[plz].append(idx)
+
+        # Get positive pairs (to exclude)
+        positive_pairs = set(
+            (min(row['idx_a'], row['idx_b']), max(row['idx_a'], row['idx_b']))
+            for _, row in positives_df.iterrows()
+        )
+
+        # Allocate counts for each difficulty level
+        n_easy = int(target_count * 0.40)  # 40% easy
+        n_medium = int(target_count * 0.30)  # 30% medium
+        n_hard = target_count - n_easy - n_medium  # 30% hard
+
+        negatives = []
+        indices_list = list(all_indices)
+
+        # --- Generate EASY negatives: random pairs ---
+        logger.info(f"  Generating {n_easy} easy negatives (random pairs)...")
+        easy_count = 0
+        max_attempts = n_easy * 10
+        attempts = 0
+
+        while easy_count < n_easy and attempts < max_attempts:
+            attempts += 1
+            idx_a, idx_b = np.random.choice(indices_list, size=2, replace=False)
+            idx_a, idx_b = int(min(idx_a, idx_b)), int(max(idx_a, idx_b))
+
+            if (idx_a, idx_b) not in positive_pairs:
+                negatives.append({
+                    'idx_a': idx_a,
+                    'idx_b': idx_b,
+                    'label': 0,
+                    'source': 'easy_random',
+                })
+                positive_pairs.add((idx_a, idx_b))  # Don't reuse
+                easy_count += 1
+
+        # --- Generate MEDIUM negatives: same last name OR same PLZ ---
+        logger.info(f"  Generating {n_medium} medium negatives (same name or PLZ)...")
+        medium_count = 0
+
+        # Try same last name first
+        for last, indices in last_name_groups.items():
+            if len(indices) < 2:
+                continue
+            if medium_count >= n_medium // 2:
+                break
+
+            # Sample pairs with same last name
+            for _ in range(min(3, len(indices))):
+                if medium_count >= n_medium // 2:
+                    break
+                idx_sample = np.random.choice(indices, size=min(2, len(indices)), replace=False)
+                if len(idx_sample) < 2:
+                    continue
+                idx_a, idx_b = int(min(idx_sample)), int(max(idx_sample))
+
+                if (idx_a, idx_b) not in positive_pairs:
+                    negatives.append({
+                        'idx_a': idx_a,
+                        'idx_b': idx_b,
+                        'label': 0,
+                        'source': 'medium_same_lastname',
+                    })
+                    positive_pairs.add((idx_a, idx_b))
+                    medium_count += 1
+
+        # Then same PLZ
+        for plz, indices in plz_groups.items():
+            if len(indices) < 2:
+                continue
+            if medium_count >= n_medium:
+                break
+
+            # Sample pairs with same PLZ
+            for _ in range(min(3, len(indices))):
+                if medium_count >= n_medium:
+                    break
+                idx_sample = np.random.choice(indices, size=min(2, len(indices)), replace=False)
+                if len(idx_sample) < 2:
+                    continue
+                idx_a, idx_b = int(min(idx_sample)), int(max(idx_sample))
+
+                if (idx_a, idx_b) not in positive_pairs:
+                    negatives.append({
+                        'idx_a': idx_a,
+                        'idx_b': idx_b,
+                        'label': 0,
+                        'source': 'medium_same_plz',
+                    })
+                    positive_pairs.add((idx_a, idx_b))
+                    medium_count += 1
+
+        # --- Generate HARD negatives: same address block, different names ---
+        logger.info(f"  Generating {n_hard} hard negatives (same address, different name)...")
+        hard_count = 0
+
+        if 'addr_key_building' in df.columns:
+            for block_key, group in df.groupby('addr_key_building'):
+                if hard_count >= n_hard:
+                    break
+                if len(group) < 2:
+                    continue
+
+                indices_in_block = group['index'].unique()
+                if len(indices_in_block) < 2:
+                    continue
+
+                # Sample pairs from same address block
+                for _ in range(min(5, len(indices_in_block))):
+                    if hard_count >= n_hard:
+                        break
+
+                    idx_sample = np.random.choice(indices_in_block, size=2, replace=False)
+                    idx_a, idx_b = int(min(idx_sample)), int(max(idx_sample))
+
+                    if (idx_a, idx_b) not in positive_pairs:
+                        negatives.append({
+                            'idx_a': idx_a,
+                            'idx_b': idx_b,
+                            'label': 0,
+                            'source': 'hard_same_address',
+                        })
+                        positive_pairs.add((idx_a, idx_b))
+                        hard_count += 1
+
+        # Fill remaining with random if needed
+        while len(negatives) < target_count:
+            idx_a, idx_b = np.random.choice(indices_list, size=2, replace=False)
+            idx_a, idx_b = int(min(idx_a, idx_b)), int(max(idx_a, idx_b))
+
+            if (idx_a, idx_b) not in positive_pairs:
+                negatives.append({
+                    'idx_a': idx_a,
+                    'idx_b': idx_b,
+                    'label': 0,
+                    'source': 'filler_random',
+                })
+                positive_pairs.add((idx_a, idx_b))
+
+        negatives_df = pd.DataFrame(negatives)
+
+        # Log distribution
+        source_counts = negatives_df['source'].value_counts()
+        logger.info("  Negative distribution:")
+        for source, count in source_counts.items():
+            logger.info(f"    {source}: {count:,} ({count/len(negatives_df)*100:.1f}%)")
+
+        return negatives_df
+
     def generate_silver_labels(
         self,
         results_path: str,
@@ -367,6 +578,11 @@ class SilverLabelGenerator:
                 positives_df, results_path, target_negatives - len(neg_blocking)
             )
             negatives_df = pd.concat([neg_blocking, neg_low_conf], ignore_index=True)
+        elif self.hard_negative_strategy == 'diverse':
+            # Recommended: diverse mix of easy, medium, and hard negatives
+            negatives_df = self.generate_diverse_negatives(
+                positives_df, results_path, target_negatives
+            )
         else:
             raise ValueError(f"Unknown hard_negative_strategy: {self.hard_negative_strategy}")
 

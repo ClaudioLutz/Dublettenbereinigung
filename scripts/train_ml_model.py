@@ -138,16 +138,30 @@ def main():
 
     # Load embeddings if provided
     embedding_store = None
+    name_embedding_store = None
     if args.embeddings:
         embeddings_path = Path(args.embeddings)
         if embeddings_path.exists():
-            logger.info(f"Loading embeddings from {embeddings_path}")
+            # Load full embeddings (name + address)
+            logger.info(f"Loading full embeddings from {embeddings_path}")
             try:
                 embedding_store = EmbeddingStore.load(embeddings_path)
-                logger.info("Embeddings loaded successfully")
+                logger.info("Full embeddings loaded successfully")
             except Exception as e:
-                logger.warning(f"Failed to load embeddings: {e}")
-                logger.warning("Continuing without embeddings...")
+                logger.warning(f"Failed to load full embeddings: {e}")
+                logger.warning("Continuing without full embeddings...")
+
+            # Load name-only embeddings (critical for proper entity matching)
+            logger.info(f"Loading name-only embeddings from {embeddings_path}")
+            try:
+                name_embedding_store = EmbeddingStore.load_name_only(embeddings_path)
+                logger.info("Name-only embeddings loaded successfully")
+            except FileNotFoundError:
+                logger.warning("Name-only embeddings not found. Run with --name-only to generate them.")
+                logger.warning("Continuing without name-only embeddings...")
+            except Exception as e:
+                logger.warning(f"Failed to load name-only embeddings: {e}")
+                logger.warning("Continuing without name-only embeddings...")
         else:
             logger.warning(f"Embeddings directory not found: {embeddings_path}")
             logger.warning("Continuing without embeddings...")
@@ -155,6 +169,7 @@ def main():
     # Initialize training pipeline
     pipeline = TrainingPipeline(
         embedding_store=embedding_store,
+        name_embedding_store=name_embedding_store,
         random_state=args.random_state,
     )
 

@@ -42,7 +42,10 @@ def process_block(
 ) -> list[MatchResult]:
     """
     Process a single block with global deduplication across passes.
-    
+
+    Uses batch processing for ML scoring when available for significantly
+    better performance.
+
     Args:
         idx: Block indices
         cols: Preprocessed columns
@@ -53,34 +56,15 @@ def process_block(
         window_size: Window size for sorted neighborhood
         global_seen: Set of already seen pairs across all blocks
         global_lock: Thread lock for global_seen access
+        ml_scorer: Optional MLScorer for ML-based scoring
     """
     results: list[MatchResult] = []
     local_seen: set[tuple[int, int]] = set()
 
-    # Stage 1: Exact pairs (cheap, catches identical normalized names)
-    for i, j in iter_exact_pairs(idx, cols):
-        pair = (min(i, j), max(i, j))
-        if pair in local_seen:
-            continue
-        local_seen.add(pair)
-
-        with global_lock:
-            if pair in global_seen:
-                continue
-            global_seen.add(pair)
-
-        # Use ML scorer if provided, otherwise use rule-based
-        if ml_scorer:
-            mr = ml_scorer.score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold)
-        else:
-            mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
-        if mr:
-            results.append(mr)
-
-    # Stage 2: Fuzzy pairs (name similarity with prefilter)
-    if use_windowed:
-        # Use sorted neighborhood windowing for address blocks
-        for i, j in iter_windowed_fuzzy_pairs(idx, cols, window=window_size, name_threshold=88):
+    def collect_unique_pairs(pair_generator) -> list[tuple[int, int]]:
+        """Collect unique pairs not yet seen locally or globally."""
+        unique_pairs = []
+        for i, j in pair_generator:
             pair = (min(i, j), max(i, j))
             if pair in local_seen:
                 continue
@@ -91,31 +75,43 @@ def process_block(
                     continue
                 global_seen.add(pair)
 
-            # Use ML scorer if provided, otherwise use rule-based
-            if ml_scorer:
-                mr = ml_scorer.score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold)
-            else:
-                mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
+            unique_pairs.append(pair)
+        return unique_pairs
+
+    # Stage 1: Collect exact pairs (cheap, catches identical normalized names)
+    exact_pairs = collect_unique_pairs(iter_exact_pairs(idx, cols))
+
+    # Stage 2: Collect fuzzy pairs (name similarity with prefilter)
+    if use_windowed:
+        fuzzy_pairs = collect_unique_pairs(
+            iter_windowed_fuzzy_pairs(idx, cols, window=window_size, name_threshold=88)
+        )
+    else:
+        fuzzy_pairs = collect_unique_pairs(
+            iter_fuzzy_pairs(idx, cols, k=10, name_threshold=88)
+        )
+
+    # Combine all pairs for processing
+    all_pairs = exact_pairs + fuzzy_pairs
+
+    if not all_pairs:
+        return results
+
+    # Process with ML scorer (batch) or rule-based (per-pair)
+    if ml_scorer and hasattr(ml_scorer, 'score_batch'):
+        # Batch ML scoring - significantly faster
+        batch_results = ml_scorer.score_batch(all_pairs, cols, fuzzy_threshold=fuzzy_threshold)
+        results.extend([mr for mr in batch_results if mr is not None])
+    elif ml_scorer:
+        # Fallback: per-pair ML scoring (legacy)
+        for i, j in all_pairs:
+            mr = ml_scorer.score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold)
             if mr:
                 results.append(mr)
     else:
-        # Legacy: use process.extract for name-based blocks
-        for i, j in iter_fuzzy_pairs(idx, cols, k=10, name_threshold=88):
-            pair = (min(i, j), max(i, j))
-            if pair in local_seen:
-                continue
-            local_seen.add(pair)
-
-            with global_lock:
-                if pair in global_seen:
-                    continue
-                global_seen.add(pair)
-
-            # Use ML scorer if provided, otherwise use rule-based
-            if ml_scorer:
-                mr = ml_scorer.score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold)
-            else:
-                mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
+        # Rule-based scoring (per-pair, unchanged behavior)
+        for i, j in all_pairs:
+            mr = score_pair(i, j, cols, fuzzy_threshold=fuzzy_threshold, enable_address_aware=enable_address_aware)
             if mr:
                 results.append(mr)
 
@@ -265,9 +261,9 @@ def _write_audit_log(path: str, df: pd.DataFrame, cols: dict[str, object]) -> No
 
 
 def run_pipeline(
-    query: str,
-    db_cfg: DbConfig,
-    out_path: str,
+    query: str | None = None,
+    db_cfg: DbConfig | None = None,
+    out_path: str = "",
     workers: int = 0,
     chunksize: int = 200_000,
     fuzzy_threshold: float = 0.80,
@@ -278,13 +274,14 @@ def run_pipeline(
     norm_audit_out: str | None = None,
     ml_scorer=None,
     embedding_store=None,
+    input_df: pd.DataFrame | None = None,
 ) -> None:
     """
     Run the deduplication pipeline with configurable blocking strategy.
 
     Args:
-        query: SQL query to fetch data
-        db_cfg: Database configuration
+        query: SQL query to fetch data (not needed if input_df provided)
+        db_cfg: Database configuration (not needed if input_df provided)
         out_path: Output CSV path
         workers: Number of worker threads (0 = auto)
         chunksize: SQL chunk size
@@ -296,8 +293,18 @@ def run_pipeline(
         norm_audit_out: Optional path to write normalization audit CSV
         ml_scorer: Optional ML scorer for ML-based matching
         embedding_store: Optional embedding store (used by ML scorer)
+        input_df: Optional pre-loaded DataFrame (skips SQL reading if provided)
     """
-    engine = create_mssql_engine(db_cfg)
+    # Determine data source
+    # input_df can be: None, a DataFrame, or a file path string
+    use_file_input = input_df is not None
+
+    if not use_file_input:
+        if db_cfg is None or query is None:
+            raise ValueError("Either input_df or (query + db_cfg) must be provided")
+        engine = create_mssql_engine(db_cfg)
+    else:
+        engine = None
     
     # Initialize swisstopo address normalizer if provided
     address_normalizer = None
@@ -316,26 +323,59 @@ def run_pipeline(
     # Remove existing audit log if it exists and we're starting fresh
     if norm_audit_out and os.path.exists(norm_audit_out):
         os.remove(norm_audit_out)
-    
-    # First pass: count total rows to estimate chunks
-    print("Counting total rows...")
-    # Remove ORDER BY clause for counting (SQL Server doesn't allow it in subqueries)
-    import re
-    query_no_order = re.sub(r'\s+ORDER\s+BY\s+.*?(?=\s*$)', '', query, flags=re.IGNORECASE | re.DOTALL)
-    count_query = f"SELECT COUNT(*) as total FROM ({query_no_order}) as subq"
-    try:
-        total_rows = pd.read_sql(count_query, engine).iloc[0]['total']
+
+    # Get data: either from file or SQL
+    if use_file_input:
+        # Read file metadata to get row count without loading all data
+        import pyarrow.parquet as pq
+
+        # Check if input_df is actually a file path (string) or DataFrame
+        if isinstance(input_df, str):
+            input_file_path = input_df
+            parquet_file = pq.ParquetFile(input_file_path)
+            total_rows = parquet_file.metadata.num_rows
+        else:
+            # DataFrame was passed - get row count
+            total_rows = len(input_df)
+            input_file_path = None
+
         estimated_chunks = (total_rows + chunksize - 1) // chunksize
-        print(f"Total rows: {total_rows:,} → Estimated chunks: {estimated_chunks}")
+        print(f"Total rows: {total_rows:,} (from file) → Estimated chunks: {estimated_chunks}")
         print()
-    except Exception as e:
-        print(f"Could not count rows (non-critical): {e}")
-        total_rows = None
-        estimated_chunks = None
-    
-    dfs = read_sql_df(engine, query, chunksize=chunksize)
-    if isinstance(dfs, pd.DataFrame):
-        dfs = [dfs]
+
+        # Create a generator that reads parquet in batches to save memory
+        def parquet_chunk_generator():
+            if input_file_path:
+                # Read parquet in batches using PyArrow
+                parquet_file = pq.ParquetFile(input_file_path)
+                for batch in parquet_file.iter_batches(batch_size=chunksize):
+                    yield batch.to_pandas()
+            else:
+                # DataFrame was passed - chunk it
+                for i in range(0, len(input_df), chunksize):
+                    yield input_df.iloc[i:i + chunksize].copy()
+
+        dfs = parquet_chunk_generator()
+    else:
+        # First pass: count total rows to estimate chunks
+        print("Counting total rows...")
+        # Remove ORDER BY clause for counting (SQL Server doesn't allow it in subqueries)
+        import re
+        query_no_order = re.sub(r'\s+ORDER\s+BY\s+.*?(?=\s*$)', '', query, flags=re.IGNORECASE | re.DOTALL)
+        count_query = f"SELECT COUNT(*) as total FROM ({query_no_order}) as subq"
+        try:
+            total_rows = pd.read_sql(count_query, engine).iloc[0]['total']
+            estimated_chunks = (total_rows + chunksize - 1) // chunksize
+            print(f"Total rows: {total_rows:,} → Estimated chunks: {estimated_chunks}")
+            print()
+        except Exception as e:
+            print(f"Could not count rows (non-critical): {e}")
+            total_rows = None
+            estimated_chunks = None
+
+        dfs = read_sql_df(engine, query, chunksize=chunksize)
+        if isinstance(dfs, pd.DataFrame):
+            dfs = [dfs]
 
     max_workers = workers if workers > 0 else max(1, os.cpu_count() or 1)
     in_flight = max_workers * 2

@@ -39,19 +39,26 @@ class TrainingPipeline:
     def __init__(
         self,
         embedding_store=None,
+        name_embedding_store=None,
         random_state: int = 42,
     ):
         """
         Initialize training pipeline.
 
         Args:
-            embedding_store: Optional EmbeddingStore for embedding features
+            embedding_store: Optional EmbeddingStore for full embedding features (name+address)
+            name_embedding_store: Optional EmbeddingStore for name-only embedding features.
+                                  Critical for proper entity matching to avoid address contamination.
             random_state: Random seed for reproducibility
         """
         self.embedding_store = embedding_store
+        self.name_embedding_store = name_embedding_store
         self.random_state = random_state
 
-        self.feature_extractor = FeatureExtractor(embedding_store=embedding_store)
+        self.feature_extractor = FeatureExtractor(
+            embedding_store=embedding_store,
+            name_embedding_store=name_embedding_store,
+        )
         self.model = None
         self.calibrator = None
 
@@ -100,8 +107,10 @@ class TrainingPipeline:
         labels = silver_labels_df['label'].values
 
         # Extract features in batches for efficiency
+        # Include embeddings if either full or name-only embeddings are available
+        has_embeddings = (self.embedding_store is not None) or (self.name_embedding_store is not None)
         X, feature_names = self.feature_extractor.extract_features_batch(
-            pairs, cols, include_embeddings=(self.embedding_store is not None)
+            pairs, cols, include_embeddings=has_embeddings
         )
 
         logger.info(f"Extracted {X.shape[1]} features for {len(pairs)} pairs")
@@ -262,7 +271,7 @@ class TrainingPipeline:
         label_generator = SilverLabelGenerator(
             positive_confidence_threshold=positive_threshold,
             negative_ratio=negative_ratio,
-            hard_negative_strategy='mixed',
+            hard_negative_strategy='diverse',  # Use diverse strategy for better training
         )
 
         _, _, silver_labels_df = label_generator.generate_silver_labels(

@@ -51,6 +51,7 @@ temp/
 .env
 .env.local
 .env.*.local
+.mcp.json
 
 # IDE / Editor
 .vscode/
@@ -59,6 +60,13 @@ temp/
 *.swo
 *~
 .DS_Store
+
+# Claude Code local files
+.claude/settings.local.json
+.claude/commands/
+
+# BMAD local directory
+_bmad/
 
 # Project-specific: Splink cache and outputs
 cache_splink/
@@ -73,6 +81,8 @@ duplicate_report.csv
 # *.parquet
 # data/
 modular_results.csv
+results*.csv
+results*.parquet
 
 # Large data files - amtliches Gebäudeverzeichnis
 amtliches-gebaeudeadressverzeichnis_ch_2056.csv/amtliches-gebaeudeadressverzeichnis_ch_2056.csv

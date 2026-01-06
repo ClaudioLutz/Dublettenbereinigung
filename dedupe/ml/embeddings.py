@@ -19,6 +19,7 @@ from tqdm import tqdm
 
 from dedupe.ml.config import (
     BATCH_SIZE,
+    DEFAULT_EMBEDDING_MODE,
     DEVICE,
     EMBEDDING_DIM,
     EMBEDDING_DTYPE,
@@ -29,8 +30,10 @@ from dedupe.ml.config import (
     FAISS_TRAIN_SAMPLE_FRACTION,
     METADATA_KEYS,
     MODEL_VERSION,
+    NAME_ONLY_VERSION_SUFFIX,
     SHOW_PROGRESS,
     TEXT_TEMPLATE,
+    TEXT_TEMPLATE_NAME_ONLY,
     TOKEN_ADDR,
     TOKEN_DOB,
     TOKEN_NAME,
@@ -102,6 +105,7 @@ class EmbeddingGenerator:
         plz: str = "",
         ort: str = "",
         dob: str = "",
+        name_only: bool = False,
     ) -> str:
         """
         Prepare a single text string from address fields.
@@ -118,33 +122,51 @@ class EmbeddingGenerator:
             plz: Postal code (PLZ4)
             ort: Normalized city/locality
             dob: Date of birth (optional)
+            name_only: If True, only include name fields (no address).
+                       This is recommended for name similarity comparison
+                       to avoid address contamination.
 
         Returns:
             Formatted text string for embedding
 
-        Example:
+        Example (full):
             >>> generator.prepare_text(
             ...     first="hans", last="mueller", street="hauptstrasse",
             ...     house="12", plz="8000", ort="zuerich"
             ... )
             "[NAME] hans mueller [ADDR] hauptstrasse 12 8000 zuerich"
-        """
-        # Build text using template
-        text = TEXT_TEMPLATE.format(
-            token_name=TOKEN_NAME,
-            first=first or "",
-            last=last or "",
-            name2=name2 or "",
-            token_addr=TOKEN_ADDR,
-            street=street or "",
-            house=house or "",
-            plz=plz or "",
-            ort=ort or "",
-        )
 
-        # Optionally add DOB
-        if dob:
-            text += f" {TOKEN_DOB} {dob}"
+        Example (name_only):
+            >>> generator.prepare_text(
+            ...     first="hans", last="mueller", name_only=True
+            ... )
+            "[NAME] hans mueller"
+        """
+        if name_only:
+            # Name-only template - no address contamination
+            text = TEXT_TEMPLATE_NAME_ONLY.format(
+                token_name=TOKEN_NAME,
+                first=first or "",
+                last=last or "",
+                name2=name2 or "",
+            )
+        else:
+            # Full template with address
+            text = TEXT_TEMPLATE.format(
+                token_name=TOKEN_NAME,
+                first=first or "",
+                last=last or "",
+                name2=name2 or "",
+                token_addr=TOKEN_ADDR,
+                street=street or "",
+                house=house or "",
+                plz=plz or "",
+                ort=ort or "",
+            )
+
+            # Optionally add DOB
+            if dob:
+                text += f" {TOKEN_DOB} {dob}"
 
         # Clean up multiple spaces
         text = " ".join(text.split())
@@ -155,6 +177,7 @@ class EmbeddingGenerator:
         self,
         records: Union[List[Dict], 'pd.DataFrame'],
         field_mapping: Optional[Dict[str, str]] = None,
+        name_only: bool = False,
     ) -> List[str]:
         """
         Prepare a batch of texts from records.
@@ -163,6 +186,8 @@ class EmbeddingGenerator:
             records: List of dictionaries or pandas DataFrame with address fields
             field_mapping: Optional mapping from standard field names to actual column names
                           Default: {'first': 'first', 'last': 'last', ...}
+            name_only: If True, only include name fields (no address).
+                       This is recommended for name similarity comparison.
 
         Returns:
             List of formatted text strings
@@ -194,6 +219,7 @@ class EmbeddingGenerator:
                         house=str(row.get(field_mapping['house'], '')),
                         plz=str(row.get(field_mapping['plz'], '')),
                         ort=str(row.get(field_mapping['ort'], '')),
+                        name_only=name_only,
                     )
                     texts.append(text)
                 return texts
@@ -210,6 +236,7 @@ class EmbeddingGenerator:
                 house=str(record.get(field_mapping['house'], '')),
                 plz=str(record.get(field_mapping['plz'], '')),
                 ort=str(record.get(field_mapping['ort'], '')),
+                name_only=name_only,
             )
             texts.append(text)
 
@@ -517,7 +544,7 @@ class EmbeddingStore:
 
         logger.info("FAISS index built successfully")
 
-    def save(self, output_dir: Union[str, Path], skip_embeddings: bool = False):
+    def save(self, output_dir: Union[str, Path], skip_embeddings: bool = False, version_suffix: str = ""):
         """
         Save embedding store to disk.
 
@@ -525,12 +552,15 @@ class EmbeddingStore:
             output_dir: Directory to save embeddings and metadata
             skip_embeddings: If True, skip saving embeddings (useful when they
                 were already saved by encode_large_dataset and are memory-mapped)
+            version_suffix: Suffix to add to version in filenames (e.g., "_name" for name-only)
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
+        version = f"{MODEL_VERSION}{version_suffix}"
+
         # Save embeddings (unless already saved externally)
-        embeddings_path = output_dir / f"embeddings_{MODEL_VERSION}.dat"
+        embeddings_path = output_dir / f"embeddings_{version}.dat"
         if skip_embeddings:
             logger.info(f"Skipping embeddings save (already exists at {embeddings_path})")
             # On Windows, release memmap file lock before saving other files
@@ -552,14 +582,14 @@ class EmbeddingStore:
             np.save(embeddings_path, self.embeddings)
 
         # Save metadata
-        metadata_path = output_dir / f"embeddings_{MODEL_VERSION}_meta.npz"
+        metadata_path = output_dir / f"embeddings_{version}_meta.npz"
         np.savez(metadata_path, **self.metadata)
 
         # Save FAISS index
         if self.faiss_index is not None:
             try:
                 import faiss
-                index_path = output_dir / f"faiss_index_{MODEL_VERSION}.bin"
+                index_path = output_dir / f"faiss_index_{version}.bin"
                 faiss.write_index(self.faiss_index, str(index_path))
                 logger.info(f"FAISS index saved to {index_path}")
             except ImportError:
@@ -568,24 +598,26 @@ class EmbeddingStore:
         logger.info(f"Embedding store saved to {output_dir}")
 
     @classmethod
-    def load(cls, input_dir: Union[str, Path]) -> 'EmbeddingStore':
+    def load(cls, input_dir: Union[str, Path], version_suffix: str = "") -> 'EmbeddingStore':
         """
         Load embedding store from disk.
 
         Args:
             input_dir: Directory containing embeddings and metadata
+            version_suffix: Suffix to add to version in filenames (e.g., "_name" for name-only)
 
         Returns:
             EmbeddingStore instance
         """
         input_dir = Path(input_dir)
+        version = f"{MODEL_VERSION}{version_suffix}"
 
         # Load embeddings
-        embeddings_path = input_dir / f"embeddings_{MODEL_VERSION}.dat"
+        embeddings_path = input_dir / f"embeddings_{version}.dat"
         if embeddings_path.exists():
             if USE_MEMORY_MAPPING:
                 # Determine shape from metadata first
-                metadata_path = input_dir / f"embeddings_{MODEL_VERSION}_meta.npz"
+                metadata_path = input_dir / f"embeddings_{version}_meta.npz"
                 if metadata_path.exists():
                     meta_data = np.load(metadata_path, allow_pickle=True)
                     n_records = len(meta_data['index']) if 'index' in meta_data else 0
@@ -603,7 +635,7 @@ class EmbeddingStore:
             raise FileNotFoundError(f"Embeddings file not found: {embeddings_path}")
 
         # Load metadata
-        metadata_path = input_dir / f"embeddings_{MODEL_VERSION}_meta.npz"
+        metadata_path = input_dir / f"embeddings_{version}_meta.npz"
         if metadata_path.exists():
             metadata = dict(np.load(metadata_path, allow_pickle=True))
         else:
@@ -611,7 +643,7 @@ class EmbeddingStore:
 
         # Load FAISS index
         faiss_index = None
-        index_path = input_dir / f"faiss_index_{MODEL_VERSION}.bin"
+        index_path = input_dir / f"faiss_index_{version}.bin"
         if index_path.exists():
             try:
                 import faiss
@@ -620,6 +652,21 @@ class EmbeddingStore:
             except ImportError:
                 logger.warning("FAISS not installed, index not loaded")
 
-        logger.info(f"Embedding store loaded from {input_dir}")
+        logger.info(f"Embedding store loaded from {input_dir} (version: {version})")
 
         return cls(embeddings, metadata, faiss_index)
+
+    @classmethod
+    def load_name_only(cls, input_dir: Union[str, Path]) -> 'EmbeddingStore':
+        """
+        Load name-only embedding store from disk.
+
+        This is a convenience method for loading embeddings generated with --name-only flag.
+
+        Args:
+            input_dir: Directory containing embeddings and metadata
+
+        Returns:
+            EmbeddingStore instance with name-only embeddings
+        """
+        return cls.load(input_dir, version_suffix=NAME_ONLY_VERSION_SUFFIX)

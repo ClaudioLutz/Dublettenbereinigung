@@ -19,9 +19,21 @@ from dedupe.pipeline import run_pipeline
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run optimized dedupe pipeline")
-    parser.add_argument("--query-file", required=True, help="Path to SQL query file")
+    parser.add_argument("--query-file", help="Path to SQL query file (required unless --input-file is used)")
+    parser.add_argument(
+        "--input-file",
+        type=str,
+        default=None,
+        help="Read data from parquet/CSV file instead of SQL. Use with --use-gpu in WSL."
+    )
+    parser.add_argument(
+        "--export-only",
+        action="store_true",
+        help="Export SQL data to parquet file and exit (for use with GPU in WSL later)"
+    )
     parser.add_argument("--out", required=True, help="Output CSV path")
     parser.add_argument("--workers", type=int, default=0, help="Number of worker threads (0=auto)")
+    parser.add_argument("--chunksize", type=int, default=200000, help="Chunk size for processing (default: 200000)")
     parser.add_argument("--prompt-password", action="store_true", help="Prompt for DB password instead of env var")
     
     # Blocking strategy options
@@ -73,27 +85,80 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Directory containing pre-computed embeddings (optional, improves ML quality)"
     )
+    parser.add_argument(
+        "--use-gpu",
+        action="store_true",
+        help="Use GPU for ML model inference (requires cuML). Provides 50-150x speedup for large datasets."
+    )
 
     return parser.parse_args()
 
 
 def main() -> int:
-    args = parse_args()
-    query_path = Path(args.query_file)
-    query = query_path.read_text(encoding="utf-8")
+    import pandas as pd
 
-    cfg = DbConfig.from_env()
-    if args.prompt_password:
-        pw = getpass.getpass("DB password: ")
-        cfg = DbConfig(
-            server=cfg.server,
-            database=cfg.database,
-            user=cfg.user,
-            password=pw,
-            driver=cfg.driver,
-            trust_server_certificate=cfg.trust_server_certificate,
-            encrypt=cfg.encrypt,
-        )
+    args = parse_args()
+
+    # Validate arguments
+    if not args.input_file and not args.query_file:
+        print("Error: Either --query-file or --input-file is required")
+        return 1
+
+    # Load input data from file or SQL
+    input_df = None
+    query = None
+    cfg = None
+
+    if args.input_file:
+        # Validate file exists
+        input_path = Path(args.input_file)
+        if not input_path.exists():
+            print(f"Error: Input file not found: {args.input_file}")
+            return 1
+
+        if input_path.suffix.lower() == '.parquet':
+            # For parquet, pass the file path - pipeline will read in chunks
+            print(f"Using parquet file: {args.input_file}")
+            input_df = args.input_file  # Pass path as string
+        elif input_path.suffix.lower() == '.csv':
+            # For CSV, load into DataFrame (no chunked reading support)
+            print(f"Loading data from {args.input_file}...")
+            input_df = pd.read_csv(args.input_file)
+            print(f"  Loaded {len(input_df):,} records from file")
+        else:
+            print(f"Error: Unsupported file format: {input_path.suffix}")
+            return 1
+
+    else:
+        # Read from SQL
+        query_path = Path(args.query_file)
+        query = query_path.read_text(encoding="utf-8")
+
+        cfg = DbConfig.from_env()
+        if args.prompt_password:
+            pw = getpass.getpass("DB password: ")
+            cfg = DbConfig(
+                server=cfg.server,
+                database=cfg.database,
+                user=cfg.user,
+                password=pw,
+                driver=cfg.driver,
+                trust_server_certificate=cfg.trust_server_certificate,
+                encrypt=cfg.encrypt,
+            )
+
+        # Export-only mode: fetch data and save to parquet
+        if args.export_only:
+            from dedupe.io import create_mssql_engine
+            print(f"Exporting data from SQL to parquet...")
+            engine = create_mssql_engine(cfg)
+            export_df = pd.read_sql(query, engine)
+            export_path = args.out.replace('.csv', '.parquet')
+            export_df.to_parquet(export_path, index=False)
+            print(f"Exported {len(export_df):,} records to {export_path}")
+            print(f"\nTo run GPU deduplication in WSL:")
+            print(f"  wsl -d Ubuntu-22.04 -- bash -c \"source ~/miniforge3/etc/profile.d/conda.sh && conda activate rapids-dedupe && cd /mnt/c/Lokal_Code/dubletten && python scripts/run_dedupe.py --input-file {export_path} --out {args.out} --use-ml-scoring --use-gpu\"")
+            return 0
 
     use_address_blocking = (args.blocking_mode == "address")
     enable_address_aware = not args.no_address_aware
@@ -101,6 +166,7 @@ def main() -> int:
     # Load ML scorer if requested
     ml_scorer = None
     embedding_store = None
+    name_embedding_store = None
 
     if args.use_ml_scoring:
         print("Loading ML scorer...")
@@ -108,8 +174,17 @@ def main() -> int:
             # Load embeddings if provided
             if args.embeddings_dir:
                 from dedupe.ml.embeddings import EmbeddingStore
+                # Load full embeddings (name + address)
                 embedding_store = EmbeddingStore.load(args.embeddings_dir)
-                print(f"  Loaded embeddings from {args.embeddings_dir}")
+                print(f"  Loaded full embeddings from {args.embeddings_dir}")
+
+                # Load name-only embeddings (critical for proper entity matching)
+                try:
+                    name_embedding_store = EmbeddingStore.load_name_only(args.embeddings_dir)
+                    print(f"  Loaded name-only embeddings from {args.embeddings_dir}")
+                except FileNotFoundError:
+                    print("  WARNING: Name-only embeddings not found. Run build_embeddings.py with --name-only")
+                    print("           Continuing without name-only embeddings...")
 
             # Load ML scorer
             from dedupe.ml.scoring_ml import MLScorer
@@ -117,8 +192,20 @@ def main() -> int:
                 model_dir=args.ml_model_dir,
                 version=args.ml_version,
                 embedding_store=embedding_store,
+                name_embedding_store=name_embedding_store,
+                use_gpu=args.use_gpu,
             )
             print(f"  Loaded ML model version {args.ml_version} from {args.ml_model_dir}")
+
+            # Report GPU status
+            if args.use_gpu:
+                stats = ml_scorer.get_statistics()
+                if stats.get('gpu_available'):
+                    backend = stats.get('gpu_backend', 'unknown')
+                    print(f"  GPU inference: ENABLED ({backend})")
+                else:
+                    print(f"  GPU inference: UNAVAILABLE (falling back to CPU)")
+                    print(f"    Install: pip install onnxruntime-gpu onnxmltools")
         except Exception as e:
             print(f"  Warning: Failed to load ML scorer: {e}")
             print(f"  Falling back to rule-based scoring...")
@@ -140,6 +227,7 @@ def main() -> int:
         db_cfg=cfg,
         out_path=args.out,
         workers=args.workers,
+        chunksize=args.chunksize,
         fuzzy_threshold=args.fuzzy_threshold,
         enable_address_aware=enable_address_aware,
         use_address_blocking=use_address_blocking,
@@ -148,6 +236,7 @@ def main() -> int:
         norm_audit_out=args.norm_audit_out,
         ml_scorer=ml_scorer,
         embedding_store=embedding_store,
+        input_df=input_df,
     )
     
     print(f"\nDeduplication complete. Results written to: {args.out}")

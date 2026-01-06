@@ -72,25 +72,36 @@ class FeatureExtractor:
         'yob_both_present',
         'yob_one_missing',
 
-        # Embedding features (4)
+        # Full embedding features (4) - includes name + address
         'emb_cosine_similarity',
         'emb_l2_distance',
         'emb_dot_product',
         'emb_manhattan_distance',
+
+        # Name-only embedding features (4) - critical for name matching
+        # These use embeddings generated only from name fields, no address
+        'name_emb_cosine_similarity',
+        'name_emb_l2_distance',
+        'name_emb_dot_product',
+        'name_emb_manhattan_distance',
 
         # Interaction features (2)
         'name_addr_interaction',
         'first_word_bonus',
     ]
 
-    def __init__(self, embedding_store=None):
+    def __init__(self, embedding_store=None, name_embedding_store=None):
         """
         Initialize feature extractor.
 
         Args:
-            embedding_store: Optional EmbeddingStore for embedding-based features
+            embedding_store: Optional EmbeddingStore for full (name+address) embeddings
+            name_embedding_store: Optional EmbeddingStore for name-only embeddings.
+                                  This is critical for proper entity matching as it
+                                  provides name similarity without address contamination.
         """
         self.embedding_store = embedding_store
+        self.name_embedding_store = name_embedding_store
         self.n_features = len(self.FEATURE_NAMES)
 
     def extract_features(
@@ -126,7 +137,7 @@ class FeatureExtractor:
         date_features = self._extract_date_features(idx_a, idx_b, cols)
         features.update(date_features)
 
-        # Extract embedding features
+        # Extract full embedding features (name + address)
         if include_embeddings and self.embedding_store is not None:
             emb_features = self._extract_embedding_features(idx_a, idx_b)
             features.update(emb_features)
@@ -137,6 +148,19 @@ class FeatureExtractor:
                 'emb_l2_distance': 0.0,
                 'emb_dot_product': 0.0,
                 'emb_manhattan_distance': 0.0,
+            })
+
+        # Extract name-only embedding features (critical for name matching)
+        if include_embeddings and self.name_embedding_store is not None:
+            name_emb_features = self._extract_name_embedding_features(idx_a, idx_b)
+            features.update(name_emb_features)
+        else:
+            # Fill with default values if name embeddings not available
+            features.update({
+                'name_emb_cosine_similarity': 0.0,
+                'name_emb_l2_distance': 0.0,
+                'name_emb_dot_product': 0.0,
+                'name_emb_manhattan_distance': 0.0,
             })
 
         # Extract interaction features
@@ -353,6 +377,55 @@ class FeatureExtractor:
 
         return features
 
+    def _extract_name_embedding_features(
+        self,
+        idx_a: int,
+        idx_b: int,
+    ) -> Dict[str, float]:
+        """
+        Extract name-only embedding similarity features.
+
+        These features use embeddings generated only from name fields (no address),
+        which is critical for proper entity matching. Address contamination in
+        embeddings can lead to high similarity for different people at the same
+        address.
+        """
+        features = {}
+
+        if self.name_embedding_store is None:
+            return {
+                'name_emb_cosine_similarity': 0.0,
+                'name_emb_l2_distance': 0.0,
+                'name_emb_dot_product': 0.0,
+                'name_emb_manhattan_distance': 0.0,
+            }
+
+        # Get name-only embeddings
+        emb_a = self.name_embedding_store.lookup_by_index(idx_a)
+        emb_b = self.name_embedding_store.lookup_by_index(idx_b)
+
+        if emb_a is None or emb_b is None:
+            return {
+                'name_emb_cosine_similarity': 0.0,
+                'name_emb_l2_distance': 0.0,
+                'name_emb_dot_product': 0.0,
+                'name_emb_manhattan_distance': 0.0,
+            }
+
+        # Cosine similarity (assumes normalized embeddings)
+        features['name_emb_cosine_similarity'] = float(np.dot(emb_a, emb_b))
+
+        # L2 distance (Euclidean)
+        features['name_emb_l2_distance'] = float(np.linalg.norm(emb_a - emb_b))
+
+        # Dot product (raw similarity)
+        features['name_emb_dot_product'] = float(np.dot(emb_a, emb_b))
+
+        # Manhattan distance (L1)
+        features['name_emb_manhattan_distance'] = float(np.sum(np.abs(emb_a - emb_b)))
+
+        return features
+
     def _extract_interaction_features(
         self,
         idx_a: int,
@@ -402,7 +475,7 @@ class FeatureExtractor:
         include_embeddings: bool = True,
     ) -> Tuple[np.ndarray, list]:
         """
-        Extract features for a batch of pairs.
+        Extract features for a batch of pairs with vectorized embedding calculations.
 
         Args:
             pairs: List of (idx_a, idx_b) tuples
@@ -414,22 +487,229 @@ class FeatureExtractor:
             - feature_matrix: numpy array of shape (n_pairs, n_features)
             - feature_names: list of feature names
         """
-        feature_dicts = []
+        n_pairs = len(pairs)
+        if n_pairs == 0:
+            return np.zeros((0, self.n_features), dtype=np.float32), self.FEATURE_NAMES
 
-        for idx_a, idx_b in pairs:
-            features = self.extract_features(
-                idx_a, idx_b, cols, include_embeddings=include_embeddings
+        feature_matrix = np.zeros((n_pairs, self.n_features), dtype=np.float32)
+
+        # Pre-compute vectorized embedding features if available
+        emb_features = None
+        if include_embeddings and self.embedding_store is not None:
+            emb_features = self._extract_embedding_features_batch(pairs)
+
+        # Pre-compute vectorized name embedding features if available
+        name_emb_features = None
+        if include_embeddings and self.name_embedding_store is not None:
+            name_emb_features = self._extract_name_embedding_features_batch(pairs)
+
+        # Extract non-embedding features per pair (string ops can't be vectorized easily)
+        for i, (idx_a, idx_b) in enumerate(pairs):
+            # Name features
+            name_features = self._extract_name_features(idx_a, idx_b, cols)
+
+            # Address features
+            addr_features = self._extract_address_features(idx_a, idx_b, cols)
+
+            # Date features
+            date_features = self._extract_date_features(idx_a, idx_b, cols)
+
+            # Interaction features
+            interaction_features = self._extract_interaction_features(
+                idx_a, idx_b, cols, name_features, addr_features
             )
-            feature_dicts.append(features)
 
-        # Convert to numpy array
-        feature_matrix = np.zeros((len(pairs), self.n_features), dtype=np.float32)
+            # Combine all features for this pair
+            all_features = {
+                **name_features,
+                **addr_features,
+                **date_features,
+                **interaction_features,
+            }
 
-        for i, feat_dict in enumerate(feature_dicts):
+            # Fill feature matrix row
             for j, feat_name in enumerate(self.FEATURE_NAMES):
-                feature_matrix[i, j] = feat_dict.get(feat_name, 0.0)
+                if feat_name.startswith('emb_') and not feat_name.startswith('name_emb_') and emb_features is not None:
+                    # Use pre-computed vectorized full embedding feature
+                    feature_matrix[i, j] = emb_features[feat_name][i]
+                elif feat_name.startswith('name_emb_') and name_emb_features is not None:
+                    # Use pre-computed vectorized name embedding feature
+                    feature_matrix[i, j] = name_emb_features[feat_name][i]
+                else:
+                    feature_matrix[i, j] = all_features.get(feat_name, 0.0)
 
         return feature_matrix, self.FEATURE_NAMES
+
+    def _extract_embedding_features_batch(
+        self,
+        pairs: list,
+    ) -> Dict[str, np.ndarray]:
+        """
+        Extract embedding features for a batch of pairs using vectorized operations.
+
+        This is significantly faster than per-pair extraction for large batches.
+
+        Args:
+            pairs: List of (idx_a, idx_b) tuples
+
+        Returns:
+            Dictionary mapping feature names to arrays of values
+        """
+        n_pairs = len(pairs)
+
+        # Initialize output arrays
+        cosine_sim = np.zeros(n_pairs, dtype=np.float32)
+        l2_dist = np.zeros(n_pairs, dtype=np.float32)
+        dot_prod = np.zeros(n_pairs, dtype=np.float32)
+        manhattan_dist = np.zeros(n_pairs, dtype=np.float32)
+
+        if self.embedding_store is None:
+            return {
+                'emb_cosine_similarity': cosine_sim,
+                'emb_l2_distance': l2_dist,
+                'emb_dot_product': dot_prod,
+                'emb_manhattan_distance': manhattan_dist,
+            }
+
+        # Collect positions for batch lookup
+        positions_a = []
+        positions_b = []
+        valid_indices = []
+
+        for i, (idx_a, idx_b) in enumerate(pairs):
+            pos_a = self.embedding_store.index_to_pos.get(idx_a)
+            pos_b = self.embedding_store.index_to_pos.get(idx_b)
+
+            if pos_a is not None and pos_b is not None:
+                positions_a.append(pos_a)
+                positions_b.append(pos_b)
+                valid_indices.append(i)
+
+        if not valid_indices:
+            return {
+                'emb_cosine_similarity': cosine_sim,
+                'emb_l2_distance': l2_dist,
+                'emb_dot_product': dot_prod,
+                'emb_manhattan_distance': manhattan_dist,
+            }
+
+        # Batch lookup embeddings
+        emb_a = self.embedding_store.lookup_batch(positions_a)  # (n_valid, dim)
+        emb_b = self.embedding_store.lookup_batch(positions_b)  # (n_valid, dim)
+
+        # Vectorized similarity calculations
+        # Cosine similarity (assumes normalized embeddings)
+        valid_cosine = np.sum(emb_a * emb_b, axis=1)
+
+        # L2 distance
+        diff = emb_a - emb_b
+        valid_l2 = np.linalg.norm(diff, axis=1)
+
+        # Dot product (same as cosine for normalized)
+        valid_dot = valid_cosine
+
+        # Manhattan distance
+        valid_manhattan = np.sum(np.abs(diff), axis=1)
+
+        # Fill results at valid indices
+        for j, i in enumerate(valid_indices):
+            cosine_sim[i] = valid_cosine[j]
+            l2_dist[i] = valid_l2[j]
+            dot_prod[i] = valid_dot[j]
+            manhattan_dist[i] = valid_manhattan[j]
+
+        return {
+            'emb_cosine_similarity': cosine_sim,
+            'emb_l2_distance': l2_dist,
+            'emb_dot_product': dot_prod,
+            'emb_manhattan_distance': manhattan_dist,
+        }
+
+    def _extract_name_embedding_features_batch(
+        self,
+        pairs: list,
+    ) -> Dict[str, np.ndarray]:
+        """
+        Extract name-only embedding features for a batch using vectorized operations.
+
+        This uses embeddings generated only from name fields (no address),
+        which is critical for proper entity matching.
+
+        Args:
+            pairs: List of (idx_a, idx_b) tuples
+
+        Returns:
+            Dictionary mapping feature names to arrays of values
+        """
+        n_pairs = len(pairs)
+
+        # Initialize output arrays
+        cosine_sim = np.zeros(n_pairs, dtype=np.float32)
+        l2_dist = np.zeros(n_pairs, dtype=np.float32)
+        dot_prod = np.zeros(n_pairs, dtype=np.float32)
+        manhattan_dist = np.zeros(n_pairs, dtype=np.float32)
+
+        if self.name_embedding_store is None:
+            return {
+                'name_emb_cosine_similarity': cosine_sim,
+                'name_emb_l2_distance': l2_dist,
+                'name_emb_dot_product': dot_prod,
+                'name_emb_manhattan_distance': manhattan_dist,
+            }
+
+        # Collect positions for batch lookup
+        positions_a = []
+        positions_b = []
+        valid_indices = []
+
+        for i, (idx_a, idx_b) in enumerate(pairs):
+            pos_a = self.name_embedding_store.index_to_pos.get(idx_a)
+            pos_b = self.name_embedding_store.index_to_pos.get(idx_b)
+
+            if pos_a is not None and pos_b is not None:
+                positions_a.append(pos_a)
+                positions_b.append(pos_b)
+                valid_indices.append(i)
+
+        if not valid_indices:
+            return {
+                'name_emb_cosine_similarity': cosine_sim,
+                'name_emb_l2_distance': l2_dist,
+                'name_emb_dot_product': dot_prod,
+                'name_emb_manhattan_distance': manhattan_dist,
+            }
+
+        # Batch lookup embeddings
+        emb_a = self.name_embedding_store.lookup_batch(positions_a)
+        emb_b = self.name_embedding_store.lookup_batch(positions_b)
+
+        # Vectorized similarity calculations
+        # Cosine similarity (assumes normalized embeddings)
+        valid_cosine = np.sum(emb_a * emb_b, axis=1)
+
+        # L2 distance
+        diff = emb_a - emb_b
+        valid_l2 = np.linalg.norm(diff, axis=1)
+
+        # Dot product (same as cosine for normalized)
+        valid_dot = valid_cosine
+
+        # Manhattan distance
+        valid_manhattan = np.sum(np.abs(diff), axis=1)
+
+        # Fill results at valid indices
+        for j, i in enumerate(valid_indices):
+            cosine_sim[i] = valid_cosine[j]
+            l2_dist[i] = valid_l2[j]
+            dot_prod[i] = valid_dot[j]
+            manhattan_dist[i] = valid_manhattan[j]
+
+        return {
+            'name_emb_cosine_similarity': cosine_sim,
+            'name_emb_l2_distance': l2_dist,
+            'name_emb_dot_product': dot_prod,
+            'name_emb_manhattan_distance': manhattan_dist,
+        }
 
     def check_business_rule_violations(
         self,
@@ -502,10 +782,14 @@ def get_feature_importance_names():
         'dob_one_missing': 'One date of birth missing',
         'yob_both_present': 'Both have year of birth',
         'yob_one_missing': 'One year of birth missing',
-        'emb_cosine_similarity': 'Embedding cosine similarity',
-        'emb_l2_distance': 'Embedding Euclidean distance',
-        'emb_dot_product': 'Embedding dot product',
-        'emb_manhattan_distance': 'Embedding Manhattan distance',
+        'emb_cosine_similarity': 'Full embedding cosine similarity (name+addr)',
+        'emb_l2_distance': 'Full embedding Euclidean distance',
+        'emb_dot_product': 'Full embedding dot product',
+        'emb_manhattan_distance': 'Full embedding Manhattan distance',
+        'name_emb_cosine_similarity': 'Name-only embedding cosine similarity',
+        'name_emb_l2_distance': 'Name-only embedding Euclidean distance',
+        'name_emb_dot_product': 'Name-only embedding dot product',
+        'name_emb_manhattan_distance': 'Name-only embedding Manhattan distance',
         'name_addr_interaction': 'Name × Address interaction',
         'first_word_bonus': 'First word match bonus',
     }

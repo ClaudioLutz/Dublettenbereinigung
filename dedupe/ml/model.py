@@ -7,6 +7,7 @@ LightGBM models with monotonic constraints and precision-focused parameters.
 
 import json
 import logging
+import threading
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -79,6 +80,9 @@ class EntityMatchingModel:
         self.feature_names = None
         self.best_iteration = None
         self.cv_scores = []
+
+        # Thread lock for GPU inference (cuML is not thread-safe)
+        self._gpu_lock = threading.Lock()
 
     def _get_monotone_constraints(self, feature_names: List[str]) -> List[int]:
         """
@@ -397,3 +401,210 @@ class EntityMatchingModel:
         logger.info(f"Model loaded from {model_path}")
 
         return instance
+
+    def load_for_gpu_inference(self, model_path: Optional[str] = None) -> bool:
+        """
+        Load model for GPU inference using available backend.
+
+        Tries backends in order:
+        1. cuML FIL (Linux only, fastest - 50-150x speedup)
+        2. ONNX Runtime with DirectML/CUDA (Windows/Linux, 10-50x speedup)
+
+        Args:
+            model_path: Path to saved LightGBM model file. If None, saves
+                       current model to a temp file.
+
+        Returns:
+            True if GPU initialization successful, False otherwise
+        """
+        if self.model is None:
+            raise RuntimeError("Model not trained/loaded. Call train() or load() first.")
+
+        # Try cuML first (Linux only, fastest)
+        if self._try_cuml_gpu(model_path):
+            return True
+
+        # Try ONNX Runtime (Windows/Linux)
+        if self._try_onnx_gpu():
+            return True
+
+        logger.warning(
+            "No GPU backend available. Install one of:\n"
+            "  - Linux: pip install cuml-cu12 (or conda install -c rapidsai cuml)\n"
+            "  - Windows: pip install onnxruntime-gpu onnxmltools"
+        )
+        return False
+
+    def _try_cuml_gpu(self, model_path: Optional[str] = None) -> bool:
+        """Try to initialize cuML FIL backend (Linux only)."""
+        try:
+            from cuml import ForestInference
+        except ImportError:
+            logger.debug("cuML not available (Linux only)")
+            return False
+
+        try:
+            import tempfile
+            import os
+
+            # Save model to temp file if path not provided
+            if model_path is None:
+                temp_file = tempfile.NamedTemporaryFile(
+                    mode='w', suffix='.txt', delete=False
+                )
+                model_path = temp_file.name
+                temp_file.close()
+                self.model.save_model(model_path)
+                cleanup_temp = True
+            else:
+                cleanup_temp = False
+
+            # Load into FIL
+            self.fil_model = ForestInference.load(
+                model_path,
+                model_type='lightgbm',
+                output_class=True,
+            )
+
+            if cleanup_temp:
+                os.unlink(model_path)
+
+            self._gpu_available = True
+            self._gpu_backend = 'cuml'
+            logger.info("GPU inference initialized with cuML FIL")
+            return True
+
+        except Exception as e:
+            logger.debug(f"cuML initialization failed: {e}")
+            return False
+
+    def _try_onnx_gpu(self) -> bool:
+        """Try to initialize ONNX Runtime GPU backend (Windows/Linux)."""
+        try:
+            import onnxruntime as ort
+            import onnxmltools
+            from onnxmltools.convert import convert_lightgbm
+            from onnxmltools.convert.common.data_types import FloatTensorType
+        except ImportError:
+            logger.debug("ONNX Runtime or onnxmltools not available")
+            return False
+
+        try:
+            # Check for GPU execution provider
+            available_providers = ort.get_available_providers()
+            gpu_provider = None
+
+            if 'CUDAExecutionProvider' in available_providers:
+                gpu_provider = 'CUDAExecutionProvider'
+            elif 'DmlExecutionProvider' in available_providers:
+                gpu_provider = 'DmlExecutionProvider'  # DirectML for Windows
+
+            if gpu_provider is None:
+                logger.debug("No GPU execution provider available in ONNX Runtime")
+                return False
+
+            # Convert LightGBM model to ONNX
+            n_features = self.model.num_feature()
+            initial_type = [('input', FloatTensorType([None, n_features]))]
+
+            onnx_model = convert_lightgbm(
+                self.model,
+                initial_types=initial_type,
+                target_opset=15,
+            )
+
+            # Create ONNX Runtime session with GPU
+            sess_options = ort.SessionOptions()
+            sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+            self.onnx_session = ort.InferenceSession(
+                onnx_model.SerializeToString(),
+                sess_options,
+                providers=[gpu_provider, 'CPUExecutionProvider'],
+            )
+
+            self._gpu_available = True
+            self._gpu_backend = 'onnx'
+            logger.info(f"GPU inference initialized with ONNX Runtime ({gpu_provider})")
+            return True
+
+        except Exception as e:
+            logger.debug(f"ONNX Runtime GPU initialization failed: {e}")
+            return False
+
+    def predict_proba_gpu(self, X: np.ndarray) -> np.ndarray:
+        """
+        Predict match probabilities using GPU.
+
+        Uses whichever GPU backend was successfully initialized.
+        Thread-safe: Uses a lock to serialize GPU access (cuML is not thread-safe).
+
+        Args:
+            X: Features (n_samples, n_features)
+
+        Returns:
+            Array of probabilities (n_samples,)
+        """
+        if not self.is_gpu_available():
+            raise RuntimeError(
+                "GPU model not initialized. Call load_for_gpu_inference() first."
+            )
+
+        backend = getattr(self, '_gpu_backend', None)
+
+        # Serialize GPU access - cuML/cupy is not thread-safe
+        with self._gpu_lock:
+            try:
+                if backend == 'cuml':
+                    return self._predict_cuml(X)
+                elif backend == 'onnx':
+                    return self._predict_onnx(X)
+                else:
+                    raise RuntimeError(f"Unknown GPU backend: {backend}")
+
+            except Exception as e:
+                logger.warning(f"GPU prediction failed, falling back to CPU: {e}")
+                return self.predict_proba(X)
+
+    def _predict_cuml(self, X: np.ndarray) -> np.ndarray:
+        """Predict using cuML FIL."""
+        import cupy as cp
+
+        X_gpu = cp.asarray(X, dtype=cp.float32)
+        proba_gpu = self.fil_model.predict_proba(X_gpu)
+
+        if proba_gpu.ndim == 2:
+            return cp.asnumpy(proba_gpu[:, 1])
+        return cp.asnumpy(proba_gpu)
+
+    def _predict_onnx(self, X: np.ndarray) -> np.ndarray:
+        """Predict using ONNX Runtime."""
+        X_float = X.astype(np.float32)
+        input_name = self.onnx_session.get_inputs()[0].name
+
+        # Run inference
+        outputs = self.onnx_session.run(None, {input_name: X_float})
+
+        # Output format: [labels, probabilities]
+        # probabilities shape: (n_samples, 2) for binary classification
+        if len(outputs) > 1:
+            proba = outputs[1]  # Probability output
+            if isinstance(proba, list):
+                # List of dicts [{0: prob0, 1: prob1}, ...]
+                return np.array([p.get(1, p.get('1', 0.5)) for p in proba], dtype=np.float32)
+            elif proba.ndim == 2:
+                return proba[:, 1].astype(np.float32)
+            return proba.astype(np.float32)
+        else:
+            # Only labels output, use as probabilities
+            return outputs[0].astype(np.float32)
+
+    def is_gpu_available(self) -> bool:
+        """Check if GPU inference is available."""
+        return getattr(self, '_gpu_available', False)
+
+    def get_gpu_backend(self) -> Optional[str]:
+        """Get the name of the active GPU backend."""
+        if self.is_gpu_available():
+            return getattr(self, '_gpu_backend', None)
+        return None
