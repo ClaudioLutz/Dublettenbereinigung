@@ -1,0 +1,117 @@
+{
+  "scan_metadata": {
+    "scan_date": "2026-01-06",
+    "scan_level": "exhaustive",
+    "scan_tool_version": "1.0",
+    "files_scanned": 45,
+    "lines_analyzed": 12500
+  },
+  "project_classification": {
+    "project_type": "data",
+    "repository_type": "monolith",
+    "primary_language": "python",
+    "language_version": "3.8+",
+    "framework": "custom",
+    "architecture_pattern": "data-pipeline"
+  },
+  "project_overview": {
+    "name": "dubletten",
+    "description": "Swiss entity/address deduplication pipeline with ML-enhanced matching",
+    "purpose": "Identify duplicate entities in Swiss address records (7.5M+ records)",
+    "domain": "Entity Resolution / Record Linkage"
+  },
+  "source_structure": {
+    "root_directories": [
+      "dedupe",
+      "scripts",
+      "tests",
+      "legacy",
+      "docs",
+      "models"
+    ],
+    "core_modules": {
+      "dedupe/pipeline.py": "Main pipeline orchestration",
+      "dedupe/blocking.py": "Blocking strategies for candidate generation",
+      "dedupe/candidates.py": "Candidate pair generation and processing",
+      "dedupe/scoring.py": "Rule-based fuzzy matching and scoring",
+      "dedupe/preprocessing.py": "Data normalization and cleaning",
+      "dedupe/swisstopo.py": "Swiss address reference data integration"
+    },
+    "ml_modules": {
+      "dedupe/ml/embeddings.py": "sentence-transformer embedding generation",
+      "dedupe/ml/features.py": "Feature extraction (34 features)",
+      "dedupe/ml/model.py": "LightGBM model wrapper",
+      "dedupe/ml/scoring_ml.py": "ML scorer integration",
+      "dedupe/ml/calibration.py": "Probability calibration",
+      "dedupe/ml/config.py": "ML configuration constants"
+    },
+    "training_modules": {
+      "dedupe/ml_training/silver_labels.py": "Weak supervision label generation",
+      "dedupe/ml_training/train.py": "Model training pipeline"
+    },
+    "entry_points": [
+      "scripts/run_dedupe.py",
+      "scripts/build_embeddings.py",
+      "scripts/train_ml_model.py"
+    ]
+  },
+  "technology_stack": {
+    "core": {
+      "python": ">=3.8",
+      "pandas": "data processing",
+      "pyarrow": "parquet I/O",
+      "numpy": "numerical computing"
+    },
+    "ml": {
+      "torch": "deep learning backend",
+      "sentence-transformers": "semantic embeddings",
+      "lightgbm": "gradient boosting model",
+      "faiss-cpu": "similarity search",
+      "scikit-learn": "ML utilities"
+    },
+    "matching": {
+      "rapidfuzz": "fuzzy string matching",
+      "cologne-phonetics": "German phonetic matching"
+    },
+    "database": {
+      "pyodbc": "MSSQL connectivity",
+      "duckdb": "Swisstopo reference database"
+    },
+    "utilities": {
+      "tqdm": "progress bars",
+      "python-dotenv": "environment config"
+    }
+  },
+  "key_features": [
+    "Multi-phase pipeline: blocking -> candidate generation -> scoring",
+    "Dual scoring modes: rule-based (legacy) and ML-based (LightGBM)",
+    "34 ML features: name similarity, address, DOB, embeddings, phonetics",
+    "Swiss address normalization via Swisstopo reference data",
+    "Name swapping detection (first/last name swap)",
+    "Cologne phonetics for German name matching",
+    "Business rule gates (DOB mismatch, Zweitname conflicts)",
+    "GPU acceleration support (embeddings + inference)",
+    "Calibrated probability scores",
+    "WSL GPU workflow for Windows users"
+  ],
+  "business_rules": {
+    "hard_gates": [
+      "DOB mismatch rejection (if both have DOB and differ)",
+      "YOB mismatch rejection (if both have birth year and differ)",
+      "Zweitname conflict rejection"
+    ],
+    "soft_rules": [
+      "Minimum name similarity threshold (50% default)",
+      "Address quality penalties",
+      "Fuzzy threshold adjustments based on DOB quality"
+    ]
+  },
+  "existing_documentation": {
+    "readme": "README.md",
+    "getting_started_ml": "GETTING_STARTED_ML.md",
+    "architecture": "docs/SYSTEM_ARCHITECTURE.md",
+    "business_rules": "docs/businessrules.md",
+    "address_blocking": "docs/address_based_blocking.md",
+    "change_stories": "docs/stories/ (20+ entries)"
+  }
+}

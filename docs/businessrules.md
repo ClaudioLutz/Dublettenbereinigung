@@ -39,7 +39,15 @@ Pairs are immediately rejected (score = 0) if:
 *   **YOB Mismatch**: Both records have a Year of Birth (from DOB or separate field), and they differ.
 *   **Different Buildings**: Both records have a parsed house number, and the numeric parts differ (e.g., "12" vs "14").
 
-### 2.2 Stage 1: Exact Matching
+### 2.2 Soft Gates (Confidence Penalties)
+Pairs receive confidence penalties (but are not rejected) if:
+*   **Gender Mismatch**: Both records have known genders (from Pa_S_Anrede field), genders differ, both at same address (PLZ + house number match), and name similarity ≥75%.
+    *   **Penalty**: -20 points (pushes below auto-merge threshold)
+    *   **Purpose**: Prevents false positives for siblings/spouses with similar names (e.g., "Peter" vs "Petra", "Andreas" vs "Andrea")
+    *   **Gender Mapping**: Herr/Mr/Monsieur/Signor → M, Frau/Mrs/Ms/Miss/Madame/Signora → F, Unknown/Missing → U
+    *   **Match Types Affected**: All match types receive `_different_gender` suffix when penalty applies
+
+### 2.3 Stage 1: Exact Matching
 Checks for exact string equality on normalized names.
 
 *   **Exact Normal**: `First A == First B` AND `Last A == Last B`.
@@ -52,7 +60,7 @@ Checks for exact string equality on normalized names.
 *   Must not have conflicting house numbers.
 *   Must have decent street similarity (>70%).
 
-### 2.3 Stage 2: Fuzzy Matching
+### 2.4 Stage 2: Fuzzy Matching
 If not an exact match, fuzzy string similarity (Rapidfuzz WRatio) is calculated.
 
 *   **Name2/Zweitname Rule**: If `Name2` is present, it is checked.

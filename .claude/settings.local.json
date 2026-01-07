@@ -6,7 +6,15 @@
       "Bash(powershell:*)",
       "Bash(venv\\\\Scripts\\\\python:*)",
       "Bash(Select-String -Pattern \"train|dedupe|script\")",
-      "Bash(dir /b \"c:\\\\Lokal_Code\\\\dubletten\\\\models\")"
+      "Bash(dir /b \"c:\\\\Lokal_Code\\\\dubletten\\\\models\")",
+      "Bash(dir /b \"c:\\\\Lokal_Code\\\\dubletten\")",
+      "Bash(pip install:*)",
+      "Bash(dir /b \"c:\\\\Lokal_Code\\\\dubletten\\\\_bmad\\\\core\\\\workflows\\\\brainstorming\\\\steps\")",
+      "Bash(dir:*)",
+      "Skill(bmad:bmm:workflows:research)",
+      "Skill(bmad:bmm:workflows:research:*)",
+      "Skill(bmad:bmm:workflows:create-tech-spec)",
+      "Skill(bmad:bmm:workflows:create-tech-spec:*)"
     ]
   }
 }

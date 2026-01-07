@@ -285,7 +285,13 @@ def score_pair(i: int, j: int, cols: dict[str, object],
         # Swapped placement fallback: surname(+name2) might be in Vorname field
         if not check_zweitname(name2_i, last_i, name2_j, first_j) and not check_zweitname(name2_j, last_j, name2_i, first_i):
             return None
-    
+
+    # Business Rule 3: Gender check (different genders at same address are suspicious)
+    # This helps prevent false positives like "Peter Muster" vs "Petra Muster" at same address
+    gender_i = cols["gender"].iloc[i]
+    gender_j = cols["gender"].iloc[j]
+    different_genders = (gender_i != 'U' and gender_j != 'U' and gender_i != gender_j)
+
     # CRITICAL FIX: When name2 is present in one record but not the other,
     # combine name+name2 for fair comparison (swap-aware)
     # Example: "Haller" + "Bensel" vs "Haller Bensel" should match 100%
@@ -388,13 +394,21 @@ def score_pair(i: int, j: int, cols: dict[str, object],
             else:
                 # Weak address match - names match but addresses very different
                 confidence = 50.0 + (address_ratio * 20.0)  # 50-70%
-            
+
+            # Gender penalty: different genders at same address is suspicious
+            reason = "exact_normal"
+            same_address = (plz_i and plz_j and plz_i == plz_j and
+                          house_num_i and house_num_j and house_num_i == house_num_j)
+            if different_genders and same_address:
+                confidence = max(confidence - 20.0, 40.0)
+                reason = "exact_normal_different_gender"
+
             return MatchResult(
-                i=i, j=j, 
-                score=confidence, 
-                name_score=100.0, 
-                addr_score=addr_score, 
-                reason="exact_normal",
+                i=i, j=j,
+                score=confidence,
+                name_score=100.0,
+                addr_score=addr_score,
+                reason=reason,
                 is_swapped=False
             )
         
@@ -435,13 +449,21 @@ def score_pair(i: int, j: int, cols: dict[str, object],
                     confidence = 65.0 + (address_ratio * 25.0)  # 65-90%
                 else:
                     confidence = 45.0 + (address_ratio * 20.0)  # 45-65%
-            
+
+            # Gender penalty: different genders at same address is suspicious
+            reason = "exact_swapped"
+            same_address = (plz_i and plz_j and plz_i == plz_j and
+                          house_num_i and house_num_j and house_num_i == house_num_j)
+            if different_genders and same_address:
+                confidence = max(confidence - 20.0, 40.0)
+                reason = "exact_swapped_different_gender"
+
             return MatchResult(
-                i=i, j=j, 
-                score=confidence, 
-                name_score=100.0, 
-                addr_score=addr_score, 
-                reason="exact_swapped",
+                i=i, j=j,
+                score=confidence,
+                name_score=100.0,
+                addr_score=addr_score,
+                reason=reason,
                 is_swapped=True
             )
     
@@ -504,7 +526,14 @@ def score_pair(i: int, j: int, cols: dict[str, object],
                             else:
                                 reason = 'address_assisted_normal'
                                 confidence = 70.0 + (norm_address_ratio * 10.0)  # 70-80%
-                            
+
+                            # Gender penalty: different genders at same address is suspicious
+                            same_address = (plz_i and plz_j and plz_i == plz_j and
+                                          house_num_i and house_num_j and house_num_i == house_num_j)
+                            if different_genders and same_address:
+                                confidence = max(confidence - 20.0, 40.0)
+                                reason = reason + "_different_gender"
+
                             return MatchResult(
                                 i=i, j=j,
                                 score=confidence,
@@ -586,14 +615,21 @@ def score_pair(i: int, j: int, cols: dict[str, object],
                     if phonetic_match_normal or phonetic_match_swapped:
                         # Phonetic-assisted match
                         is_swapped = phonetic_match_swapped
-                        
+
                         if is_swapped:
                             reason = 'phonetic_assisted_swapped'
                             confidence = 70.0 + (address_ratio * 10.0)  # 70-80%
                         else:
                             reason = 'phonetic_assisted_normal'
                             confidence = 72.0 + (address_ratio * 10.0)  # 72-82%
-                        
+
+                        # Gender penalty: different genders at same address is suspicious
+                        same_address = (plz_i and plz_j and plz_i == plz_j and
+                                      house_num_i and house_num_j and house_num_i == house_num_j)
+                        if different_genders and same_address:
+                            confidence = max(confidence - 20.0, 40.0)
+                            reason = reason + "_different_gender"
+
                         return MatchResult(
                             i=i, j=j,
                             score=confidence,
@@ -682,19 +718,33 @@ def score_pair(i: int, j: int, cols: dict[str, object],
     elif both_dob_missing and both_yob_missing:
         # Both DOB and YOB missing: -20 point penalty
         dob_penalty = 20.0
-    
+
+    # Gender penalty: If different genders at same address with similar names, penalize confidence
+    # This prevents false positives like "Peter Muster" vs "Petra Muster" at same address
+    gender_penalty = 0.0
+    same_address = (plz_i and plz_j and plz_i == plz_j and
+                    house_num_i and house_num_j and house_num_i == house_num_j)
+
+    if different_genders and same_address and best_score >= 0.75:
+        # Different genders at same address with similar names (>75%) is very suspicious
+        # Apply a significant penalty (20 points) to push below auto-merge threshold
+        gender_penalty = 20.0
+        reason_suffix = "_different_gender"
+    else:
+        reason_suffix = ""
+
     if is_swapped:
         # Fuzzy swapped: apply -5 penalty
-        confidence = base_confidence + address_bonus - dob_penalty - 5.0
+        confidence = base_confidence + address_bonus - dob_penalty - gender_penalty - 5.0
         confidence = max(confidence, 40.0)  # Floor at 40%
         confidence = min(confidence, 85.0)  # Cap at 85% for fuzzy with DOB issues
-        reason = "fuzzy_swapped"
+        reason = "fuzzy_swapped" + reason_suffix
     else:
         # Fuzzy normal
-        confidence = base_confidence + address_bonus - dob_penalty
+        confidence = base_confidence + address_bonus - dob_penalty - gender_penalty
         confidence = max(confidence, 40.0)  # Floor at 40%
         confidence = min(confidence, 85.0)  # Cap at 85% for fuzzy with DOB issues
-        reason = "fuzzy_normal"
+        reason = "fuzzy_normal" + reason_suffix
 
     return MatchResult(
         i=i, j=j, 

@@ -435,6 +435,22 @@ def preprocess(df: pd.DataFrame, *, address_normalizer=None) -> dict[str, object
     last = _norm_series(df["Name"])
     name2 = _norm_series(df.get("Name2", pd.Series([""] * n)))
 
+    # Gender field (Pa_S_Anrede: Herr/Frau/etc)
+    # Normalize to simple M/F/U (male/female/unknown) for comparison
+    gender_raw = df.get("Pa_S_Anrede", pd.Series([""] * n)).astype("string").fillna("").str.strip().str.lower()
+    gender = gender_raw.replace({
+        'herr': 'M',
+        'frau': 'F',
+        'mr': 'M',
+        'mrs': 'F',
+        'ms': 'F',
+        'miss': 'F',
+        'monsieur': 'M',
+        'madame': 'F',
+        'signor': 'M',
+        'signora': 'F',
+    }).replace('', 'U')  # U = Unknown
+
     # Address fields - basic normalization
     street = _norm_series(df.get("Strasse", pd.Series([""] * n)))
     plz = _norm_series(df.get("Plz", pd.Series([""] * n)))
@@ -567,6 +583,7 @@ def preprocess(df: pd.DataFrame, *, address_normalizer=None) -> dict[str, object
     out["first"] = first
     out["last"] = last
     out["name2"] = name2
+    out["gender"] = gender
     out["street"] = street
     out["plz"] = plz
     out["house"] = house
