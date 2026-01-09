@@ -14,7 +14,10 @@
       "Skill(bmad:bmm:workflows:research)",
       "Skill(bmad:bmm:workflows:research:*)",
       "Skill(bmad:bmm:workflows:create-tech-spec)",
-      "Skill(bmad:bmm:workflows:create-tech-spec:*)"
+      "Skill(bmad:bmm:workflows:create-tech-spec:*)",
+      "Skill(bmad:bmm:workflows:quick-dev)",
+      "Skill(bmad:bmm:workflows:quick-dev:*)",
+      "Bash(git add:*)"
     ]
   }
 }

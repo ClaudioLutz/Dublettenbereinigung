@@ -146,3 +146,89 @@ Key parameters in `dedupe/pipeline.py` and `dedupe/blocking.py`:
 *   `fuzzy_threshold`: Base threshold for fuzzy matching (default: 0.80).
 *   `window_size`: Sliding window size for address blocking (default: 10).
 *   `enable_address_aware`: Toggle for address-assisted matching (default: True).
+
+## 6. Pattern Discovery Analysis
+
+The Pattern Discovery Analysis Module provides systematic validation and continuous improvement of business rules through LLM-assisted pattern identification.
+
+### Purpose
+
+Identify gaps and improvement opportunities in the rule-based scoring logic by comparing system classifications with LLM predictions on a sampled set of pairs.
+
+### Workflow
+
+**Phase 1: Clustering**
+1. Extract 35+ boolean rule features from matched pairs
+2. Run k-modes clustering to group pairs with similar rule patterns
+3. Validate clustering quality with Silhouette analysis (target: ≥0.5)
+
+**Phase 2: Calibration** (Interactive)
+1. Sample 30 pairs stratified across clusters
+2. Manually label pairs (DUPLICATE/NOT_DUPLICATE)
+3. Compare DeepSeek LLM labels vs manual labels
+4. Determine optimal confidence threshold
+
+**Phase 3: Full Analysis** (Interactive)
+1. Sample 225 pairs (15 per cluster)
+2. Label with DeepSeek LLM (auto-accept high confidence ≥0.85)
+3. Manually review low-confidence predictions
+4. Identify disagreement patterns between LLM and system
+5. Generate pattern report with specific rule recommendations
+
+**Phase 4: Continuous Improvement**
+1. Validated pairs become regression tests in `ground_truth/`
+2. Implement recommended rule improvements
+3. Run regression tests to prevent unintended changes
+4. Repeat cycle monthly/quarterly
+
+### Running Pattern Discovery
+
+```bash
+# Phase 1: Clustering only (no API key needed)
+python -m dedupe.analysis.pattern_discovery --phase 1 --input modular_results.csv
+
+# All phases (requires DEEPSEEK_API_KEY in .env)
+python -m dedupe.analysis.pattern_discovery --phase all
+```
+
+### Output Files
+
+*   `_bmad-output/analysis/run_YYYYMMDD_HHMMSS/clustered_results.csv` - All pairs with cluster assignments
+*   `_bmad-output/analysis/run_YYYYMMDD_HHMMSS/cluster_validation.png` - Silhouette + elbow plots
+*   `_bmad-output/analysis/run_YYYYMMDD_HHMMSS/pattern_report.md` - Analysis findings and recommendations
+*   `ground_truth/*.csv` - Validated pairs for regression testing
+
+### Ground Truth Structure
+
+*   `ground_truth/clear_duplicates.csv` - High-confidence matches (score ≥95%)
+*   `ground_truth/clear_non_duplicates.csv` - High-confidence non-matches (score <75%)
+*   `ground_truth/edge_cases.csv` - Borderline cases (score 65-95%)
+*   `ground_truth/boundary_cases.csv` - At-threshold cases (score 70-80%)
+
+### Regression Testing
+
+Automated tests in `tests/test_business_rules.py` validate that scoring logic remains consistent with ground truth:
+
+```bash
+pytest tests/test_business_rules.py -v
+```
+
+Tests fail if rule changes break previously validated behavior.
+
+### Frequency
+
+Run pattern discovery:
+*   **Monthly**: After significant data changes or new business requirements
+*   **Quarterly**: Regular validation of existing rules
+*   **Ad-hoc**: When investigating specific rule patterns or edge cases
+
+### Cost
+
+*   DeepSeek API: ~$0.04-0.10 per 225-pair analysis cycle
+*   Manual review: 2-3 hours per cycle
+*   Total: <$200 per cycle including labor
+
+### References
+
+*   Tech-Spec: [docs/implementation-artefacts/tech-spec-pattern-discovery-analysis-module.md](implementation-artefacts/tech-spec-pattern-discovery-analysis-module.md)
+*   Research: [docs/research/pattern-discovery-research-20260107.md](research/pattern-discovery-research-20260107.md)

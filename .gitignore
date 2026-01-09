@@ -67,6 +67,14 @@ temp/
 
 # BMAD local directory
 _bmad/
+_bmad-output/
+
+# Pattern discovery analysis outputs
+*_llm_labeled_results*.csv
+*_clustered_results*.csv
+*_refined_results*.csv
+*_sampled_for_labeling*.csv
+cluster_validation.png
 
 # Project-specific: Splink cache and outputs
 cache_splink/
