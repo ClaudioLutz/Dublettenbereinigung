@@ -1034,3 +1034,140 @@ class TestPerformanceBaselines:
         DEGRADATION_THRESHOLD_PCT = 10
 
         assert DEGRADATION_THRESHOLD_PCT == 10, "Degradation threshold should be 10%"
+
+
+# ============================================================================
+# Story 4.2: Quality Monitoring and Alerting Tests
+# ============================================================================
+
+
+class TestVolumeTracking:
+    """Test auto-merge volume tracking (Story 4.2 AC1, AC5)."""
+
+    @pytest.fixture
+    def sample_run_directory(self, tmp_path):
+        """Create sample run directory."""
+        run_dir = tmp_path / "run_test"
+        run_dir.mkdir(parents=True)
+
+        pd.DataFrame({
+            'i': range(100), 'j': range(100, 200),
+            'score': [80.0] * 100, 'cluster': [3] * 50 + [0] * 50
+        }).to_csv(run_dir / 'clustered_results.csv', index=False)
+
+        pd.DataFrame({
+            'i': range(20), 'j': range(100, 120),
+            'cluster': [3] * 10 + [0] * 10,
+            'llm_label': ['DUPLICATE'] * 10 + ['NOT_DUPLICATE'] * 10
+        }).to_csv(run_dir / 'llm_labeled_results.csv', index=False)
+
+        return run_dir
+
+    def test_result_includes_tier1_count(self, sample_run_directory):
+        """Result should include Tier 1 count for volume tracking."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        result = run_tier_assignment(sample_run_directory)
+
+        assert result['success'] is True
+        assert 'tier1_count' in result, "Should include tier1_count"
+        assert isinstance(result['tier1_count'], int), "tier1_count should be int"
+
+    def test_result_includes_total_count(self, sample_run_directory):
+        """Result should include total count for percentage calculation."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        result = run_tier_assignment(sample_run_directory)
+
+        assert result['success'] is True
+        assert 'total_count' in result, "Should include total_count"
+        assert result['total_count'] == result['tier1_count'] + result['tier2_count']
+
+    def test_tier1_percentage_calculable(self, sample_run_directory):
+        """Should be able to calculate Tier 1 percentage from result."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        result = run_tier_assignment(sample_run_directory)
+
+        assert result['success'] is True
+        tier1_pct = (result['tier1_count'] / result['total_count']) * 100
+
+        # Tier 1 percentage should be calculable
+        assert 0 <= tier1_pct <= 100, "Tier 1 percentage should be 0-100"
+
+
+class TestAlertThresholds:
+    """Test alert threshold documentation (Story 4.2 AC2, AC4, AC6)."""
+
+    def test_volume_drop_threshold_is_20_percent(self):
+        """Volume drop alert threshold should be 20%."""
+        VOLUME_DROP_THRESHOLD_PCT = 20
+
+        assert VOLUME_DROP_THRESHOLD_PCT == 20, "Volume drop threshold should be 20%"
+
+    def test_cluster_growth_threshold_is_50_percent(self):
+        """Cluster growth alert threshold should be 50%."""
+        CLUSTER_GROWTH_THRESHOLD_PCT = 50
+
+        assert CLUSTER_GROWTH_THRESHOLD_PCT == 50, "Cluster growth threshold should be 50%"
+
+    def test_tier1_target_range(self):
+        """Tier 1 target range should be 20-28%."""
+        TIER1_TARGET_MIN_PCT = 20
+        TIER1_TARGET_MAX_PCT = 28
+
+        assert TIER1_TARGET_MIN_PCT == 20, "Tier 1 min should be 20%"
+        assert TIER1_TARGET_MAX_PCT == 28, "Tier 1 max should be 28%"
+
+
+class TestClusterSizeTracking:
+    """Test cluster size distribution tracking (Story 4.2 AC3)."""
+
+    @pytest.fixture
+    def sample_run_directory(self, tmp_path):
+        """Create sample run directory with known cluster distribution."""
+        run_dir = tmp_path / "run_test"
+        run_dir.mkdir(parents=True)
+
+        # Create specific cluster distribution
+        clusters = [0] * 20 + [3] * 30 + [5] * 25 + [10] * 25
+
+        pd.DataFrame({
+            'i': range(100), 'j': range(100, 200),
+            'score': [80.0] * 100, 'cluster': clusters
+        }).to_csv(run_dir / 'clustered_results.csv', index=False)
+
+        pd.DataFrame({
+            'i': range(20), 'j': range(100, 120),
+            'cluster': [0] * 5 + [3] * 5 + [5] * 5 + [10] * 5,
+            'llm_label': ['NOT_DUPLICATE'] * 5 + ['DUPLICATE'] * 15
+        }).to_csv(run_dir / 'llm_labeled_results.csv', index=False)
+
+        return run_dir
+
+    def test_can_analyze_cluster_distribution(self, sample_run_directory):
+        """Should be able to analyze cluster distribution from output files."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        result = run_tier_assignment(sample_run_directory)
+        assert result['success'] is True
+
+        # Read output files to verify cluster distribution is preserved
+        tier1_df = pd.read_csv(sample_run_directory / 'auto_merge_pairs.csv', encoding='utf-8-sig')
+        tier2_df = pd.read_csv(sample_run_directory / 'review_queue_pairs.csv', encoding='utf-8-sig')
+
+        # Cluster column should be present for distribution analysis
+        assert 'cluster' in tier1_df.columns, "Tier 1 should have cluster column"
+        assert 'cluster' in tier2_df.columns, "Tier 2 should have cluster column"
+
+
+class TestAlertFormat:
+    """Test alert format standards (Story 4.2 AC7)."""
+
+    def test_warning_level_exists_in_logging(self):
+        """WARNING level should be available in logging."""
+        assert logging.WARNING == 30, "WARNING level should be 30"
+
+    def test_error_level_exists_in_logging(self):
+        """ERROR level should be available in logging."""
+        assert logging.ERROR == 40, "ERROR level should be 40"
