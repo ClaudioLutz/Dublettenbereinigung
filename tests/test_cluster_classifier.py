@@ -1,8 +1,10 @@
 """
-Unit tests for cluster classifier module (Story 1.3).
+Unit tests for cluster classifier module (Story 1.3, Story 2.2).
 
 Tests the Hamming distance-based classifier that assigns pairs
 to clusters based on their rule activation patterns.
+
+Story 2.2: Added tests for model loading with graceful degradation.
 """
 
 import pytest
@@ -11,6 +13,7 @@ import pandas as pd
 from pathlib import Path
 import sys
 import time
+import logging
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -297,3 +300,214 @@ class TestClusterDistribution:
         assert result[0] == 3, "Cluster 0 should have 3 pairs"
         assert result[1] == 2, "Cluster 1 should have 2 pairs"
         assert result[2] == 1, "Cluster 2 should have 1 pair"
+
+
+# ============================================================================
+# Story 2.2: Load K-Modes Model from YAML with Graceful Degradation
+# ============================================================================
+
+
+class TestLoadClusterModel:
+    """Test model loading with graceful degradation (Story 2.2)."""
+
+    @pytest.fixture
+    def valid_model_yaml(self, tmp_path):
+        """Create valid model YAML file for testing."""
+        yaml_content = """
+version: "1.0"
+model_version: "v1"
+created_date: "2026-01-10"
+silhouette_score: 0.42
+n_clusters: 3
+n_features: 5
+feature_names:
+  - f0
+  - f1
+  - f2
+  - f3
+  - f4
+centroids:
+  0: [1, 1, 1, 1, 1]
+  1: [0, 0, 0, 0, 0]
+  2: [1, 0, 1, 0, 1]
+"""
+        config_path = tmp_path / "cluster_model_v1.yaml"
+        config_path.write_text(yaml_content, encoding='utf-8')
+        return config_path
+
+    def test_load_cluster_model_success(self, valid_model_yaml):
+        """Should load valid model successfully."""
+        from dedupe.cluster_classifier import load_cluster_model
+
+        result = load_cluster_model(valid_model_yaml)
+
+        assert result is not None, "Should return model data"
+        assert 'centroids' in result, "Should have centroids key"
+        assert len(result['centroids']) == 3, "Should have 3 clusters"
+        assert result['model_version'] == "v1", "Should have correct version"
+
+    def test_load_cluster_model_returns_metadata(self, valid_model_yaml):
+        """Should return model metadata."""
+        from dedupe.cluster_classifier import load_cluster_model
+
+        result = load_cluster_model(valid_model_yaml)
+
+        assert result['n_clusters'] == 3, "Should have cluster count"
+        assert result['n_features'] == 5, "Should have feature count"
+        assert result['silhouette_score'] == 0.42, "Should have silhouette score"
+
+
+class TestLoadClusterModelWithFallback:
+    """Test graceful degradation on model load failure (Story 2.2)."""
+
+    @pytest.fixture
+    def valid_model_yaml(self, tmp_path):
+        """Create valid model YAML file for testing."""
+        yaml_content = """
+version: "1.0"
+model_version: "v1"
+n_clusters: 3
+n_features: 5
+feature_names: [f0, f1, f2, f3, f4]
+centroids:
+  0: [1, 1, 1, 1, 1]
+  1: [0, 0, 0, 0, 0]
+  2: [1, 0, 1, 0, 1]
+"""
+        config_path = tmp_path / "cluster_model_v1.yaml"
+        config_path.write_text(yaml_content, encoding='utf-8')
+        return config_path
+
+    def test_load_with_fallback_success(self, valid_model_yaml):
+        """Should load valid model successfully."""
+        from dedupe.cluster_classifier import load_cluster_model_with_fallback
+
+        result = load_cluster_model_with_fallback(valid_model_yaml)
+
+        assert result is not None, "Should return model data"
+        assert 'centroids' in result, "Should have centroids"
+
+    def test_load_with_fallback_missing_file(self, tmp_path, caplog):
+        """Missing file should return None and log warning."""
+        from dedupe.cluster_classifier import load_cluster_model_with_fallback
+
+        missing_path = tmp_path / "nonexistent.yaml"
+
+        with caplog.at_level(logging.WARNING):
+            result = load_cluster_model_with_fallback(missing_path)
+
+        assert result is None, "Should return None for missing file"
+        assert "not found" in caplog.text.lower() or len(caplog.records) > 0, \
+            "Should log warning about missing file"
+
+    def test_load_with_fallback_corrupt_file(self, tmp_path, caplog):
+        """Corrupt file should return None and log error."""
+        from dedupe.cluster_classifier import load_cluster_model_with_fallback
+
+        corrupt_content = "version: 1.0\n{{{invalid yaml"
+        corrupt_path = tmp_path / "corrupt.yaml"
+        corrupt_path.write_text(corrupt_content, encoding='utf-8')
+
+        with caplog.at_level(logging.ERROR):
+            result = load_cluster_model_with_fallback(corrupt_path)
+
+        assert result is None, "Should return None for corrupt file"
+
+    def test_load_with_fallback_missing_centroids(self, tmp_path, caplog):
+        """Missing centroids key should return None and log error."""
+        from dedupe.cluster_classifier import load_cluster_model_with_fallback
+
+        yaml_content = """
+version: "1.0"
+model_version: "v1"
+n_clusters: 3
+n_features: 5
+"""
+        invalid_path = tmp_path / "invalid.yaml"
+        invalid_path.write_text(yaml_content, encoding='utf-8')
+
+        with caplog.at_level(logging.ERROR):
+            result = load_cluster_model_with_fallback(invalid_path)
+
+        assert result is None, "Should return None for missing centroids"
+
+
+class TestTier2FallbackClassifier:
+    """Test Tier 2 fallback behavior when model loading fails (Story 2.2)."""
+
+    def test_create_tier2_fallback_classifier(self):
+        """Should create classifier that assigns all pairs to Tier 2."""
+        from dedupe.cluster_classifier import create_tier2_fallback_classifier
+
+        classifier = create_tier2_fallback_classifier()
+
+        assert classifier is not None, "Should create fallback classifier"
+
+    def test_tier2_fallback_assigns_default_cluster(self):
+        """Fallback classifier should assign default cluster (triggers Tier 2)."""
+        from dedupe.cluster_classifier import create_tier2_fallback_classifier
+
+        classifier = create_tier2_fallback_classifier(n_features=5)
+
+        # Any feature vector should get cluster 0 (which maps to Tier 2)
+        features = np.array([1, 0, 1, 0, 1])
+        result = classifier.classify_pair(features)
+
+        assert result == 0, "Fallback should assign cluster 0 (Tier 2)"
+
+    def test_tier2_fallback_batch_classification(self):
+        """Fallback classifier should work with batch classification."""
+        from dedupe.cluster_classifier import create_tier2_fallback_classifier
+
+        classifier = create_tier2_fallback_classifier(n_features=5)
+
+        df = pd.DataFrame({
+            'f0': [1, 0, 1],
+            'f1': [1, 0, 0],
+            'f2': [1, 0, 1],
+            'f3': [1, 0, 0],
+            'f4': [1, 0, 1],
+        })
+        feature_cols = ['f0', 'f1', 'f2', 'f3', 'f4']
+
+        result = classifier.classify_batch(df, feature_cols)
+
+        assert 'cluster' in result.columns, "Should add cluster column"
+        assert all(result['cluster'] == 0), "All pairs should get cluster 0 (Tier 2)"
+
+
+class TestLoadModelPerformance:
+    """Test model loading performance (Story 2.2)."""
+
+    def test_load_model_under_30_seconds(self, tmp_path):
+        """Model loading should complete in ≤30 seconds."""
+        from dedupe.cluster_classifier import load_cluster_model
+
+        # Create a realistic model with 15 clusters and 35 features
+        yaml_content = """
+version: "1.0"
+model_version: "v1"
+n_clusters: 15
+n_features: 35
+feature_names:
+"""
+        # Add 35 feature names
+        for i in range(35):
+            yaml_content += f"  - feature_{i}\n"
+
+        yaml_content += "centroids:\n"
+        # Add 15 centroids with 35 values each
+        np.random.seed(42)
+        for cluster_id in range(15):
+            values = [int(v) for v in np.random.randint(0, 2, 35)]
+            yaml_content += f"  {cluster_id}: {values}\n"
+
+        model_path = tmp_path / "large_model.yaml"
+        model_path.write_text(yaml_content, encoding='utf-8')
+
+        start = time.time()
+        result = load_cluster_model(model_path)
+        elapsed = time.time() - start
+
+        assert result is not None, "Should load model"
+        assert elapsed < 30.0, f"Load time should be <30s, was {elapsed:.2f}s"

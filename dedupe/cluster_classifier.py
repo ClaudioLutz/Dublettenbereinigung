@@ -1,5 +1,5 @@
 """
-Cluster classifier using Hamming distance (Story 1.3).
+Cluster classifier using Hamming distance (Story 1.3, Story 2.2).
 
 This module provides a classifier that assigns matched pairs to clusters
 based on their rule activation patterns, using Hamming distance to find
@@ -9,6 +9,7 @@ Features:
 - Single pair classification via classify_pair()
 - Batch classification via classify_batch()
 - Load centroids from YAML model file
+- Graceful degradation with Tier 2 fallback (Story 2.2)
 - Deterministic tie-breaking (lowest cluster ID wins)
 - Optimized for performance with NumPy vectorization
 
@@ -26,14 +27,20 @@ Usage:
 
     # Classify batch
     df_with_clusters = classifier.classify_batch(df, feature_columns)
+
+Story 2.2: Added graceful degradation with load_cluster_model_with_fallback()
 """
 
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional, Any
 from collections import Counter
+import logging
 import numpy as np
 import pandas as pd
 import yaml
+
+# Configure module logger
+logger = logging.getLogger(__name__)
 
 
 def hamming_distance(vec1: np.ndarray, vec2: np.ndarray) -> int:
@@ -263,3 +270,163 @@ def log_cluster_statistics(
     print("-" * 40)
     print(f"  Total:       {total:6,} pairs")
     print(f"  Classification time: {classification_time:.2f} seconds")
+
+
+# ============================================================================
+# Story 2.2: Model Loading with Graceful Degradation
+# ============================================================================
+
+
+def load_cluster_model(model_path: Path) -> Dict[str, Any]:
+    """
+    Load complete cluster model from YAML file.
+
+    Returns the full model configuration including centroids and metadata.
+
+    Args:
+        model_path: Path to YAML model file
+
+    Returns:
+        Dictionary with model data:
+        - centroids: Dict[int, np.ndarray]
+        - model_version: str
+        - n_clusters: int
+        - n_features: int
+        - feature_names: List[str]
+        - silhouette_score: float (optional)
+
+    Raises:
+        FileNotFoundError: If model file doesn't exist
+        ValueError: If YAML schema is invalid
+
+    Example:
+        >>> model = load_cluster_model(Path("models/cluster_model_v1.yaml"))
+        >>> model['model_version']
+        'v1'
+        >>> model['centroids'][0]
+        array([1, 0, 1, ...])
+    """
+    model_path = Path(model_path)
+
+    if not model_path.exists():
+        raise FileNotFoundError(f"Cluster model file not found: {model_path}")
+
+    with open(model_path, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+
+    if config is None:
+        raise ValueError(f"Empty or invalid YAML file: {model_path}")
+
+    if 'centroids' not in config:
+        raise ValueError(
+            f"Invalid model schema: missing 'centroids' key in {model_path}. "
+            f"Re-export model using export_cluster_model() or restore from git."
+        )
+
+    # Convert centroids to numpy arrays
+    centroids = {}
+    for cluster_id, centroid_values in config['centroids'].items():
+        cluster_id = int(cluster_id)
+        centroids[cluster_id] = np.array(centroid_values, dtype=int)
+
+    config['centroids'] = centroids
+
+    logger.info(
+        f"Model loaded successfully (version: {config.get('model_version', 'unknown')}, "
+        f"clusters: {config.get('n_clusters', len(centroids))}, "
+        f"features: {config.get('n_features', 'unknown')})"
+    )
+
+    return config
+
+
+def load_cluster_model_with_fallback(
+    model_path: Path
+) -> Optional[Dict[str, Any]]:
+    """
+    Load model with graceful degradation on failure.
+
+    If the model file is missing or corrupt, logs an appropriate message
+    and returns None. The caller should handle the fallback behavior
+    (e.g., assign all pairs to Tier 2).
+
+    Args:
+        model_path: Path to YAML model file
+
+    Returns:
+        Model data dictionary if successful, None if failed
+
+    Example:
+        >>> model = load_cluster_model_with_fallback(Path("models/cluster_model_v1.yaml"))
+        >>> if model is None:
+        ...     classifier = create_tier2_fallback_classifier()
+        ... else:
+        ...     classifier = HammingDistanceClassifier(model['centroids'])
+    """
+    model_path = Path(model_path)
+
+    try:
+        return load_cluster_model(model_path)
+
+    except FileNotFoundError:
+        logger.warning(
+            f"Cluster model not found: {model_path} - defaulting to Tier 2. "
+            f"Run export_cluster_model() to create model file."
+        )
+        return None
+
+    except yaml.YAMLError as e:
+        logger.error(
+            f"Corrupt cluster model: {model_path} - YAML parsing failed. "
+            f"Error: {e}. "
+            f"Remediation: Re-export model using export_cluster_model() or restore from git."
+        )
+        return None
+
+    except ValueError as e:
+        logger.error(
+            f"Invalid cluster model schema: {model_path}. "
+            f"Error: {e}. "
+            f"Remediation: Re-export model using export_cluster_model() or restore from git."
+        )
+        return None
+
+    except Exception as e:
+        logger.error(
+            f"Unexpected error loading cluster model: {model_path}. "
+            f"Error: {type(e).__name__}: {e}. "
+            f"Defaulting to Tier 2."
+        )
+        return None
+
+
+def create_tier2_fallback_classifier(n_features: int = 35) -> HammingDistanceClassifier:
+    """
+    Create a fallback classifier that assigns all pairs to cluster 0 (Tier 2).
+
+    Used when model loading fails to ensure safe fallback behavior.
+    Cluster 0 is mapped to Tier 2 in the default cluster tier mapping,
+    ensuring all pairs go to manual review.
+
+    Args:
+        n_features: Number of features in feature vectors (default: 35)
+
+    Returns:
+        HammingDistanceClassifier that assigns all pairs to cluster 0
+
+    Example:
+        >>> classifier = create_tier2_fallback_classifier()
+        >>> classifier.classify_pair([1, 0, 1, 0, ...])
+        0  # Always returns cluster 0 (Tier 2)
+    """
+    # Create a single centroid that matches any input
+    # Using all zeros means any feature vector will have minimal distance
+    fallback_centroid = np.zeros(n_features, dtype=int)
+
+    centroids = {0: fallback_centroid}
+
+    logger.warning(
+        f"Created Tier 2 fallback classifier - all pairs will be assigned to cluster 0 (manual review)"
+    )
+
+    return HammingDistanceClassifier(centroids)
