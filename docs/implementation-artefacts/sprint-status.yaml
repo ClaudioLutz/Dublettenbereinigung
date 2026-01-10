@@ -1,0 +1,95 @@
+# generated: 2026-01-10
+# project: dubletten
+# project_key: dubletten
+# tracking_system: file-system
+# story_location: docs/implementation-artefacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-10
+project: dubletten
+project_key: dubletten
+tracking_system: file-system
+story_location: docs/implementation-artefacts
+
+development_status:
+  # Epic 1: Automated Tier Assignment System
+  epic-1: in-progress
+  1-1-generate-tiered-output-files-from-clustered-results: done
+  1-2-load-cluster-to-tier-mapping-from-yaml-configuration: done
+  1-3-classify-pairs-by-cluster-using-hamming-distance: backlog
+  1-4-generate-tier-assignment-validation-report: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Production-Ready Model Persistence
+  epic-2: backlog
+  2-1-export-k-modes-cluster-model-to-yaml-format: backlog
+  2-2-load-k-modes-model-from-yaml-with-graceful-degradation: backlog
+  2-3-implement-cluster-classifier-module-with-no-ml-dependencies: backlog
+  2-4-define-tiered-output-csv-file-format-with-excel-compatibility: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: End-to-End Pipeline Integration
+  epic-3: backlog
+  3-1-integrate-stage-3-tier-assignment-into-existing-pipeline: backlog
+  3-2-maintain-backward-compatibility-with-existing-merge-tools: backlog
+  3-3-validate-performance-targets-across-full-pipeline: backlog
+  3-4-implement-reliability-checks-and-data-integrity-validation: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Monitoring & Operational Observability
+  epic-4: backlog
+  4-1-implement-runtime-performance-monitoring: backlog
+  4-2-implement-quality-monitoring-and-alerting: backlog
+  4-3-implement-comprehensive-error-handling-with-remediation-guidance: backlog
+  4-4-create-production-runbook-with-troubleshooting-guide: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Ground Truth Management & Continuous Improvement
+  epic-5: backlog
+  5-1-save-llm-validated-pairs-to-ground-truth-directory: backlog
+  5-2-implement-regression-testing-framework-with-ground-truth: backlog
+  5-3-create-comprehensive-documentation-for-system-maintenance: backlog
+  5-4-implement-audit-trail-for-compliance-and-reproducibility: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Quarterly Re-Clustering Workflow
+  epic-6: backlog
+  6-1-implement-manual-re-clustering-cli-command: backlog
+  6-2-generate-migration-guide-comparing-old-and-new-validation-results: backlog
+  6-3-validate-re-clustering-results-before-production-deployment: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Business Intelligence & ROI Reporting
+  epic-7: backlog
+  7-1-calculate-and-display-roi-metrics-dashboard: backlog
+  7-2-generate-quarterly-executive-summary-report: backlog
+  7-3-track-and-report-team-satisfaction-metrics: backlog
+  epic-7-retrospective: optional
