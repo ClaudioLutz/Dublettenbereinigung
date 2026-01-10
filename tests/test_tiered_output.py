@@ -711,3 +711,102 @@ class TestSaveTierReport:
         assert report_path.exists(), "Report file should exist"
         saved_content = report_path.read_text(encoding='utf-8')
         assert saved_content == report_content, "Content should match"
+
+
+# ============================================================================
+# Story 2.4: CSV Format Verification Tests
+# ============================================================================
+
+
+class TestCSVFormatSpecification:
+    """Verify CSV format meets specification (Story 2.4)."""
+
+    def test_save_with_bom_uses_utf8_sig(self, tmp_path):
+        """save_with_bom should use UTF-8 BOM encoding."""
+        from scripts.generate_tiered_output import save_with_bom
+
+        df = pd.DataFrame({
+            'name': ['Müller', 'Zürich', 'Straße'],
+            'id': [1, 2, 3]
+        })
+        output_path = tmp_path / "test.csv"
+
+        save_with_bom(df, output_path)
+
+        # Read file as bytes to check BOM
+        with open(output_path, 'rb') as f:
+            content = f.read()
+
+        # UTF-8 BOM is EF BB BF
+        assert content[:3] == b'\xef\xbb\xbf', "File should start with UTF-8 BOM"
+
+    def test_save_with_bom_german_characters(self, tmp_path):
+        """German characters should be preserved correctly."""
+        from scripts.generate_tiered_output import save_with_bom
+
+        df = pd.DataFrame({
+            'name': ['Müller', 'Zürich', 'Straße', 'Größe'],
+            'id': [1, 2, 3, 4]
+        })
+        output_path = tmp_path / "test.csv"
+
+        save_with_bom(df, output_path)
+
+        # Read back and verify
+        read_df = pd.read_csv(output_path, encoding='utf-8-sig')
+        assert list(read_df['name']) == ['Müller', 'Zürich', 'Straße', 'Größe'], \
+            "German characters should be preserved"
+
+    def test_column_order_specification(self):
+        """Column order should follow specification."""
+        from scripts.generate_tiered_output import reorder_columns_for_ac4
+
+        df = pd.DataFrame({
+            'extra_col': [1],
+            'i': [100],
+            'j': [200],
+            'confidence': [0.95],
+            'cluster': [3],
+            'match_id': ['100_200'],
+            'name_A': ['Test']
+        })
+
+        result = reorder_columns_for_ac4(df)
+
+        # First 5 columns should be in specified order
+        expected_first_5 = ['match_id', 'cluster', 'confidence', 'i', 'j']
+        assert list(result.columns[:5]) == expected_first_5, \
+            f"First 5 columns should be {expected_first_5}, got {list(result.columns[:5])}"
+
+    def test_csv_uses_comma_delimiter(self, tmp_path):
+        """CSV should use comma as delimiter."""
+        from scripts.generate_tiered_output import save_with_bom
+
+        df = pd.DataFrame({
+            'col1': [1, 2],
+            'col2': ['a', 'b']
+        })
+        output_path = tmp_path / "test.csv"
+
+        save_with_bom(df, output_path)
+
+        # Read content and check for comma delimiter
+        content = output_path.read_text(encoding='utf-8-sig')
+        lines = content.strip().split('\n')
+
+        # Header should be comma-separated
+        assert 'col1,col2' in lines[0], "Header should be comma-separated"
+
+    def test_format_specification_document_exists(self):
+        """Format specification document should exist."""
+        from pathlib import Path
+
+        spec_path = Path(__file__).parent.parent / 'docs' / 'csv-format-specification.md'
+
+        assert spec_path.exists(), \
+            f"CSV format specification should exist at {spec_path}"
+
+        content = spec_path.read_text(encoding='utf-8')
+        assert 'UTF-8' in content, "Spec should mention UTF-8 encoding"
+        assert 'BOM' in content, "Spec should mention BOM"
+        assert 'Column Order' in content, "Spec should document column order"
