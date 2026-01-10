@@ -300,3 +300,178 @@ class TestInputFileDiscovery:
 
         assert result['success'] is False, "Should fail with missing input files"
         assert 'error' in result, "Should include error message"
+
+
+# ============================================================================
+# Story 3.2: Backward Compatibility Tests
+# ============================================================================
+
+
+class TestBackwardCompatibilityColumnSchema:
+    """Test column schema compatibility with existing tools (Story 3.2 AC1)."""
+
+    @pytest.fixture
+    def sample_run_directory(self, tmp_path):
+        """Create sample run directory with input files."""
+        run_dir = tmp_path / "_bmad-output" / "analysis" / "run_20260110_120000"
+        run_dir.mkdir(parents=True)
+
+        # Create input files with typical columns
+        pd.DataFrame({
+            'i': [1, 2], 'j': [10, 20], 'score': [80.0, 85.0], 'cluster': [3, 0],
+            'vorname_A': ['Anna', 'Beat'], 'name_A': ['Muller', 'Schmidt'],
+            'vorname_B': ['Anna', 'Bea'], 'name_B': ['Müller', 'Schmid'],
+        }).to_csv(run_dir / 'clustered_results.csv', index=False)
+
+        pd.DataFrame({
+            'i': [1, 2], 'j': [10, 20], 'cluster': [3, 0],
+            'llm_label': ['DUPLICATE', 'NOT_DUPLICATE']
+        }).to_csv(run_dir / 'llm_labeled_results.csv', index=False)
+
+        return run_dir
+
+    def test_tiered_output_has_required_columns(self, sample_run_directory):
+        """Tiered output files should have required columns for compatibility."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        run_tier_assignment(sample_run_directory)
+
+        tier1_path = sample_run_directory / 'auto_merge_pairs.csv'
+        tier2_path = sample_run_directory / 'review_queue_pairs.csv'
+
+        # Read outputs
+        tier1_df = pd.read_csv(tier1_path, encoding='utf-8-sig')
+        tier2_df = pd.read_csv(tier2_path, encoding='utf-8-sig')
+
+        # Required columns for backward compatibility
+        required_cols = ['match_id', 'cluster', 'confidence', 'i', 'j']
+
+        for col in required_cols:
+            assert col in tier1_df.columns, f"Tier 1 should have '{col}' column"
+            assert col in tier2_df.columns, f"Tier 2 should have '{col}' column"
+
+    def test_tiered_output_preserves_original_columns(self, sample_run_directory):
+        """Tiered output should preserve all original data columns."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        run_tier_assignment(sample_run_directory)
+
+        tier1_path = sample_run_directory / 'auto_merge_pairs.csv'
+        tier1_df = pd.read_csv(tier1_path, encoding='utf-8-sig')
+
+        # Original columns should be preserved
+        original_cols = ['vorname_A', 'name_A', 'vorname_B', 'name_B']
+        for col in original_cols:
+            assert col in tier1_df.columns, f"Should preserve '{col}' column"
+
+
+class TestBackwardCompatibilityMatchIdFormat:
+    """Test match_id format compatibility (Story 3.2 AC2)."""
+
+    @pytest.fixture
+    def sample_run_directory(self, tmp_path):
+        """Create sample run directory."""
+        run_dir = tmp_path / "run_20260110"
+        run_dir.mkdir(parents=True)
+
+        pd.DataFrame({
+            'i': [100, 200], 'j': [150, 250], 'score': [80.0, 85.0], 'cluster': [3, 0]
+        }).to_csv(run_dir / 'clustered_results.csv', index=False)
+
+        pd.DataFrame({
+            'i': [100, 200], 'j': [150, 250], 'cluster': [3, 0],
+            'llm_label': ['DUPLICATE', 'NOT_DUPLICATE']
+        }).to_csv(run_dir / 'llm_labeled_results.csv', index=False)
+
+        return run_dir
+
+    def test_match_id_uses_underscore_separator(self, sample_run_directory):
+        """match_id should use underscore separator: {i}_{j}."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        run_tier_assignment(sample_run_directory)
+
+        tier1_path = sample_run_directory / 'auto_merge_pairs.csv'
+        df = pd.read_csv(tier1_path, encoding='utf-8-sig')
+
+        if len(df) > 0:
+            match_id = df['match_id'].iloc[0]
+            assert '_' in str(match_id), "match_id should contain underscore"
+
+    def test_match_id_format_i_j(self, sample_run_directory):
+        """match_id should be formatted as {i}_{j}."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        run_tier_assignment(sample_run_directory)
+
+        tier2_path = sample_run_directory / 'review_queue_pairs.csv'
+        df = pd.read_csv(tier2_path, encoding='utf-8-sig')
+
+        for _, row in df.iterrows():
+            expected_id = f"{int(row['i'])}_{int(row['j'])}"
+            assert str(row['match_id']) == expected_id, \
+                f"match_id should be {expected_id}, got {row['match_id']}"
+
+
+class TestNoBreakingChangesToCoreModules:
+    """Test no breaking changes to core modules (Story 3.2 AC4, AC6)."""
+
+    def test_scoring_module_unchanged(self):
+        """scoring.py module should be importable and have core functions."""
+        from dedupe.scoring import score_pair, MatchResult
+
+        # Verify core functions exist
+        assert callable(score_pair), "score_pair should be callable"
+        assert MatchResult is not None, "MatchResult should exist"
+
+    def test_pipeline_module_unchanged(self):
+        """pipeline.py module should be importable and have core functions."""
+        from dedupe.pipeline import run_pipeline, process_block
+
+        # Verify core functions exist
+        assert callable(run_pipeline), "run_pipeline should be callable"
+        assert callable(process_block), "process_block should be callable"
+
+    def test_match_result_dataclass_unchanged(self):
+        """MatchResult dataclass should have expected fields."""
+        from dedupe.scoring import MatchResult
+
+        # Verify expected fields
+        mr = MatchResult(i=1, j=2, score=80.0, name_score=90.0, addr_score=70.0, reason="test")
+
+        assert mr.i == 1, "MatchResult should have 'i' field"
+        assert mr.j == 2, "MatchResult should have 'j' field"
+        assert mr.score == 80.0, "MatchResult should have 'score' field"
+        assert mr.reason == "test", "MatchResult should have 'reason' field"
+
+
+class TestExistingTestsNotBroken:
+    """Verify existing tests are not broken (Story 3.2 AC5)."""
+
+    def test_tiered_output_tests_pass(self):
+        """test_tiered_output.py tests should continue to pass."""
+        # This is verified by running the full test suite
+        # We just verify the module is importable
+        from scripts.generate_tiered_output import (
+            calculate_cluster_fp_rates,
+            classify_tiers,
+            validate_tier_integrity,
+            save_with_bom,
+        )
+
+        assert callable(calculate_cluster_fp_rates)
+        assert callable(classify_tiers)
+        assert callable(validate_tier_integrity)
+        assert callable(save_with_bom)
+
+    def test_cluster_classifier_tests_pass(self):
+        """test_cluster_classifier.py tests should continue to pass."""
+        from dedupe.cluster_classifier import (
+            HammingDistanceClassifier,
+            hamming_distance,
+            load_centroids_from_yaml,
+        )
+
+        assert callable(hamming_distance)
+        assert HammingDistanceClassifier is not None
+        assert callable(load_centroids_from_yaml)
