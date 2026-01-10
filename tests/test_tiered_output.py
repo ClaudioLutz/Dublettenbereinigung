@@ -585,3 +585,129 @@ class TestClassifyTiersWithMapping:
 
         assert list(tier1.columns) == list(df.columns), "Tier 1 columns should match input"
         assert list(tier2.columns) == list(df.columns), "Tier 2 columns should match input"
+
+
+# Story 1.4: Tier Assignment Validation Report Tests
+class TestGenerateTierReport:
+    """Test tier report generation (Story 1.4)."""
+
+    @pytest.fixture
+    def sample_tier_stats(self):
+        """Create sample tier statistics for testing."""
+        return {
+            'total_pairs': 78677,
+            'tier1_count': 20619,
+            'tier2_count': 58058,
+            'tier1_pct': 26.2,
+            'tier2_pct': 73.8,
+            'validation_date': '2026-01-08',
+            'model_version': 'cluster_model_v1',
+        }
+
+    @pytest.fixture
+    def sample_cluster_stats(self):
+        """Create sample cluster statistics."""
+        return {
+            0: {'count': 12456, 'fp_rate': 15.2, 'tier': 2},
+            1: {'count': 8234, 'fp_rate': 8.7, 'tier': 2},
+            2: {'count': 7891, 'fp_rate': 12.3, 'tier': 2},
+            3: {'count': 5234, 'fp_rate': 0.0, 'tier': 1},
+            4: {'count': 3891, 'fp_rate': 0.0, 'tier': 1},
+            5: {'count': 4567, 'fp_rate': 5.1, 'tier': 2},
+        }
+
+    def test_generate_report_creates_markdown(self, sample_tier_stats, sample_cluster_stats):
+        """Report should be valid Markdown format."""
+        from scripts.generate_tiered_output import generate_tier_report
+
+        report = generate_tier_report(sample_tier_stats, sample_cluster_stats)
+
+        assert '# Tier Assignment Validation Report' in report
+        assert '## Summary' in report
+        assert '## Cluster Distribution' in report
+
+    def test_generate_report_includes_summary_stats(self, sample_tier_stats, sample_cluster_stats):
+        """Report should include tier statistics."""
+        from scripts.generate_tiered_output import generate_tier_report
+
+        report = generate_tier_report(sample_tier_stats, sample_cluster_stats)
+
+        assert '78,677' in report or '78677' in report, "Should include total pairs"
+        assert '20,619' in report or '20619' in report, "Should include Tier 1 count"
+        assert '26.2%' in report or '26.2' in report, "Should include Tier 1 percentage"
+
+    def test_generate_report_includes_cluster_distribution(self, sample_tier_stats, sample_cluster_stats):
+        """Report should include cluster distribution."""
+        from scripts.generate_tiered_output import generate_tier_report
+
+        report = generate_tier_report(sample_tier_stats, sample_cluster_stats)
+
+        assert 'Tier 1' in report, "Should mention Tier 1"
+        assert 'Tier 2' in report, "Should mention Tier 2"
+        assert '0.0%' in report, "Should include 0% FP clusters"
+        assert '15.2%' in report or '15.2' in report, "Should include non-zero FP rates"
+
+    def test_generate_report_includes_validation_metadata(self, sample_tier_stats, sample_cluster_stats):
+        """Report should include validation metadata."""
+        from scripts.generate_tiered_output import generate_tier_report
+
+        report = generate_tier_report(sample_tier_stats, sample_cluster_stats)
+
+        assert '2026-01-08' in report, "Should include validation date"
+        assert 'cluster_model_v1' in report, "Should include model version"
+
+
+class TestCalculateTierStats:
+    """Test tier statistics calculation."""
+
+    def test_calculate_tier_stats(self):
+        """Should calculate correct tier statistics."""
+        from scripts.generate_tiered_output import calculate_tier_stats
+
+        tier1_df = pd.DataFrame({'i': range(20), 'j': range(20, 40)})
+        tier2_df = pd.DataFrame({'i': range(80), 'j': range(80, 160)})
+
+        stats = calculate_tier_stats(tier1_df, tier2_df)
+
+        assert stats['tier1_count'] == 20
+        assert stats['tier2_count'] == 80
+        assert stats['total_pairs'] == 100
+        assert stats['tier1_pct'] == 20.0
+        assert stats['tier2_pct'] == 80.0
+
+    def test_calculate_cluster_stats(self):
+        """Should calculate correct cluster statistics."""
+        from scripts.generate_tiered_output import calculate_cluster_stats
+
+        clustered_df = pd.DataFrame({
+            'cluster': [0, 0, 0, 1, 1, 2],
+            'i': range(6),
+            'j': range(6, 12)
+        })
+        fp_rates = {0: 15.2, 1: 0.0, 2: 8.7}
+        cluster_tier_mapping = {0: 2, 1: 1, 2: 2}
+
+        stats = calculate_cluster_stats(clustered_df, fp_rates, cluster_tier_mapping)
+
+        assert stats[0]['count'] == 3
+        assert stats[0]['fp_rate'] == 15.2
+        assert stats[0]['tier'] == 2
+        assert stats[1]['count'] == 2
+        assert stats[1]['tier'] == 1
+
+
+class TestSaveTierReport:
+    """Test saving tier report to file."""
+
+    def test_save_tier_report(self, tmp_path):
+        """Should save report to specified path."""
+        from scripts.generate_tiered_output import save_tier_report
+
+        report_content = "# Test Report\n\nThis is a test."
+        report_path = tmp_path / "tier_report.md"
+
+        save_tier_report(report_content, report_path)
+
+        assert report_path.exists(), "Report file should exist"
+        saved_content = report_path.read_text(encoding='utf-8')
+        assert saved_content == report_content, "Content should match"

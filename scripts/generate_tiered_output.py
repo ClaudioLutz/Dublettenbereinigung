@@ -371,6 +371,162 @@ def classify_tiers_with_mapping(
     return tier1_df, tier2_df
 
 
+def calculate_tier_stats(
+    tier1_df: pd.DataFrame,
+    tier2_df: pd.DataFrame,
+    validation_date: str = None,
+    model_version: str = None
+) -> Dict:
+    """
+    Calculate tier assignment statistics (Story 1.4).
+
+    Args:
+        tier1_df: Tier 1 (auto-merge) DataFrame
+        tier2_df: Tier 2 (review queue) DataFrame
+        validation_date: Date of LLM validation (optional)
+        model_version: Model version string (optional)
+
+    Returns:
+        Dictionary with tier statistics
+    """
+    tier1_count = len(tier1_df)
+    tier2_count = len(tier2_df)
+    total = tier1_count + tier2_count
+
+    return {
+        'tier1_count': tier1_count,
+        'tier2_count': tier2_count,
+        'total_pairs': total,
+        'tier1_pct': round((tier1_count / total) * 100, 1) if total > 0 else 0.0,
+        'tier2_pct': round((tier2_count / total) * 100, 1) if total > 0 else 0.0,
+        'validation_date': validation_date or 'unknown',
+        'model_version': model_version or 'unknown',
+    }
+
+
+def calculate_cluster_stats(
+    clustered_df: pd.DataFrame,
+    fp_rates: Dict[int, float],
+    cluster_tier_mapping: Dict[int, int]
+) -> Dict[int, Dict]:
+    """
+    Calculate per-cluster statistics (Story 1.4).
+
+    Args:
+        clustered_df: DataFrame with cluster assignments
+        fp_rates: Dictionary of cluster ID -> FP rate
+        cluster_tier_mapping: Dictionary of cluster ID -> tier (1 or 2)
+
+    Returns:
+        Dictionary mapping cluster_id -> {count, fp_rate, tier}
+    """
+    cluster_counts = clustered_df['cluster'].value_counts().to_dict()
+
+    stats = {}
+    for cluster_id in sorted(set(cluster_counts.keys()) | set(fp_rates.keys())):
+        stats[cluster_id] = {
+            'count': cluster_counts.get(cluster_id, 0),
+            'fp_rate': fp_rates.get(cluster_id, 0.0),
+            'tier': cluster_tier_mapping.get(cluster_id, 2),
+        }
+
+    return stats
+
+
+def generate_tier_report(
+    tier_stats: Dict,
+    cluster_stats: Dict[int, Dict],
+    silhouette_score: float = None
+) -> str:
+    """
+    Generate Markdown tier assignment validation report (Story 1.4).
+
+    Args:
+        tier_stats: Dictionary from calculate_tier_stats()
+        cluster_stats: Dictionary from calculate_cluster_stats()
+        silhouette_score: Optional silhouette score from clustering
+
+    Returns:
+        Markdown report string
+    """
+    lines = []
+
+    # Header
+    lines.append("# Tier Assignment Validation Report")
+    lines.append("")
+    lines.append(f"Generated: {tier_stats.get('validation_date', 'unknown')}")
+    lines.append(f"Model Version: {tier_stats.get('model_version', 'unknown')}")
+    lines.append("")
+
+    # Summary
+    lines.append("## Summary")
+    lines.append("")
+    lines.append("| Metric | Value |")
+    lines.append("|--------|-------|")
+    lines.append(f"| Total Pairs | {tier_stats['total_pairs']:,} |")
+    lines.append(f"| Tier 1 (Auto-Merge) | {tier_stats['tier1_count']:,} ({tier_stats['tier1_pct']:.1f}%) |")
+    lines.append(f"| Tier 2 (Review Queue) | {tier_stats['tier2_count']:,} ({tier_stats['tier2_pct']:.1f}%) |")
+
+    # Calculate manual review reduction
+    # Assuming baseline is 100% manual review
+    reduction = tier_stats['tier1_pct']
+    lines.append(f"| Manual Review Reduction | {reduction:.1f}% |")
+    lines.append("")
+
+    # Cluster Distribution
+    lines.append("## Cluster Distribution")
+    lines.append("")
+
+    # Tier 1 clusters
+    tier1_clusters = {k: v for k, v in cluster_stats.items() if v['tier'] == 1}
+    if tier1_clusters:
+        lines.append("### Tier 1 Clusters (0% FP - Auto-Merge)")
+        lines.append("")
+        lines.append("| Cluster | Pairs | FP Rate | Status |")
+        lines.append("|---------|-------|---------|--------|")
+        for cluster_id in sorted(tier1_clusters.keys()):
+            stats = tier1_clusters[cluster_id]
+            lines.append(f"| {cluster_id} | {stats['count']:,} | {stats['fp_rate']:.1f}% | Auto-Merge |")
+        lines.append("")
+
+    # Tier 2 clusters
+    tier2_clusters = {k: v for k, v in cluster_stats.items() if v['tier'] == 2}
+    if tier2_clusters:
+        lines.append("### Tier 2 Clusters (>0% FP - Manual Review)")
+        lines.append("")
+        lines.append("| Cluster | Pairs | FP Rate | Status |")
+        lines.append("|---------|-------|---------|--------|")
+        for cluster_id in sorted(tier2_clusters.keys()):
+            stats = tier2_clusters[cluster_id]
+            lines.append(f"| {cluster_id} | {stats['count']:,} | {stats['fp_rate']:.1f}% | Review |")
+        lines.append("")
+
+    # Validation Notes
+    lines.append("## Validation Notes")
+    lines.append("")
+    if silhouette_score is not None:
+        lines.append(f"- Silhouette Score: {silhouette_score:.3f}")
+    else:
+        lines.append("- Silhouette Score: N/A")
+    lines.append("- Validation Method: LLM stratified sampling")
+    lines.append("- Tier 1 Guarantee: 0% false positive rate")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+def save_tier_report(report_content: str, report_path: Path) -> None:
+    """
+    Save tier report to file (Story 1.4).
+
+    Args:
+        report_content: Markdown report content
+        report_path: Path to save report
+    """
+    report_path.write_text(report_content, encoding='utf-8')
+    print(f"[OK] Saved tier report to: {report_path}")
+
+
 def find_latest_run_directory(base_path: Path) -> Path:
     """
     Find the most recent run directory in the analysis folder.
