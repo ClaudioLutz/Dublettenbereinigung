@@ -57,11 +57,11 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: End-to-End Pipeline Integration
-  epic-3: in-progress
+  epic-3: done
   3-1-integrate-stage-3-tier-assignment-into-existing-pipeline: done
   3-2-maintain-backward-compatibility-with-existing-merge-tools: done
   3-3-validate-performance-targets-across-full-pipeline: done
-  3-4-implement-reliability-checks-and-data-integrity-validation: backlog
+  3-4-implement-reliability-checks-and-data-integrity-validation: done
   epic-3-retrospective: optional
 
   # Epic 4: Monitoring & Operational Observability

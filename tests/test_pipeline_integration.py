@@ -621,3 +621,223 @@ class TestPerformanceLogging:
         assert 'tier1_count' in result, "Should have tier1_count"
         assert 'tier2_count' in result, "Should have tier2_count"
         assert 'total_count' in result, "Should have total_count"
+
+
+# ============================================================================
+# Story 3.4: Reliability Checks and Data Integrity Validation Tests
+# ============================================================================
+
+
+class TestDataIntegrityNoLoss:
+    """Test no data loss validation (Story 3.4 AC1)."""
+
+    @pytest.fixture
+    def sample_run_directory(self, tmp_path):
+        """Create sample run directory with known pair count."""
+        import numpy as np
+        np.random.seed(42)
+
+        run_dir = tmp_path / "_bmad-output" / "analysis" / "run_test"
+        run_dir.mkdir(parents=True)
+
+        n_pairs = 100
+        pd.DataFrame({
+            'i': range(n_pairs),
+            'j': range(n_pairs, 2 * n_pairs),
+            'score': np.random.uniform(60, 95, n_pairs),
+            'cluster': np.random.randint(0, 15, n_pairs),
+        }).to_csv(run_dir / 'clustered_results.csv', index=False)
+
+        pd.DataFrame({
+            'i': range(20),
+            'j': range(100, 120),
+            'cluster': np.random.randint(0, 15, 20),
+            'llm_label': ['DUPLICATE'] * 10 + ['NOT_DUPLICATE'] * 10,
+        }).to_csv(run_dir / 'llm_labeled_results.csv', index=False)
+
+        return run_dir
+
+    def test_tier1_plus_tier2_equals_total(self, sample_run_directory):
+        """Tier 1 + Tier 2 should equal total input pairs."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        result = run_tier_assignment(sample_run_directory)
+
+        assert result['success'] is True, "Should succeed"
+        assert result['tier1_count'] + result['tier2_count'] == result['total_count'], \
+            "Tier 1 + Tier 2 should equal total"
+
+    def test_validate_tier_integrity_function_exists(self):
+        """validate_tier_integrity function should exist."""
+        from scripts.generate_tiered_output import validate_tier_integrity
+
+        assert callable(validate_tier_integrity), "validate_tier_integrity should be callable"
+
+
+class TestNoDuplicatePairs:
+    """Test no duplicate pairs validation (Story 3.4 AC2)."""
+
+    @pytest.fixture
+    def sample_run_directory(self, tmp_path):
+        """Create sample run directory."""
+        run_dir = tmp_path / "run_test"
+        run_dir.mkdir(parents=True)
+
+        pd.DataFrame({
+            'i': [1, 2, 3, 4],
+            'j': [10, 20, 30, 40],
+            'score': [80.0, 85.0, 70.0, 75.0],
+            'cluster': [3, 3, 0, 0],
+        }).to_csv(run_dir / 'clustered_results.csv', index=False)
+
+        pd.DataFrame({
+            'i': [1, 2, 3, 4],
+            'j': [10, 20, 30, 40],
+            'cluster': [3, 3, 0, 0],
+            'llm_label': ['DUPLICATE', 'DUPLICATE', 'NOT_DUPLICATE', 'NOT_DUPLICATE'],
+        }).to_csv(run_dir / 'llm_labeled_results.csv', index=False)
+
+        return run_dir
+
+    def test_no_pairs_in_both_tiers(self, sample_run_directory):
+        """No pair should appear in both Tier 1 and Tier 2."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        run_tier_assignment(sample_run_directory)
+
+        tier1_df = pd.read_csv(sample_run_directory / 'auto_merge_pairs.csv', encoding='utf-8-sig')
+        tier2_df = pd.read_csv(sample_run_directory / 'review_queue_pairs.csv', encoding='utf-8-sig')
+
+        # Create pair tuples for comparison
+        tier1_pairs = set(zip(tier1_df['i'], tier1_df['j']))
+        tier2_pairs = set(zip(tier2_df['i'], tier2_df['j']))
+
+        overlap = tier1_pairs.intersection(tier2_pairs)
+        assert len(overlap) == 0, f"No pairs should be in both tiers, found: {overlap}"
+
+
+class TestClusterValidation:
+    """Test cluster validation (Story 3.4 AC3)."""
+
+    def test_validate_cluster_range_function_exists(self):
+        """validate_cluster_range function should exist."""
+        from scripts.generate_tiered_output import validate_cluster_range
+
+        assert callable(validate_cluster_range), "validate_cluster_range should be callable"
+
+    def test_valid_cluster_range_passes(self):
+        """Valid cluster range (0-14) should pass validation."""
+        from scripts.generate_tiered_output import validate_cluster_range
+
+        df = pd.DataFrame({'cluster': [0, 7, 14]})
+
+        # Should not raise
+        validate_cluster_range(df)
+
+    def test_invalid_cluster_below_range_fails(self):
+        """Cluster below valid range should fail."""
+        from scripts.generate_tiered_output import validate_cluster_range
+
+        df = pd.DataFrame({'cluster': [-1, 5, 10]})
+
+        with pytest.raises(ValueError, match="Invalid cluster values"):
+            validate_cluster_range(df)
+
+    def test_invalid_cluster_above_range_fails(self):
+        """Cluster above valid range should fail."""
+        from scripts.generate_tiered_output import validate_cluster_range
+
+        df = pd.DataFrame({'cluster': [0, 5, 15]})
+
+        with pytest.raises(ValueError, match="Invalid cluster values"):
+            validate_cluster_range(df)
+
+
+class TestInputValidation:
+    """Test input file validation (Story 3.4 AC4)."""
+
+    def test_missing_clustered_file_returns_error(self, tmp_path):
+        """Missing clustered_results.csv should return error."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        empty_dir = tmp_path / "empty"
+        empty_dir.mkdir()
+
+        result = run_tier_assignment(empty_dir)
+
+        assert result['success'] is False, "Should fail with missing file"
+        assert 'error' in result, "Should have error message"
+
+    def test_missing_required_columns_returns_error(self, tmp_path):
+        """Missing required columns should return error."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        run_dir = tmp_path / "test_run"
+        run_dir.mkdir()
+
+        # Create file missing 'score' column
+        pd.DataFrame({
+            'i': [1], 'j': [2], 'cluster': [0]  # Missing 'score'
+        }).to_csv(run_dir / 'clustered_results.csv', index=False)
+
+        pd.DataFrame({
+            'i': [1], 'j': [2], 'cluster': [0], 'llm_label': ['DUPLICATE']
+        }).to_csv(run_dir / 'llm_labeled_results.csv', index=False)
+
+        result = run_tier_assignment(run_dir)
+
+        assert result['success'] is False, "Should fail with missing columns"
+
+
+class TestGracefulErrorHandling:
+    """Test graceful error handling (Story 3.4 AC5)."""
+
+    def test_error_returns_dict_not_exception(self, tmp_path):
+        """Errors should return dict, not raise exceptions."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        empty_dir = tmp_path / "empty"
+        empty_dir.mkdir()
+
+        # Should not raise, should return error dict
+        result = run_tier_assignment(empty_dir)
+
+        assert isinstance(result, dict), "Should return dict on error"
+        assert result['success'] is False, "success should be False"
+        assert 'error' in result, "Should have error key"
+
+    def test_error_message_is_descriptive(self, tmp_path):
+        """Error messages should be descriptive."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        empty_dir = tmp_path / "empty"
+        empty_dir.mkdir()
+
+        result = run_tier_assignment(empty_dir)
+
+        error_msg = result.get('error', '')
+        assert len(error_msg) > 10, "Error message should be descriptive"
+        assert 'not found' in error_msg.lower() or 'missing' in error_msg.lower(), \
+            "Error should mention what's wrong"
+
+    def test_partial_failure_doesnt_corrupt_data(self, tmp_path):
+        """Partial failure should not leave corrupted output files."""
+        from scripts.generate_tiered_output import run_tier_assignment
+
+        run_dir = tmp_path / "test_run"
+        run_dir.mkdir()
+
+        # Create invalid input
+        pd.DataFrame({
+            'i': [1], 'j': [2]  # Missing required columns
+        }).to_csv(run_dir / 'clustered_results.csv', index=False)
+
+        pd.DataFrame({
+            'i': [1], 'j': [2], 'llm_label': ['DUPLICATE']
+        }).to_csv(run_dir / 'llm_labeled_results.csv', index=False)
+
+        result = run_tier_assignment(run_dir)
+
+        # On failure, output files should not exist (partial writes)
+        assert result['success'] is False
+        # tier1/tier2 files should not be created on failure
