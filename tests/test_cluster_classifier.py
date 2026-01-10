@@ -511,3 +511,69 @@ feature_names:
 
         assert result is not None, "Should load model"
         assert elapsed < 30.0, f"Load time should be <30s, was {elapsed:.2f}s"
+
+
+# ============================================================================
+# Story 2.3: Verify No ML Dependencies
+# ============================================================================
+
+
+class TestNoMLDependencies:
+    """Verify cluster_classifier has no ML library dependencies (Story 2.3)."""
+
+    def test_module_has_no_sklearn_import(self):
+        """Module should not import sklearn."""
+        import dedupe.cluster_classifier as cc
+        import inspect
+
+        source = inspect.getsource(cc)
+
+        assert 'from sklearn' not in source, "Should not import from sklearn"
+        assert 'import sklearn' not in source, "Should not import sklearn"
+
+    def test_module_has_no_kmodes_import(self):
+        """Module should not import kmodes."""
+        import dedupe.cluster_classifier as cc
+        import inspect
+
+        source = inspect.getsource(cc)
+
+        assert 'from kmodes' not in source, "Should not import from kmodes"
+        assert 'import kmodes' not in source, "Should not import kmodes"
+
+    def test_module_only_uses_allowed_imports(self):
+        """Module should only use standard library + numpy/pandas/yaml."""
+        import dedupe.cluster_classifier as cc
+        import inspect
+
+        source = inspect.getsource(cc)
+
+        # Extract import lines
+        lines = source.split('\n')
+        import_lines = [l.strip() for l in lines if l.strip().startswith(('import ', 'from '))]
+
+        # Allowed modules
+        allowed_patterns = [
+            'pathlib', 'typing', 'collections', 'logging',
+            'numpy', 'pandas', 'yaml', 'np', 'pd'
+        ]
+
+        for line in import_lines:
+            # Check if line contains any disallowed import
+            is_allowed = any(pattern in line for pattern in allowed_patterns)
+            assert is_allowed, f"Unexpected import: {line}"
+
+    def test_classifier_works_without_ml_libraries(self):
+        """Classifier should work without sklearn/kmodes being imported."""
+        from dedupe.cluster_classifier import HammingDistanceClassifier
+
+        centroids = {
+            0: np.array([1, 1, 1, 1, 1]),
+            1: np.array([0, 0, 0, 0, 0]),
+        }
+
+        classifier = HammingDistanceClassifier(centroids)
+
+        # Should classify without any ML library
+        result = classifier.classify_pair(np.array([1, 1, 1, 0, 0]))
+        assert result in [0, 1], "Should return valid cluster"
