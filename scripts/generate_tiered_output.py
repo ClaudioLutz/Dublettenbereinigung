@@ -24,6 +24,7 @@ Exit Codes:
 
 import sys
 import time
+import logging
 from pathlib import Path
 from typing import Dict, Tuple, Optional
 import pandas as pd
@@ -558,6 +559,140 @@ def get_memory_usage_mb() -> float:
         return process.memory_info().rss / (1024 * 1024)
     except ImportError:
         return 0.0  # psutil not installed
+
+
+# ============================================================================
+# Story 3.1: Programmatic Tier Assignment Function
+# ============================================================================
+
+# Configure module logger
+logger = logging.getLogger(__name__)
+
+
+def run_tier_assignment(
+    input_dir: Path,
+    config_path: Optional[Path] = None
+) -> Dict:
+    """
+    Run tier assignment programmatically (Story 3.1).
+
+    This function allows Stage 3 (tier assignment) to be called from other
+    scripts without using the command-line interface.
+
+    Args:
+        input_dir: Directory containing clustered_results.csv and llm_labeled_results.csv
+        config_path: Optional path to YAML config with cluster-to-tier mappings
+
+    Returns:
+        Dictionary with results:
+        - success: bool - True if tier assignment completed successfully
+        - tier1_count: int - Number of pairs in Tier 1 (auto-merge)
+        - tier2_count: int - Number of pairs in Tier 2 (review queue)
+        - elapsed_time: float - Execution time in seconds
+        - error: str - Error message if success is False
+
+    Example:
+        >>> result = run_tier_assignment(Path("_bmad-output/analysis/run_20260110"))
+        >>> if result['success']:
+        ...     print(f"Tier 1: {result['tier1_count']} pairs")
+    """
+    start_time = time.time()
+    input_dir = Path(input_dir)
+
+    logger.info(f"Stage 3 (Tier Assignment) starting: {input_dir}")
+
+    # File paths
+    clustered_path = input_dir / 'clustered_results.csv'
+    llm_labeled_path = input_dir / 'llm_labeled_results.csv'
+    tier1_output = input_dir / 'auto_merge_pairs.csv'
+    tier2_output = input_dir / 'review_queue_pairs.csv'
+
+    # Load data
+    try:
+        clustered_df, fp_rates = load_clustered_results(clustered_path, llm_labeled_path)
+    except (FileNotFoundError, ValueError) as e:
+        elapsed_time = time.time() - start_time
+        logger.error(f"Stage 3 failed: {e}")
+        return {
+            'success': False,
+            'tier1_count': 0,
+            'tier2_count': 0,
+            'elapsed_time': elapsed_time,
+            'error': str(e)
+        }
+
+    # Classify tiers - use YAML config if provided, otherwise use FP rates
+    logger.info("Classifying pairs into tiers...")
+    if config_path is not None:
+        try:
+            cluster_tier_mapping = load_cluster_tier_mapping(config_path)
+            tier1_df, tier2_df = classify_tiers_with_mapping(clustered_df, cluster_tier_mapping)
+        except ValueError as e:
+            elapsed_time = time.time() - start_time
+            logger.error(f"Stage 3 failed: {e}")
+            return {
+                'success': False,
+                'tier1_count': 0,
+                'tier2_count': 0,
+                'elapsed_time': elapsed_time,
+                'error': str(e)
+            }
+    else:
+        tier1_df, tier2_df = classify_tiers(clustered_df, fp_rates, tier1_threshold=0.0)
+
+    # Validate data integrity
+    try:
+        validate_tier_integrity(clustered_df, tier1_df, tier2_df)
+    except AssertionError as e:
+        elapsed_time = time.time() - start_time
+        logger.error(f"Stage 3 data integrity validation failed: {e}")
+        return {
+            'success': False,
+            'tier1_count': 0,
+            'tier2_count': 0,
+            'elapsed_time': elapsed_time,
+            'error': str(e)
+        }
+
+    # Add match_id column for unique pair identification
+    tier1_df['match_id'] = tier1_df['i'].astype(str) + '_' + tier1_df['j'].astype(str)
+    tier2_df['match_id'] = tier2_df['i'].astype(str) + '_' + tier2_df['j'].astype(str)
+
+    # Rename score to confidence for clarity
+    tier1_df = tier1_df.rename(columns={'score': 'confidence'})
+    tier2_df = tier2_df.rename(columns={'score': 'confidence'})
+
+    # Reorder columns per AC4: match_id, cluster, confidence, i, j, ...
+    tier1_df = reorder_columns_for_ac4(tier1_df)
+    tier2_df = reorder_columns_for_ac4(tier2_df)
+
+    # Save tiered outputs
+    save_with_bom(tier1_df, tier1_output)
+    save_with_bom(tier2_df, tier2_output)
+
+    elapsed_time = time.time() - start_time
+
+    tier1_count = len(tier1_df)
+    tier2_count = len(tier2_df)
+    total_count = tier1_count + tier2_count
+
+    logger.info(
+        f"Stage 3 (Tier Assignment) complete: "
+        f"Tier 1={tier1_count:,} ({tier1_count/total_count*100:.1f}%), "
+        f"Tier 2={tier2_count:,} ({tier2_count/total_count*100:.1f}%), "
+        f"time={elapsed_time:.2f}s"
+    )
+
+    return {
+        'success': True,
+        'tier1_count': tier1_count,
+        'tier2_count': tier2_count,
+        'total_count': total_count,
+        'elapsed_time': elapsed_time,
+        'output_dir': str(input_dir),
+        'tier1_path': str(tier1_output),
+        'tier2_path': str(tier2_output),
+    }
 
 
 def main() -> int:
