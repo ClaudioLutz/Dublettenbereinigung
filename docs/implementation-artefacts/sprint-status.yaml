@@ -44,7 +44,7 @@ development_status:
   epic-1: in-progress
   1-1-generate-tiered-output-files-from-clustered-results: done
   1-2-load-cluster-to-tier-mapping-from-yaml-configuration: done
-  1-3-classify-pairs-by-cluster-using-hamming-distance: backlog
+  1-3-classify-pairs-by-cluster-using-hamming-distance: done
   1-4-generate-tier-assignment-validation-report: backlog
   epic-1-retrospective: optional
 
