@@ -1,4 +1,5 @@
 # Python
+.git-rewrite
 venv/
 env/
 ENV/

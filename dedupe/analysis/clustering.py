@@ -3,11 +3,17 @@ K-modes clustering module for categorical/binary rule features.
 
 This module implements k-modes clustering (NOT k-means) for pattern discovery
 on binary rule features. K-modes uses Hamming distance for categorical data.
+
+Story 2.1: Added model export functions for YAML persistence.
 """
 
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List, Optional
+from pathlib import Path
+from datetime import date
+import re
 import numpy as np
 import pandas as pd
+import yaml
 from kmodes.kmodes import KModes
 from sklearn.metrics import silhouette_score
 import matplotlib
@@ -262,3 +268,199 @@ def evaluate_clustering_quality(silhouette_score_value: float) -> str:
         return "POOR - Weak clustering structure, results may not be reliable"
     else:
         return "INVALID - Clustering failed or data not suitable"
+
+
+# ============================================================================
+# Story 2.1: Model Export Functions
+# ============================================================================
+
+
+def export_cluster_model(
+    centroids: np.ndarray,
+    feature_names: List[str],
+    output_path: Path,
+    model_version: str = "v1",
+    silhouette_score: Optional[float] = None,
+    validation_date: Optional[str] = None
+) -> None:
+    """
+    Export k-modes cluster model to YAML format.
+
+    Creates a human-readable YAML file containing cluster centroids and
+    metadata. This file can be loaded by the cluster classifier without
+    requiring the kmodes library.
+
+    Args:
+        centroids: Cluster centroids array of shape (n_clusters, n_features)
+        feature_names: List of feature names corresponding to columns
+        output_path: Path to save YAML file (e.g., models/cluster_model_v1.yaml)
+        model_version: Semantic version string (e.g., "v1", "v2")
+        silhouette_score: Optional clustering quality score (0.0-1.0)
+        validation_date: Optional LLM validation date (ISO format)
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If centroid dimensions don't match feature count
+
+    Example:
+        >>> export_cluster_model(
+        ...     centroids=km.cluster_centroids_,
+        ...     feature_names=['f0', 'f1', 'f2'],
+        ...     output_path=Path("models/cluster_model_v1.yaml"),
+        ...     model_version="v1",
+        ...     silhouette_score=0.42
+        ... )
+    """
+    output_path = Path(output_path)
+    n_clusters, n_features = centroids.shape
+
+    # Validate dimensions
+    if len(feature_names) != n_features:
+        raise ValueError(
+            f"Feature name count ({len(feature_names)}) doesn't match "
+            f"centroid dimensions ({n_features})"
+        )
+
+    # Build model configuration
+    model_config = {
+        'version': '1.0',
+        'model_version': model_version,
+        'created_date': date.today().isoformat(),
+        'n_clusters': int(n_clusters),
+        'n_features': int(n_features),
+        'feature_names': list(feature_names),
+        'centroids': {}
+    }
+
+    # Add optional metadata
+    if silhouette_score is not None:
+        model_config['silhouette_score'] = float(silhouette_score)
+
+    if validation_date is not None:
+        model_config['validation_date'] = validation_date
+
+    # Convert centroids to dictionary format
+    for cluster_id in range(n_clusters):
+        # Ensure values are Python int (not numpy int64)
+        centroid_values = [int(v) for v in centroids[cluster_id]]
+        model_config['centroids'][cluster_id] = centroid_values
+
+    # Create output directory if needed
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Write YAML file with clean formatting
+    with open(output_path, 'w', encoding='utf-8') as f:
+        yaml.dump(
+            model_config,
+            f,
+            default_flow_style=False,
+            allow_unicode=True,
+            sort_keys=False
+        )
+
+    print(f"Exported cluster model to: {output_path}")
+    print(f"  Version: {model_version}")
+    print(f"  Clusters: {n_clusters}")
+    print(f"  Features: {n_features}")
+
+
+def validate_model_schema(model_path: Path) -> bool:
+    """
+    Validate YAML model file schema.
+
+    Checks that the model file contains all required keys and that
+    dimensions are consistent.
+
+    Args:
+        model_path: Path to YAML model file
+
+    Returns:
+        True if schema is valid
+
+    Raises:
+        FileNotFoundError: If model file doesn't exist
+        ValueError: If schema is invalid with descriptive message
+    """
+    model_path = Path(model_path)
+
+    if not model_path.exists():
+        raise FileNotFoundError(f"Model file not found: {model_path}")
+
+    with open(model_path, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+
+    if config is None:
+        raise ValueError(f"Empty or invalid YAML file: {model_path}")
+
+    # Check required keys
+    required_keys = ['version', 'n_clusters', 'n_features', 'centroids', 'feature_names']
+    for key in required_keys:
+        if key not in config:
+            raise ValueError(
+                f"Invalid model schema: missing '{key}' in {model_path}. "
+                f"Required keys: {required_keys}"
+            )
+
+    # Validate dimensions
+    n_features = config['n_features']
+    n_clusters = config['n_clusters']
+
+    # Check feature names count
+    if len(config['feature_names']) != n_features:
+        raise ValueError(
+            f"Feature name count ({len(config['feature_names'])}) doesn't match "
+            f"n_features ({n_features})"
+        )
+
+    # Check centroid dimensions
+    for cluster_id, centroid in config['centroids'].items():
+        if len(centroid) != n_features:
+            raise ValueError(
+                f"Centroid dimension mismatch: cluster {cluster_id} has "
+                f"{len(centroid)} values, expected {n_features}"
+            )
+
+    print(f"Schema validation passed: {model_path}")
+    return True
+
+
+def get_next_model_version(models_dir: Path) -> str:
+    """
+    Determine next model version based on existing files.
+
+    Scans the models directory for cluster_model_v*.yaml files and
+    returns the next version number.
+
+    Args:
+        models_dir: Directory containing model files
+
+    Returns:
+        Version string (e.g., "v1", "v2", "v3")
+
+    Example:
+        >>> get_next_model_version(Path("models/"))
+        "v1"  # No existing models
+        >>> get_next_model_version(Path("models/"))
+        "v3"  # After v1 and v2 exist
+    """
+    models_dir = Path(models_dir)
+
+    if not models_dir.exists():
+        return "v1"
+
+    # Find existing model files
+    pattern = re.compile(r'cluster_model_v(\d+)\.yaml')
+    versions = []
+
+    for file_path in models_dir.glob("cluster_model_v*.yaml"):
+        match = pattern.match(file_path.name)
+        if match:
+            versions.append(int(match.group(1)))
+
+    if not versions:
+        return "v1"
+
+    next_version = max(versions) + 1
+    return f"v{next_version}"
