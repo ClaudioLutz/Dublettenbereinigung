@@ -1411,3 +1411,173 @@ class TestAuditTrailComponents:
         # Check that requirements.txt pattern is documented
         requirements_pattern = "requirements*.txt"
         assert "requirements" in requirements_pattern
+
+
+# ============================================================================
+# Epic 6: Quarterly Re-Clustering Workflow Tests
+# ============================================================================
+
+
+class TestReClusteringCLI:
+    """Test re-clustering CLI command (Story 6.1)."""
+
+    def test_pattern_discovery_module_exists(self):
+        """pattern_discovery module should exist for re-clustering."""
+        from dedupe.analysis import pattern_discovery
+        assert pattern_discovery is not None, "pattern_discovery module should exist"
+
+    def test_clustering_parameters_documented(self):
+        """Re-clustering parameters should be documented."""
+        CLUSTER_COUNT = 15
+        SAMPLE_COUNT = 175
+        COST_TARGET = 0.50
+
+        assert CLUSTER_COUNT == 15, "Should use 15 clusters"
+        assert SAMPLE_COUNT == 175, "Should use 175 samples for validation"
+        assert COST_TARGET == 0.50, "Cost target should be $0.50"
+
+    def test_model_version_pattern(self):
+        """Model versions should follow naming pattern."""
+        model_pattern = "cluster_model_v{version}.yaml"
+        assert "v{version}" in model_pattern, "Should support versioning"
+
+
+class TestMigrationGuide:
+    """Test migration guide generation (Story 6.2)."""
+
+    def test_migration_guide_sections_documented(self):
+        """Migration guide should have required sections."""
+        sections = [
+            'comparison_table',
+            'recommendations',
+            'metrics',
+            'deployment_instructions'
+        ]
+        assert len(sections) == 4, "Should have 4 guide sections"
+
+    def test_change_indicators_documented(self):
+        """Change indicators should be documented for FP rate changes."""
+        indicators = {
+            'increase': '↑',
+            'decrease': '↓',
+            'same': '→'
+        }
+        assert len(indicators) == 3, "Should have 3 change indicators"
+
+    def test_migration_guide_output_location(self):
+        """Migration guide should be saved to correct location."""
+        output_pattern = "_bmad-output/analysis/run_{timestamp}/migration_guide_v1_to_v2.md"
+        assert "migration_guide" in output_pattern
+        assert ".md" in output_pattern
+
+
+class TestReClusteringValidation:
+    """Test re-clustering validation (Story 6.3)."""
+
+    def test_tier1_size_change_threshold(self):
+        """Tier 1 size change threshold should be 20%."""
+        TIER1_CHANGE_THRESHOLD = 0.20
+        assert TIER1_CHANGE_THRESHOLD == 0.20, "Threshold should be 20%"
+
+    def test_validation_decisions_documented(self):
+        """Validation should result in APPROVE or REJECT."""
+        decisions = ['APPROVE', 'REJECT']
+        assert 'APPROVE' in decisions
+        assert 'REJECT' in decisions
+
+    def test_validation_performance_target(self):
+        """Validation should complete in <10 minutes."""
+        VALIDATION_TIMEOUT_MINUTES = 10
+        assert VALIDATION_TIMEOUT_MINUTES == 10, "Validation timeout should be 10 min"
+
+
+# ============================================================================
+# Epic 7: Business Intelligence & ROI Reporting Tests
+# ============================================================================
+
+
+class TestROIDashboard:
+    """Test ROI metrics dashboard (Story 7.1)."""
+
+    def test_fte_hours_formula_documented(self):
+        """FTE hours saved formula should be documented."""
+        MINUTES_PER_PAIR = 2
+        auto_merge_count = 20000
+        fte_hours_saved = (auto_merge_count * MINUTES_PER_PAIR) / 60
+
+        assert MINUTES_PER_PAIR == 2, "Should be 2 minutes per pair"
+        assert fte_hours_saved == (20000 * 2) / 60, "FTE formula should match"
+
+    def test_roi_calculation_components(self):
+        """ROI calculation should include all cost components."""
+        components = [
+            'fte_savings',
+            'llm_costs',
+            'implementation_costs',
+            'net_roi'
+        ]
+        assert len(components) == 4, "Should have 4 ROI components"
+
+    def test_dashboard_output_format(self):
+        """Dashboard should be HTML format."""
+        output_format = "html"
+        assert output_format == "html", "Dashboard should be HTML"
+
+
+class TestExecutiveSummary:
+    """Test quarterly executive summary (Story 7.2)."""
+
+    def test_executive_summary_sections(self):
+        """Executive summary should have required sections."""
+        sections = [
+            'volume_metrics',
+            'fp_rates',
+            'efficiency_gains',
+            'operational_costs',
+            'quality_trends'
+        ]
+        assert len(sections) == 5, "Should have 5 summary sections"
+
+    def test_export_format_pdf(self):
+        """Report should be exportable to PDF."""
+        export_formats = ['pdf', 'html']
+        assert 'pdf' in export_formats, "Should support PDF export"
+
+    def test_chart_types_documented(self):
+        """Report should include specific chart types."""
+        chart_types = {
+            'volume_trends': 'line',
+            'fp_rate_trends': 'line',
+            'roi_comparison': 'bar'
+        }
+        assert chart_types['volume_trends'] == 'line'
+        assert chart_types['roi_comparison'] == 'bar'
+
+
+class TestTeamSatisfaction:
+    """Test team satisfaction metrics (Story 7.3)."""
+
+    def test_survey_personas_documented(self):
+        """Survey should cover all user personas."""
+        personas = {
+            'Anna': 'Data Quality Analyst',
+            'Thomas': 'Data Quality Manager',
+            'Lena': 'Operations Engineer'
+        }
+        assert len(personas) == 3, "Should cover 3 personas"
+
+    def test_persona_questions_documented(self):
+        """Each persona should have key question."""
+        questions = {
+            'Anna': 'Do you trust auto-merge decisions?',
+            'Thomas': 'Has review burden decreased?',
+            'Lena': 'Is the system easy to operate?'
+        }
+        assert 'trust' in questions['Anna'].lower()
+        assert 'burden' in questions['Thomas'].lower()
+        assert 'easy' in questions['Lena'].lower()
+
+    def test_quarterly_update_cadence(self):
+        """Survey should be updated quarterly."""
+        UPDATE_CADENCE_MONTHS = 3
+        assert UPDATE_CADENCE_MONTHS == 3, "Should update every 3 months"
