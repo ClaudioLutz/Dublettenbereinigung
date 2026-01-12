@@ -169,7 +169,58 @@ def save_with_bom(df: pd.DataFrame, path: Path) -> None:
         path: Output file path
     """
     df.to_csv(path, index=False, encoding='utf-8-sig')  # utf-8-sig adds BOM
-    print(f"[OK] Saved {len(df):,} pairs to: {path}")
+    print(f"[OK] Saved {len(df):,} rows to: {path}")
+
+
+def wide_to_stacked(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convert wide format (one row per pair with _i/_j suffixes) to stacked format
+    (two rows per pair with A/B positions).
+
+    Args:
+        df: DataFrame in wide format with columns like vorname_i, vorname_j, etc.
+
+    Returns:
+        DataFrame in stacked format with position column (A/B) and single set of fields
+    """
+    if df.empty:
+        return df
+
+    # Identify columns for each record type
+    cols_i = [c for c in df.columns if c.endswith('_i')]
+    cols_j = [c for c in df.columns if c.endswith('_j')]
+
+    # Common columns (not record-specific)
+    record_specific = set(cols_i + cols_j + ['i', 'j'])
+    common_cols = [c for c in df.columns if c not in record_specific]
+
+    # Build record A rows (from _i columns)
+    rows_a = df[common_cols].copy()
+    rows_a['position'] = 'A'
+    rows_a['index'] = df['i']
+    for col in cols_i:
+        base_name = col[:-2]  # remove _i suffix
+        rows_a[base_name] = df[col]
+
+    # Build record B rows (from _j columns)
+    rows_b = df[common_cols].copy()
+    rows_b['position'] = 'B'
+    rows_b['index'] = df['j']
+    for col in cols_j:
+        base_name = col[:-2]  # remove _j suffix
+        rows_b[base_name] = df[col]
+
+    # Stack A and B rows together
+    stacked = pd.concat([rows_a, rows_b], ignore_index=True)
+    stacked = stacked.sort_values(['match_id', 'position']).reset_index(drop=True)
+
+    # Reorder columns: match_id, position, index first, then common, then record fields
+    priority_cols = ['match_id', 'position', 'index', 'cluster', 'confidence', 'reason']
+    priority_cols = [c for c in priority_cols if c in stacked.columns]
+    other_cols = [c for c in stacked.columns if c not in priority_cols]
+    stacked = stacked[priority_cols + other_cols]
+
+    return stacked
 
 
 def reorder_columns_for_ac4(df: pd.DataFrame) -> pd.DataFrame:
@@ -571,7 +622,8 @@ logger = logging.getLogger(__name__)
 
 def run_tier_assignment(
     input_dir: Path,
-    config_path: Optional[Path] = None
+    config_path: Optional[Path] = None,
+    stacked: bool = True
 ) -> Dict:
     """
     Run tier assignment programmatically (Story 3.1).
@@ -582,6 +634,8 @@ def run_tier_assignment(
     Args:
         input_dir: Directory containing clustered_results.csv and llm_labeled_results.csv
         config_path: Optional path to YAML config with cluster-to-tier mappings
+        stacked: If True (default), output stacked format (2 rows per pair).
+                 If False, output wide format (1 row per pair with _i/_j suffixes).
 
     Returns:
         Dictionary with results:
@@ -666,14 +720,22 @@ def run_tier_assignment(
     tier1_df = reorder_columns_for_ac4(tier1_df)
     tier2_df = reorder_columns_for_ac4(tier2_df)
 
-    # Save tiered outputs
-    save_with_bom(tier1_df, tier1_output)
-    save_with_bom(tier2_df, tier2_output)
-
-    elapsed_time = time.time() - start_time
-
+    # Save tiered outputs (stacked or wide format)
     tier1_count = len(tier1_df)
     tier2_count = len(tier2_df)
+
+    if stacked:
+        tier1_stacked = wide_to_stacked(tier1_df)
+        tier2_stacked = wide_to_stacked(tier2_df)
+        tier1_output = input_dir / 'auto_merge_stacked.csv'
+        tier2_output = input_dir / 'review_queue_stacked.csv'
+        save_with_bom(tier1_stacked, tier1_output)
+        save_with_bom(tier2_stacked, tier2_output)
+    else:
+        save_with_bom(tier1_df, tier1_output)
+        save_with_bom(tier2_df, tier2_output)
+
+    elapsed_time = time.time() - start_time
     total_count = tier1_count + tier2_count
 
     logger.info(
@@ -725,7 +787,22 @@ def main() -> int:
         help='Path to YAML config file with cluster-to-tier mappings (Story 1.2). '
              'If not specified, uses FP-rate based classification from LLM labels.'
     )
+    parser.add_argument(
+        '--stacked',
+        action='store_true',
+        default=True,
+        help='Output in stacked format (2 rows per pair with A/B positions). Default: True'
+    )
+    parser.add_argument(
+        '--wide',
+        action='store_true',
+        default=False,
+        help='Output in wide format (1 row per pair with _i/_j suffixes). Overrides --stacked.'
+    )
     args = parser.parse_args()
+
+    # --wide overrides --stacked
+    use_stacked = not args.wide
 
     # Auto-discover input directory if not specified
     if args.input_dir is None:
@@ -794,10 +871,22 @@ def main() -> int:
     tier1_df = reorder_columns_for_ac4(tier1_df)
     tier2_df = reorder_columns_for_ac4(tier2_df)
 
-    # Save tiered outputs
-    print("\nSaving tiered outputs...")
-    save_with_bom(tier1_df, tier1_output)
-    save_with_bom(tier2_df, tier2_output)
+    # Convert to stacked format if requested (default)
+    if use_stacked:
+        print("\nConverting to stacked format (2 rows per pair)...")
+        tier1_stacked = wide_to_stacked(tier1_df)
+        tier2_stacked = wide_to_stacked(tier2_df)
+        tier1_output = input_dir / 'auto_merge_stacked.csv'
+        tier2_output = input_dir / 'review_queue_stacked.csv'
+        save_with_bom(tier1_stacked, tier1_output)
+        save_with_bom(tier2_stacked, tier2_output)
+        print(f"  Tier 1: {len(tier1_df):,} pairs -> {len(tier1_stacked):,} rows")
+        print(f"  Tier 2: {len(tier2_df):,} pairs -> {len(tier2_stacked):,} rows")
+    else:
+        # Save in wide format (1 row per pair)
+        print("\nSaving tiered outputs (wide format)...")
+        save_with_bom(tier1_df, tier1_output)
+        save_with_bom(tier2_df, tier2_output)
 
     # Performance metrics
     elapsed_time = time.time() - start_time
