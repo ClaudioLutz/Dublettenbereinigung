@@ -176,8 +176,9 @@ def _write_results(rows: Iterable[MatchResult], writer: csv.writer, df: pd.DataF
             crefo_a,
             record_a.get('Geburtstag', ''),
             record_a.get('Jahrgang', ''),
+            get_col('gender', mr.i),
         ] + [get_col(k, mr.i) for k in norm_keys]
-        
+
         # Record B
         row_b = [
             base_row['match_id'],
@@ -195,6 +196,7 @@ def _write_results(rows: Iterable[MatchResult], writer: csv.writer, df: pd.DataF
             crefo_b,
             record_b.get('Geburtstag', ''),
             record_b.get('Jahrgang', ''),
+            get_col('gender', mr.j),
         ] + [get_col(k, mr.j) for k in norm_keys]
         
         writer.writerow(row_a)
@@ -390,7 +392,7 @@ def run_pipeline(
         header = [
             "match_id", "confidence", "match_type", "position", "index",
             "vorname", "name", "name2", "strasse", "hausnummer", "plz", "ort",
-            "crefo", "geburtstag", "jahrgang"
+            "crefo", "geburtstag", "jahrgang", "gender"
         ]
         # Append normalization fields
         header += [

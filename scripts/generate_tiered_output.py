@@ -216,7 +216,7 @@ def wide_to_stacked(df: pd.DataFrame) -> pd.DataFrame:
 
     # Reorder columns: match_id, position, crefo first, then key fields for review
     priority_cols = ['match_id', 'position', 'crefo', 'cluster', 'confidence', 'reason',
-                     'vorname', 'name', 'strasse', 'hausnummer', 'plz', 'ort', 'geburtstag', 'jahrgang']
+                     'vorname', 'name', 'gender', 'strasse', 'hausnummer', 'plz', 'ort', 'geburtstag', 'jahrgang']
     priority_cols = [c for c in priority_cols if c in stacked.columns]
     other_cols = [c for c in stacked.columns if c not in priority_cols]
     stacked = stacked[priority_cols + other_cols]

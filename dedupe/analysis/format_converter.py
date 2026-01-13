@@ -87,6 +87,11 @@ def convert_results_with_gender_to_pairs(filepath: str) -> pd.DataFrame:
     result_df['crefo_i'] = pairs['crefo_i']
     result_df['crefo_j'] = pairs['crefo_j']
 
+    # Include gender if available
+    if 'gender_i' in pairs.columns:
+        result_df['gender_i'] = pairs['gender_i']
+        result_df['gender_j'] = pairs['gender_j']
+
     print(f"Converted to {len(result_df)} pair rows")
     print(f"Score range: {result_df['score'].min():.1f} - {result_df['score'].max():.1f}")
     print(f"Match types: {result_df['reason'].value_counts().to_dict()}")
