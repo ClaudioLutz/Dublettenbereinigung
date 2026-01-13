@@ -83,6 +83,10 @@ def convert_results_with_gender_to_pairs(filepath: str) -> pd.DataFrame:
     result_df['jahrgang_i'] = pairs['jahrgang_i']
     result_df['jahrgang_j'] = pairs['jahrgang_j']
 
+    # Include CrefoID for unique pair identification
+    result_df['crefo_i'] = pairs['crefo_i']
+    result_df['crefo_j'] = pairs['crefo_j']
+
     print(f"Converted to {len(result_df)} pair rows")
     print(f"Score range: {result_df['score'].min():.1f} - {result_df['score'].max():.1f}")
     print(f"Match types: {result_df['reason'].value_counts().to_dict()}")

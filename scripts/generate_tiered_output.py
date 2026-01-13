@@ -214,8 +214,9 @@ def wide_to_stacked(df: pd.DataFrame) -> pd.DataFrame:
     stacked = pd.concat([rows_a, rows_b], ignore_index=True)
     stacked = stacked.sort_values(['match_id', 'position']).reset_index(drop=True)
 
-    # Reorder columns: match_id, position, index first, then common, then record fields
-    priority_cols = ['match_id', 'position', 'index', 'cluster', 'confidence', 'reason']
+    # Reorder columns: match_id, position, crefo first, then key fields for review
+    priority_cols = ['match_id', 'position', 'crefo', 'cluster', 'confidence', 'reason',
+                     'vorname', 'name', 'strasse', 'hausnummer', 'plz', 'ort', 'geburtstag', 'jahrgang']
     priority_cols = [c for c in priority_cols if c in stacked.columns]
     other_cols = [c for c in stacked.columns if c not in priority_cols]
     stacked = stacked[priority_cols + other_cols]
@@ -709,8 +710,13 @@ def run_tier_assignment(
         }
 
     # Add match_id column for unique pair identification
-    tier1_df['match_id'] = tier1_df['i'].astype(str) + '_' + tier1_df['j'].astype(str)
-    tier2_df['match_id'] = tier2_df['i'].astype(str) + '_' + tier2_df['j'].astype(str)
+    # Use CrefoID for match_id if available, otherwise fall back to indices
+    if 'crefo_i' in tier1_df.columns and 'crefo_j' in tier1_df.columns:
+        tier1_df['match_id'] = tier1_df['crefo_i'].astype(str) + '_' + tier1_df['crefo_j'].astype(str)
+        tier2_df['match_id'] = tier2_df['crefo_i'].astype(str) + '_' + tier2_df['crefo_j'].astype(str)
+    else:
+        tier1_df['match_id'] = tier1_df['i'].astype(str) + '_' + tier1_df['j'].astype(str)
+        tier2_df['match_id'] = tier2_df['i'].astype(str) + '_' + tier2_df['j'].astype(str)
 
     # Rename score to confidence for clarity
     tier1_df = tier1_df.rename(columns={'score': 'confidence'})
@@ -859,9 +865,13 @@ def main() -> int:
         print(f"ERROR: {e}")
         return 1
 
-    # Add match_id column for unique pair identification
-    tier1_df['match_id'] = tier1_df['i'].astype(str) + '_' + tier1_df['j'].astype(str)
-    tier2_df['match_id'] = tier2_df['i'].astype(str) + '_' + tier2_df['j'].astype(str)
+    # Add match_id column for unique pair identification (use CrefoID if available)
+    if 'crefo_i' in tier1_df.columns and 'crefo_j' in tier1_df.columns:
+        tier1_df['match_id'] = tier1_df['crefo_i'].astype(str) + '_' + tier1_df['crefo_j'].astype(str)
+        tier2_df['match_id'] = tier2_df['crefo_i'].astype(str) + '_' + tier2_df['crefo_j'].astype(str)
+    else:
+        tier1_df['match_id'] = tier1_df['i'].astype(str) + '_' + tier1_df['j'].astype(str)
+        tier2_df['match_id'] = tier2_df['i'].astype(str) + '_' + tier2_df['j'].astype(str)
 
     # Rename score to confidence for clarity
     tier1_df = tier1_df.rename(columns={'score': 'confidence'})
