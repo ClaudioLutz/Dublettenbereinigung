@@ -112,3 +112,5 @@ models/
 *.bin
 *.npz
 nul
+modular_results_fresh.csv
+modular_results_fresh_pairs.csv

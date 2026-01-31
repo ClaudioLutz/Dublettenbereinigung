@@ -20,7 +20,8 @@
       "Bash(git add:*)",
       "Bash(test:*)",
       "Skill(bmad:bmm:workflows:create-story)",
-      "Skill(bmad:bmm:workflows:create-story:*)"
+      "Skill(bmad:bmm:workflows:create-story:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
